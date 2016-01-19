@@ -26,7 +26,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\Include\Eval.h">
+    <ClInclude Include="..\..\..\Common\Include\Eval.h">
       <Filter>Common\Include</Filter>
     </ClInclude>
   </ItemGroup>
