@@ -6,7 +6,7 @@
 #pragma once
 
 #include "BaseDataDeserializer.h"
-#include "commandArgUtil.h"
+#include "Config.h"
 #include <opencv2/core/mat.hpp>
 
 namespace Microsoft { namespace MSR { namespace CNTK {

@@ -6,7 +6,7 @@
 #include "stdafx.h"
 #include "ImageTransformers.h"
 
-#include "commandArgUtil.h"
+#include "Config.h"
 #include "ConcStack.h"
 #include <algorithm>
 #include <unordered_map>
@@ -78,9 +78,9 @@ Sequences BaseTransformer::GetNextSequences(size_t count)
 
 SequenceDataPtr BaseTransformer::Apply(const DenseSequenceData& sequence, StreamDescriptionPtr stream, cv::Mat& buffer)
 {
-    int rows = static_cast<int>(sequence.sampleLayout->GetWidth());
-    int columns = static_cast<int>(sequence.sampleLayout->GetHeight());
-    int channels = static_cast<int>(sequence.sampleLayout->GetNumChannels());
+    int columns = static_cast<int>(sequence.sampleLayout->GetDim(0));
+    int rows = static_cast<int>(sequence.sampleLayout->GetDim(1));
+    int channels = static_cast<int>(sequence.sampleLayout->GetDim(2));
 
     int typeId = 0;
     if (stream->elementType == ElementType::tdouble)
@@ -101,8 +101,7 @@ SequenceDataPtr BaseTransformer::Apply(const DenseSequenceData& sequence, Stream
     this->Apply(buffer);
 
     auto result = std::make_shared<DenseSequenceData>();
-    result->sampleLayout = std::make_shared<ImageLayout>(
-        ImageLayoutWHC(buffer.cols, buffer.rows, buffer.channels()));
+    result->sampleLayout = std::make_shared<TensorShape>(buffer.cols, buffer.rows, buffer.channels());
     result->numberOfSamples = sequence.numberOfSamples;
     result->data = buffer.ptr();
     return result;

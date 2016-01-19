@@ -14,7 +14,7 @@
 
 #define DATAREADER_EXPORTS // creating the exports here
 #include "DataReader.h"
-#include "commandArgUtil.h"
+//#include "commandArgUtil.h"
 #include "ReaderShim.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
@@ -32,7 +32,7 @@ void ReaderShim<ElemType>::Init(const ConfigParameters& config)
         config(L"nbruttsineachrecurrentiter", ConfigParameters::Array(intargvector(vector<int>{1})));
 
     auto numSeqsPerMBForAllEpochs = numberOfuttsPerMinibatchForAllEpochs;
-    m_layout->Init(numSeqsPerMBForAllEpochs[0], 0, true);
+    m_layout->Init(numSeqsPerMBForAllEpochs[0], 0);
 
     m_reader = m_factory(config);
     m_streams = m_reader->GetStreams();

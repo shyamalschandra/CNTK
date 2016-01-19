@@ -8,12 +8,11 @@
 #include <vector>
 #include <memory>
 #include "Sequences.h"
-#include "DataTensor.h"
+#include "TensorShape.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
-struct ImageLayout;
-typedef std::shared_ptr<ImageLayout> TensorShapePtr;
+typedef std::shared_ptr<TensorShape> TensorShapePtr;
 
 struct MBLayout;
 typedef std::shared_ptr<MBLayout> MBLayoutPtr;

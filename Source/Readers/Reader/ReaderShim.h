@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 #include "DataReader.h"
-#include "commandArgUtil.h"
+//#include "commandArgUtil.h"
 #include "Reader.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {

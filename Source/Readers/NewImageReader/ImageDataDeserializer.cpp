@@ -51,7 +51,7 @@ ImageDataDeserializer::ImageDataDeserializer(const ConfigParameters& config)
     feature->storageType = StorageType::dense;
 
     m_featureElementType = feature->elementType;
-    size_t labelDimension = label->sampleLayout->GetHeight();
+    size_t labelDimension = label->sampleLayout->GetDim(0);
 
     if (label->elementType == ElementType::tfloat)
     {
@@ -139,7 +139,7 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
 
         auto image = std::make_shared<DenseSequenceData>();
         image->data = cvImage.ptr();
-        image->sampleLayout = std::make_shared<ImageLayout>(ImageLayoutWHC(cvImage.cols, cvImage.rows, cvImage.channels()));
+        image->sampleLayout = std::make_shared<TensorShape>(cvImage.cols, cvImage.rows, cvImage.channels());
         image->numberOfSamples = 1;
         assert(imageSequence.numberOfSamples == image->numberOfSamples);
 

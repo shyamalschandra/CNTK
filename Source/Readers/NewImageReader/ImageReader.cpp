@@ -5,7 +5,7 @@
 
 #include "stdafx.h"
 #include "ImageReader.h"
-#include "commandArgUtil.h"
+#include "Config.h"
 #include "ImageConfigHelper.h"
 #include "ImageTransformers.h"
 #include "BlockRandomizer.h"

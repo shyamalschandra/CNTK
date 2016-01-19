@@ -46,7 +46,7 @@ ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
     auto features = std::make_shared<StreamDescription>();
     features->id = 0;
     features->name = msra::strfun::utf16(featSect.first);
-    features->sampleLayout = std::make_shared<ImageLayout>(ImageLayoutWHC(w, h, c));
+    features->sampleLayout = std::make_shared<TensorShape>(w, h, c);
     m_streams.push_back(features);
 
     SectionT labSect{getter("labelDim")};
@@ -55,7 +55,7 @@ ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
     auto labels = std::make_shared<StreamDescription>();
     labels->id = 1;
     labels->name = msra::strfun::utf16(labSect.first);
-    labels->sampleLayout = std::make_shared<ImageLayout>(ImageLayoutVector(labelDimension));
+    labels->sampleLayout = std::make_shared<TensorShape>(labelDimension);
     m_streams.push_back(labels);
 
     m_mapPath = config(L"file");
