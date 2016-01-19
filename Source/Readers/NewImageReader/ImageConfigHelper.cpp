@@ -71,9 +71,8 @@ ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
         RuntimeError("ImageReader does not support the mini-batch format %s.", mbFmt.c_str());
     }
 
-
     // Identify precision
-    string precision = config.Find("precision", "");
+    string precision = config.Find("precision", "float");
     if (AreEqualIgnoreCase(precision, "float"))
     {
         features->elementType = ElementType::tfloat;
@@ -88,6 +87,8 @@ ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
     {
         RuntimeError("Not supported precision '%s'", precision);
     }
+
+    m_cpuThreadCount = config(L"numCPUThreads", 0);
 }
 
 std::vector<StreamDescriptionPtr> ImageConfigHelper::GetStreams() const

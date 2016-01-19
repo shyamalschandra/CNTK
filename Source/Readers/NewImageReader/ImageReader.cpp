@@ -11,6 +11,7 @@
 #include "BlockRandomizer.h"
 #include "ImageDataDeserializer.h"
 #include "FrameModePacker.h"
+#include <omp.h>
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
@@ -27,6 +28,13 @@ ImageReader::ImageReader(
     ImageConfigHelper configHelper(config);
     m_streams = configHelper.GetStreams();
     assert(m_streams.size() == 2);
+
+    int threadCount = configHelper.GetCpuThreadCount();
+    if (threadCount > 0)
+    {
+        omp_set_num_threads(threadCount);
+    }
+
     auto deserializer = std::make_shared<ImageDataDeserializer>(config);
 
     auto randomizer = std::make_shared<BlockRandomizer>(0, SIZE_MAX, deserializer);

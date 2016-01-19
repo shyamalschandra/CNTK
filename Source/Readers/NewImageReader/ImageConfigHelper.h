@@ -36,6 +36,11 @@ public:
         return m_dataFormat;
     }
 
+    int GetCpuThreadCount() const
+    {
+        return m_cpuThreadCount;
+    }
+
 private:
     ImageConfigHelper(const ImageConfigHelper&) = delete;
     ImageConfigHelper& operator=(const ImageConfigHelper&) = delete;
@@ -43,6 +48,7 @@ private:
     std::string m_mapPath;
     std::vector<StreamDescriptionPtr> m_streams;
     ImageLayoutKind m_dataFormat;
+    int m_cpuThreadCount;
 };
 
 typedef std::shared_ptr<ImageConfigHelper> ImageConfigHelperPtr;
