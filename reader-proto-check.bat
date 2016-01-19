@@ -28,7 +28,7 @@ if not defined a_nodebug (
 
 if not defined a_notests (
 if not defined a_nounittests (
-        .\x64\Debug\UnitTests\ReaderTests.exe -t ReaderTestSuite/HTKMLFReaderSimpleDataLoop
+        .\x64\Debug\UnitTests\ReaderTests.exe -t ReaderTestSuite/HTKMLFReaderSimpleDataLoop1
         if errorlevel 1 exit /b 1
 )
 )
@@ -40,7 +40,7 @@ if not defined a_norelease (
 
 if not defined a_notests (
 if not defined a_nounittests (
-    .\x64\Release\UnitTests\ReaderTests.exe -t ReaderTestSuite/HTKMLFReaderSimpleDataLoop
+    .\x64\Release\UnitTests\ReaderTests.exe -t ReaderTestSuite/HTKMLFReaderSimpleDataLoop1
     if errorlevel 1 exit /b 1
 )
 )
