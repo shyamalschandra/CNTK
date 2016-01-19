@@ -43,4 +43,5 @@ private:
     // Memory provider (TODO: this will possibly change in the near future.)
     MemoryProviderPtr m_provider;
 };
-} } }
+
+}}}

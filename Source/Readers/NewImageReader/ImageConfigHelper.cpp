@@ -10,6 +10,7 @@
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
+    : m_dataFormat(CHW)
 {
     // TODO alexeyk: does not work for BrainScript, since configs cannot be copied
     using SectionT = std::pair<std::string, ConfigParameters>;
@@ -59,6 +60,17 @@ ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
     m_streams.push_back(labels);
 
     m_mapPath = config(L"file");
+
+    std::string mbFmt = featSect.second("mbFormat", "nchw");
+    if (AreEqualIgnoreCase(mbFmt, "nhwc"))
+    {
+        m_dataFormat = HWC;
+    }
+    else if (!AreEqualIgnoreCase(mbFmt, "nchw"))
+    {
+        RuntimeError("ImageReader does not support the mini-batch format %s.", mbFmt.c_str());
+    }
+
 
     // Identify precision
     string precision = config.Find("precision", "");

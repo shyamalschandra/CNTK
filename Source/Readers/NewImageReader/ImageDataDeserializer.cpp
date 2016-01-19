@@ -137,9 +137,10 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
             cvImage.convertTo(cvImage, dataType);
         }
 
+        ImageDimensions dimensions(cvImage.cols, cvImage.rows, cvImage.channels());
         auto image = std::make_shared<DenseSequenceData>();
         image->data = cvImage.ptr();
-        image->sampleLayout = std::make_shared<TensorShape>(cvImage.cols, cvImage.rows, cvImage.channels());
+        image->sampleLayout = std::make_shared<TensorShape>(dimensions.AsTensorShape(HWC));
         image->numberOfSamples = 1;
         assert(imageSequence.numberOfSamples == image->numberOfSamples);
 

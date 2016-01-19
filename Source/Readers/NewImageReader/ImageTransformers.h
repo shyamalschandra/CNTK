@@ -1,6 +1,7 @@
 //
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
+// <copyright company="Microsoft">
+//     Copyright (c) Microsoft Corporation.  All rights reserved.
+// </copyright>
 //
 
 #pragma once
@@ -12,36 +13,30 @@
 
 #include "Transformer.h"
 #include "ConcStack.h"
+#include "BaseTransformer.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 class ConfigParameters;
 
 // Base class for image transformations based on OpenCV.
-// Currently supports only dense data format.
-class BaseTransformer : public Transformer
+class CvMatTransformer : public BaseTransformer<cv::Mat>
 {
 public:
-    BaseTransformer();
-
     // Initializes the transformer.
-    virtual void Initialize(TransformerPtr next, const ConfigParameters& readerConfig) override;
-
-    // Description of streams that the transformer provides.
-    virtual std::vector<StreamDescriptionPtr> GetStreams() const override;
-
-    // Gets next "count" sequences. Sequences contains data for all streams.
-    virtual Sequences GetNextSequences(size_t count) override;
-
-    // Sets configuration for the current epoch.
-    virtual void StartEpoch(const EpochConfiguration& config) override;
+    virtual void Initialize(TransformerPtr next,
+                            const ConfigParameters &readerConfig) override;
 
 protected:
-    using UniRealT = std::uniform_real_distribution<double>;
-    using UniIntT = std::uniform_int_distribution<int>;
+    virtual const std::vector<StreamId> &GetAppliedStreamIds() const override
+    {
+        return m_appliedStreamIds;
+    }
 
-    // Applies transformation to the image.
-    virtual void Apply(cv::Mat& from) = 0;
+    virtual const std::vector<StreamDescriptionPtr>& GetOutputStreams() const override
+    {
+        return m_outputStreams;
+    }
 
     // Seed  getter.
     unsigned int GetSeed() const
@@ -49,27 +44,32 @@ protected:
         return m_seed;
     }
 
-    const std::vector<StreamId>& GetFeatureStreamIds() const;
-    std::vector<StreamDescriptionPtr> m_streams;
+    using Base = BaseTransformer<cv::Mat>;
+    using UniRealT = std::uniform_real_distribution<double>;
+    using UniIntT = std::uniform_int_distribution<int>;
+
+    // Applies transformation to the sequence.
+    SequenceDataPtr Apply(const DenseSequenceData &inputSequence,
+                          const StreamDescription &inputStream, cv::Mat &buffer,
+                          const StreamDescription &outputStream) override;
+
+    // The only function that should be redefined by the inherited classes.
+    virtual void Apply(cv::Mat &from) = 0;
 
 private:
-    // Applies transformation to the sequence.
-    SequenceDataPtr Apply(const DenseSequenceData& sequence, StreamDescriptionPtr stream, cv::Mat& buffer);
-
-    std::vector<StreamId> m_featureStreamIds;
-    TransformerPtr m_next;
+    std::vector<StreamDescriptionPtr> m_outputStreams;
+    std::vector<StreamId> m_appliedStreamIds;
     unsigned int m_seed;
-    std::vector<std::vector<cv::Mat>> m_buffer;
 };
 
-class CropTransformer : public BaseTransformer
+class CropTransformer : public CvMatTransformer
 {
 public:
-    CropTransformer();
-    virtual void Initialize(TransformerPtr next, const ConfigParameters& readerConfig) override;
+    virtual void Initialize(TransformerPtr next,
+                            const ConfigParameters &readerConfig) override;
 
 protected:
-    virtual void Apply(cv::Mat& mat) override;
+    virtual void Apply(cv::Mat &mat) override;
 
 private:
     enum class CropType
@@ -85,10 +85,11 @@ private:
         UniArea = 3
     };
 
-    void InitFromConfig(const ConfigParameters& config);
-    CropType ParseCropType(const std::string& src);
-    RatioJitterType ParseJitterType(const std::string& src);
-    cv::Rect GetCropRect(CropType type, int crow, int ccol, double cropRatio, std::mt19937& rng);
+    void InitFromConfig(const ConfigParameters &config);
+    CropType ParseCropType(const std::string &src);
+    RatioJitterType ParseJitterType(const std::string &src);
+    cv::Rect GetCropRect(CropType type, int crow, int ccol, double cropRatio,
+                         std::mt19937 &rng);
 
     conc_stack<std::unique_ptr<std::mt19937>> m_rngs;
     CropType m_cropType;
@@ -98,15 +99,15 @@ private:
     bool m_hFlip;
 };
 
-class ScaleTransformer : public BaseTransformer
+class ScaleTransformer : public CvMatTransformer
 {
 public:
-    ScaleTransformer();
-    virtual void Initialize(TransformerPtr next, const ConfigParameters& readerConfig) override;
+    virtual void Initialize(TransformerPtr next,
+                            const ConfigParameters &readerConfig) override;
 
 private:
-    void InitFromConfig(const ConfigParameters& config);
-    virtual void Apply(cv::Mat& mat) override;
+    void InitFromConfig(const ConfigParameters &config);
+    virtual void Apply(cv::Mat &mat) override;
 
     using StrToIntMapT = std::unordered_map<std::string, int>;
     StrToIntMapT m_interpMap;
@@ -119,16 +120,52 @@ private:
     size_t m_imgChannels;
 };
 
-class MeanTransformer : public BaseTransformer
+class MeanTransformer : public CvMatTransformer
 {
 public:
-    MeanTransformer();
-    virtual void Initialize(TransformerPtr next, const ConfigParameters& readerConfig) override;
+    virtual void Initialize(TransformerPtr next,
+                            const ConfigParameters &readerConfig) override;
 
 private:
-    virtual void Apply(cv::Mat& mat) override;
-    void InitFromConfig(const ConfigParameters& config);
+    virtual void Apply(cv::Mat &mat) override;
+    void InitFromConfig(const ConfigParameters &config);
 
     cv::Mat m_meanImg;
 };
-} } }
+
+class TransposeTransformer : public BaseTransformer<vector<char>>
+{
+public:
+    virtual void Initialize(TransformerPtr next,
+                            const ConfigParameters &readerConfig) override;
+
+protected:
+    virtual const std::vector<StreamId>& GetAppliedStreamIds() const override
+    {
+        return m_appliedStreamIds;
+    }
+
+    virtual const std::vector<StreamDescriptionPtr>& GetOutputStreams() const override
+    {
+        return m_outputStreams;
+    }
+
+    SequenceDataPtr Apply(const DenseSequenceData &inputSequence,
+                          const StreamDescription &inputStream,
+                          vector<char> &buffer,
+                          const StreamDescription &outputStream) override;
+
+private:
+    using Base = BaseTransformer<vector<char>>;
+
+    template <class TElement>
+    SequenceDataPtr TypedApply(const DenseSequenceData &inputSequence,
+                               const StreamDescription &inputStream,
+                               vector<char> &buffer,
+                               const StreamDescription &outputStream);
+
+    std::vector<StreamDescriptionPtr> m_outputStreams;
+    std::vector<StreamId> m_appliedStreamIds;
+};
+
+}}}

@@ -28,16 +28,27 @@ ImageReader::ImageReader(
     m_streams = configHelper.GetStreams();
     assert(m_streams.size() == 2);
     auto deserializer = std::make_shared<ImageDataDeserializer>(config);
+
     auto randomizer = std::make_shared<BlockRandomizer>(0, SIZE_MAX, deserializer);
+    randomizer->Initialize(nullptr, config);
 
     auto cropper = std::make_shared<CropTransformer>();
-    auto scaler = std::make_shared<ScaleTransformer>();
-    auto mean = std::make_shared<MeanTransformer>();
-
     cropper->Initialize(randomizer, config);
+
+    auto scaler = std::make_shared<ScaleTransformer>();
     scaler->Initialize(cropper, config);
+
+    auto mean = std::make_shared<MeanTransformer>();
     mean->Initialize(scaler, config);
-    m_transformer = mean;
+
+    TransformerPtr last = mean;
+    if (configHelper.GetDataFormat() == CHW)
+    {
+        last = std::make_shared<TransposeTransformer>();
+        last->Initialize(mean, config);
+    }
+
+    m_transformer = last;
 }
 
 std::vector<StreamDescriptionPtr> ImageReader::GetStreams()

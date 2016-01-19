@@ -40,6 +40,9 @@
     <ClInclude Include="StringUtils.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="BaseTransformer.h">
+      <Filter>Transformers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BlockRandomizer.cpp">
@@ -70,6 +73,9 @@
     </Filter>
     <Filter Include="Deserializers">
       <UniqueIdentifier>{2f73a66b-9551-41c4-91c5-cf51537b9feb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Transformers">
+      <UniqueIdentifier>{90d4b51b-73ae-47f5-9a9e-97ef287dcead}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
