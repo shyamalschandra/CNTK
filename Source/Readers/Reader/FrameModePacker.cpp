@@ -95,7 +95,7 @@ Minibatch FrameModePacker::ReadMinibatch()
         return m;
     }
 
-    m_minibatchLayout->Init(images.m_data.size(), 1);
+    m_minibatchLayout->InitAsFrameMode(images.m_data.size());
     for (int i = 0; i < m_outputStreams.size(); ++i)
     {
         size_t dimensions = m_outputStreams[i]->sampleLayout->GetNumElements() * GetSizeByType(m_outputStreams[i]->elementType);

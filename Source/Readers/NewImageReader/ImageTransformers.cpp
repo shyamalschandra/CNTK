@@ -15,6 +15,7 @@
 #include <random>
 #include "ImageConfigHelper.h"
 #include "StringUtils.h"
+#include "ElementTypeUtils.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK
 {
@@ -399,7 +400,7 @@ TransposeTransformer::TypedApply(const DenseSequenceData &inputSequence,
     assert(inputStream.sampleLayout->GetNumElements() ==
            outputStream.sampleLayout->GetNumElements());
 
-    size_t count = inputStream.sampleLayout->GetNumElements();
+    size_t count = inputStream.sampleLayout->GetNumElements() * GetSizeByType(inputStream.elementType);
     buffer.resize(count);
 
     ImageDimensions dimensions(*inputStream.sampleLayout, ImageLayoutKind::HWC);
