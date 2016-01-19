@@ -32,7 +32,7 @@ void ReaderShim<ElemType>::Init(const ConfigParameters& config)
         config(L"nbruttsineachrecurrentiter", ConfigParameters::Array(intargvector(vector<int> { 1 })));
 
     bool prefetch = config(L"prefetch", true);
-    // if prefetch - launching asyncrchronously,
+    // if prefetch - launching asynchronously,
     // otherwise deferring - synchronous execution during .get() call
     m_launchType = prefetch ? launch::async : launch::deferred;
 
