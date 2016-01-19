@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 #include "DataReader.h"
-//#include "commandArgUtil.h"
+#include <future>
 #include "Reader.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
@@ -20,20 +20,9 @@ typedef ReaderPtr (*ReaderFactory)(const ConfigParameters& parameters);
 template <class ElemType>
 class ReaderShim : public IDataReader<ElemType>
 {
-    ReaderPtr m_reader;
-    ReaderFactory m_factory;
-    bool m_endOfEpoch;
-
-    MBLayoutPtr m_layout;
-
-    std::map<std::wstring, size_t> m_nameToStreamId;
-    std::vector<StreamDescriptionPtr> m_streams;
-
 public:
     explicit ReaderShim(ReaderFactory factory);
-    virtual ~ReaderShim()
-    {
-    }
+    virtual ~ReaderShim() { }
 
     virtual void Init(const ScriptableObjects::IConfigRecord& /*config*/) override
     {
@@ -61,5 +50,18 @@ public:
     void CopyMBLayoutTo(MBLayoutPtr) override;
 
     virtual size_t GetNumParallelSequences() override;
+
+private:
+    std::future<Minibatch> m_prefetchTask;
+    ReaderPtr m_reader;
+    ReaderFactory m_factory;
+    bool m_endOfEpoch;
+
+    MBLayoutPtr m_layout;
+
+    std::map<std::wstring, size_t> m_nameToStreamId;
+    std::vector<StreamDescriptionPtr> m_streams;
+    launch m_launchType;
 };
-} } }
+
+}}}

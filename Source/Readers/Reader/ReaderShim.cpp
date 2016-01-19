@@ -29,7 +29,12 @@ template <class ElemType>
 void ReaderShim<ElemType>::Init(const ConfigParameters& config)
 {
     intargvector numberOfuttsPerMinibatchForAllEpochs =
-        config(L"nbruttsineachrecurrentiter", ConfigParameters::Array(intargvector(vector<int>{1})));
+        config(L"nbruttsineachrecurrentiter", ConfigParameters::Array(intargvector(vector<int> { 1 })));
+
+    bool prefetch = config(L"prefetch", true);
+    // if prefetch - launching asyncrchronously,
+    // otherwise deferring - synchronous execution during .get() call
+    m_launchType = prefetch ? launch::async : launch::deferred;
 
     auto numSeqsPerMBForAllEpochs = numberOfuttsPerMinibatchForAllEpochs;
     m_layout->Init(numSeqsPerMBForAllEpochs[0], 0);
@@ -65,6 +70,11 @@ void ReaderShim<ElemType>::StartDistributedMinibatchLoop(
 
     m_reader->StartEpoch(config);
     m_endOfEpoch = false;
+
+    m_prefetchTask = std::async(m_launchType, [this]()
+    {
+        return m_reader->ReadMinibatch();
+    });
 }
 
 template <class ElemType>
@@ -86,7 +96,9 @@ bool ReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
         }
     }
 
-    Minibatch m = m_reader->ReadMinibatch();
+    assert(m_prefetchTask.valid());
+
+    Minibatch m = m_prefetchTask.get();
     if (m.atEndOfEpoch)
     {
         m_endOfEpoch = true;
@@ -114,6 +126,11 @@ bool ReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
             mx.second->SetValue(rowNumber, columnNumber, mx.second->GetDeviceId(), const_cast<ElemType*>(data), matrixFlagNormal);
         }
     }
+
+    m_prefetchTask = std::async(m_launchType, [this]()
+    {
+        return m_reader->ReadMinibatch();
+    });
 
     return !m.minibatch.empty();
 }
