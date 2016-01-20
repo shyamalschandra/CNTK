@@ -9,7 +9,8 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
-// Memory provider. It is injected by CNTK into the reader.
+// Interface used for allocating stream data returned by the reader.
+// Should be injected by CNTK into the reader (will be a member of Matrix class).
 // Should be used for allocating the stream data returned by the reader.
 class MemoryProvider
 {

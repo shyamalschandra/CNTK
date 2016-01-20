@@ -10,7 +10,6 @@
 #include "ImageTransformers.h"
 #include "BlockRandomizer.h"
 #include "ImageDataDeserializer.h"
-#include "FrameModePacker.h"
 #include <omp.h>
 
 namespace Microsoft { namespace MSR { namespace CNTK {
@@ -72,7 +71,7 @@ void ImageReader::StartEpoch(const EpochConfiguration& config)
     }
 
     m_transformer->StartEpoch(config);
-    m_packer = std::make_shared<FrameModePacker>(
+    m_packer = std::make_shared<SampleModePacker>(
         m_provider,
         m_transformer,
         config.m_minibatchSizeInSamples,

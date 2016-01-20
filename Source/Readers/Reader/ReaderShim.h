@@ -2,7 +2,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
 //
-// ReaderShim.h: header for shim wrapping the new reader interface
+// ReaderShim.h: Currently we are preserving the old interface in SGD. So this shim exposes the old interface and calls into the 
+// reader implemented with the new interfaces (reader/packer/transforms/serializers)
 //
 
 #pragma once

@@ -5,9 +5,8 @@
 
 #pragma once
 
-#include "MemoryProvider.h"
-#include <memory>
 #include <algorithm>
+#include "MemoryProvider.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
@@ -18,28 +17,14 @@ class HeapMemoryProvider : public MemoryProvider
 public:
     virtual void* Alloc(size_t elementSize, size_t numberOfElements) override
     {
-        size_t alignment = max(elementSize, size_of_first_pointer);
-        size_t request_size = elementSize * numberOfElements + alignment;
-        size_t needed = size_of_first_pointer + request_size;
-
-        void* allocated = ::operator new(needed);
-        void* allowed_space = reinterpret_cast<char*>(allocated) + size_of_first_pointer;
-        void* p = std::align(alignment, elementSize, allowed_space, request_size);
-
-        // save for delete calls to use
-        (reinterpret_cast<void**>(p))[-1] = allocated;
-        return p;
+        // Currently not alligned.
+        return ::operator new(elementSize * numberOfElements);
     }
 
     virtual void Free(void* p) override
     {
-        if (!p)
-        {
-            return;
-        }
-
-        void* alloc = reinterpret_cast<void**>(p)[-1];
-        ::operator delete(alloc);
+        ::operator delete(p);
     }
 };
-} } }
+
+}}}
