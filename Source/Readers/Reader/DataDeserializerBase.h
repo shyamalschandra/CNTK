@@ -11,25 +11,22 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 
 // Base class for data deserializers.
 // Has default implementation for a subset of methods.
-class BaseDataDeserializer : public DataDeserializer
+class DataDeserializerBase : public DataDeserializer
 {
 public:
-    BaseDataDeserializer()
-    {
-    }
-    virtual ~BaseDataDeserializer()
-    {
-    }
+    DataDeserializerBase() : m_sequencesInitialized(false)
+    {}
 
     // Sets configuration for the current epoch.
-    void StartEpoch(const EpochConfiguration& /*config*/) override{};
+    void StartEpoch(const EpochConfiguration& /*config*/) override {};
 
     // Gets descriptions of all sequences the deserializer can produce.
     const Timeline& GetSequenceDescriptions() const override
     {
-        if (m_sequences.empty())
+        if (!m_sequencesInitialized)
         {
             FillSequenceDescriptions(m_sequences);
+            m_sequencesInitialized = true;
         }
         return m_sequences;
     }
@@ -49,9 +46,10 @@ protected:
     std::vector<StreamDescriptionPtr> m_streams;
 
 private:
-    BaseDataDeserializer(const BaseDataDeserializer&) = delete;
-    BaseDataDeserializer& operator=(const BaseDataDeserializer&) = delete;
+    DataDeserializerBase(const DataDeserializerBase&) = delete;
+    DataDeserializerBase& operator=(const DataDeserializerBase&) = delete;
 
     mutable Timeline m_sequences;
+    mutable bool m_sequencesInitialized;
 };
 } } }

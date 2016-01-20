@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "BaseDataDeserializer.h"
+#include "DataDeserializerBase.h"
 #include "Config.h"
 #include <opencv2/core/mat.hpp>
 
@@ -16,7 +16,7 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 // All sequences consist only of a single sample (image/label).
 // For features it uses dense storage format with different layour (dimensions) between different sequences.
 // For labels it uses sparse storage format.
-class ImageDataDeserializer : public BaseDataDeserializer
+class ImageDataDeserializer : public DataDeserializerBase
 {
 public:
     explicit ImageDataDeserializer(const ConfigParameters& config);

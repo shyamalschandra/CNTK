@@ -75,8 +75,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BaseDataDeserializer.h" />
-    <ClInclude Include="BaseTransformer.h" />
+    <ClInclude Include="DataDeserializerBase.h" />
+    <ClInclude Include="TransformerBase.h" />
     <ClInclude Include="BlockRandomizer.h" />
     <ClInclude Include="CudaMemoryProvider.h" />
     <ClInclude Include="DataDeserializer.h" />

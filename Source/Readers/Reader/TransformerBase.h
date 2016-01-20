@@ -14,7 +14,7 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 
 // Currently supports only dense data format.
 template <class TBufferElement>
-class BaseTransformer : public Transformer
+class TransformerBase : public Transformer
 {
 public:
     // Initializes the transformer.

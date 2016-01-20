@@ -13,14 +13,14 @@
 
 #include "Transformer.h"
 #include "ConcStack.h"
-#include "BaseTransformer.h"
+#include "TransformerBase.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 class ConfigParameters;
 
 // Base class for image transformations based on OpenCV.
-class CvMatTransformer : public BaseTransformer<cv::Mat>
+class CvMatTransformer : public TransformerBase<cv::Mat>
 {
 public:
     // Initializes the transformer.
@@ -44,7 +44,7 @@ protected:
         return m_seed;
     }
 
-    using Base = BaseTransformer<cv::Mat>;
+    using Base = TransformerBase<cv::Mat>;
     using UniRealT = std::uniform_real_distribution<double>;
     using UniIntT = std::uniform_int_distribution<int>;
 
@@ -133,7 +133,7 @@ private:
     cv::Mat m_meanImg;
 };
 
-class TransposeTransformer : public BaseTransformer<vector<char>>
+class TransposeTransformer : public TransformerBase<vector<char>>
 {
 public:
     virtual void Initialize(TransformerPtr next,
@@ -156,7 +156,7 @@ protected:
                           const StreamDescription &outputStream) override;
 
 private:
-    using Base = BaseTransformer<vector<char>>;
+    using Base = TransformerBase<vector<char>>;
 
     template <class TElement>
     SequenceDataPtr TypedApply(const DenseSequenceData &inputSequence,
