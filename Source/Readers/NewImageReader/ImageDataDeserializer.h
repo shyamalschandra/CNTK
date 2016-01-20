@@ -37,8 +37,8 @@ private:
     // Image sequence descriptions. Currently, a sequence contains a single sample only.
     struct ImageSequenceDescription : public SequenceDescription
     {
-        std::string path;
-        size_t classId;
+        std::string m_path;
+        size_t m_classId;
     };
 
     // A helper class for generation of type specific labels (currently float/double only).

@@ -4,34 +4,36 @@
 //
 
 #include "stdafx.h"
+#include <opencv2/opencv.hpp>
 #include "ImageDataDeserializer.h"
 #include "ImageConfigHelper.h"
-#include <opencv2/opencv.hpp>
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 class ImageDataDeserializer::LabelGenerator
 {
 public:
-    virtual void ReadLabelDataFor(SparseSequenceData& data, size_t classId) = 0;
-    virtual ~LabelGenerator()
-    {
-    }
+    virtual void CreateLabelFor(size_t classId, SparseSequenceData& data) = 0;
+    virtual ~LabelGenerator() { }
 };
 
+// A helper class to generate a typed label in a sparse format.
+// A label is just a category/class the image belongs to.
+// It is represented as a array indexed by the category with zero values for all categories the image does not belong to, 
+// and a single one for a category it belongs to: [ 0, .. 0.. 1 .. 0 ]
+// The class is parameterized because the representation of 1 is type specific.
 template <class TElement>
 class TypedLabelGenerator : public ImageDataDeserializer::LabelGenerator
 {
 public:
-    TypedLabelGenerator()
-        : m_value(1)
+    TypedLabelGenerator() : m_value(1)
     {
     }
 
-    virtual void ReadLabelDataFor(SparseSequenceData& data, size_t classId) override
+    virtual void CreateLabelFor(size_t classId, SparseSequenceData& data) override
     {
         data.m_indices.resize(1);
-        data.m_indices[0] = std::vector<size_t>{classId};
+        data.m_indices[0] = std::vector<size_t>{ classId };
         data.m_data = &m_value;
     }
 
@@ -63,7 +65,7 @@ ImageDataDeserializer::ImageDataDeserializer(const ConfigParameters& config)
     }
     else
     {
-        RuntimeError("Unsupported label element type %ull.", label->m_elementType);
+        RuntimeError("Unsupported label element type %d.", label->m_elementType);
     }
 
     CreateSequenceDescriptions(configHelper.GetMapPath(), labelDimension);
@@ -79,26 +81,33 @@ void ImageDataDeserializer::CreateSequenceDescriptions(std::string mapPath, size
         RuntimeError("Could not open %s for reading.", mapPath.c_str());
     }
 
-    std::string line{""};
-
+    std::string line;
     ImageSequenceDescription description;
     description.m_numberOfSamples = 1;
     description.m_isValid = true;
-    for (size_t cline = 0; std::getline(mapFile, line); cline++)
+    for (size_t lineIndex = 0; std::getline(mapFile, line); ++lineIndex)
     {
-        std::stringstream ss{line};
-        std::string imgPath;
-        std::string clsId;
-        if (!std::getline(ss, imgPath, '\t') || !std::getline(ss, clsId, '\t'))
+        std::stringstream ss(line);
+        std::string imagePath;
+        std::string classId;
+        if (!std::getline(ss, imagePath, '\t') || !std::getline(ss, classId, '\t'))
         {
-            RuntimeError("Invalid map file format, must contain 2 tab-delimited columns: %s, line: %d.", mapPath.c_str(), cline);
+            RuntimeError("Invalid map file format, must contain 2 tab-delimited columns: %s, line: %d.", mapPath.c_str(), lineIndex);
         }
 
-        description.m_id = cline;
-        description.m_chunkId = cline;
-        description.path = imgPath;
-        description.classId = std::stoi(clsId);
-        assert(description.classId < labelDimension);
+        description.m_id = lineIndex;
+        description.m_chunkId = lineIndex;
+        description.m_path = imagePath;
+        description.m_classId = std::stoi(classId);
+
+        if (description.m_classId >= labelDimension)
+        {
+            RuntimeError(
+                "Image '%s' has invalid class id '%d'. Expected label dimension is '%d'.",
+                mapPath.c_str(),
+                description.m_classId,
+                labelDimension);
+        }
         m_imageSequences.push_back(description);
     }
 }
@@ -115,7 +124,7 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
     std::vector<std::vector<SequenceDataPtr>> result;
 
     m_currentImages.resize(ids.size());
-    m_labels.resize(ids.size());
+    m_labels.resize(ids.size(), std::make_shared<SparseSequenceData>());
     result.resize(ids.size());
 
 #pragma omp parallel for ordered schedule(dynamic)
@@ -125,7 +134,7 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
         const auto& imageSequence = m_imageSequences[ids[i]];
 
         // Construct image
-        m_currentImages[i] = std::move(cv::imread(imageSequence.path, cv::IMREAD_COLOR));
+        m_currentImages[i] = std::move(cv::imread(imageSequence.m_path, cv::IMREAD_COLOR));
         cv::Mat& cvImage = m_currentImages[i];
         assert(cvImage.isContinuous());
 
@@ -144,12 +153,7 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
         image->m_numberOfSamples = 1;
         assert(imageSequence.m_numberOfSamples == image->m_numberOfSamples);
 
-        // Construct label
-        if (m_labels[i] == nullptr)
-        {
-            m_labels[i] = std::make_shared<SparseSequenceData>();
-        }
-        m_labelGenerator->ReadLabelDataFor(*m_labels[i], imageSequence.classId);
+        m_labelGenerator->CreateLabelFor(imageSequence.m_classId, *m_labels[i]);
 
         result[i] = std::move(std::vector<SequenceDataPtr>{image, m_labels[i]});
     }
@@ -165,4 +169,5 @@ void ImageDataDeserializer::FillSequenceDescriptions(Timeline& timeline) const
                        return &desc;
                    });
 }
-} } }
+
+}}}
