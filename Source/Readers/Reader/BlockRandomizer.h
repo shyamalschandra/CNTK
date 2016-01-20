@@ -32,20 +32,20 @@ private:
     // Structure for per-chunk information
     struct ChunkInformation
     {
-        size_t sequencePositionStart;
-        size_t samplePositionStart;
+        size_t m_sequencePositionStart;
+        size_t m_samplePositionStart;
     };
 
     // Structure that will be maintained for each randomized chunk
     struct RandomizedChunk
     {
-        struct ChunkInformation info; // sample positions are global // TODO could drop 'global' requirement?
+        struct ChunkInformation m_info; // sample positions are global // TODO could drop 'global' requirement?
 
-        size_t originalChunkIndex;
+        size_t m_originalChunkIndex;
 
-        // Randomization range (in randomized chunk positions)
-        size_t windowbegin;
-        size_t windowend;
+        // Randomization range (in randomized chunk positions; right-side open)
+        size_t m_windowBegin;
+        size_t m_windowEnd;
     };
 
     // General configuration
@@ -74,10 +74,12 @@ private:
     std::vector<size_t> m_sequencePositionToChunkIndex; // TODO find on m_randomizedChunks instead?
     std::vector<SequenceDescription> m_randomTimeline;
 
-    bool IsValid(const Timeline& timeline) const;
+    // Check that timeline has only valid sequences of non-zero length
+    // with incrementing IDs and non-decreasing chunk identifiers.
+    bool TimelineIsValidForRandomization(const Timeline& timeline) const;
 
     template <typename VECTOR>
-    static void randomShuffle(VECTOR& v, size_t randomseed);
+    static void RandomShuffle(VECTOR& v, size_t randomSeed);
 
     void RandomizeChunks();
 
