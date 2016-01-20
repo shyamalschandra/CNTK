@@ -9,107 +9,117 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
-ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
-    : m_dataFormat(CHW)
-{
-    // TODO alexeyk: does not work for BrainScript, since configs cannot be copied
-    using SectionT = std::pair<std::string, ConfigParameters>;
-    auto getter = [&](const std::string& paramName) -> SectionT
+    std::vector<std::string> GetSectionsWithParameter(const ConfigParameters& config, const std::string& parameterName)
     {
-        auto sect = std::find_if(
-            config.begin(),
-            config.end(),
-            [&](const std::pair<std::string, ConfigValue>& p)
-            {
-                return ConfigParameters(p.second).ExistsCurrent(paramName);
-            });
-
-        if (sect == config.end())
+        std::vector<std::string> sectionNames;
+        for (const std::pair<std::string, ConfigParameters>& section : config)
         {
-            RuntimeError("ImageReader requires %s parameter.", paramName.c_str());
+            if (section.second.ExistsCurrent(parameterName))
+            {
+                sectionNames.push_back(section.first);
+            }
         }
-        return {(*sect).first, ConfigParameters((*sect).second)};
-    };
 
-    std::string rand = config(L"randomize", "auto");
-    if (!AreEqualIgnoreCase(rand, "auto"))
-    {
-        RuntimeError("'randomize' parameter currently supports only 'auto' value.");
+        if (sectionNames.empty())
+        {
+            RuntimeError("ImageReader requires %s parameter.", parameterName.c_str());
+        }
+
+        return sectionNames;
     }
 
-    // REVIEW alexeyk: currently support only one feature and label section.
-    SectionT featSect{getter("width")};
-
-    size_t w = featSect.second("width");
-    size_t h = featSect.second("height");
-    size_t c = featSect.second("channels");
-
-    auto features = std::make_shared<StreamDescription>();
-    features->m_id = 0;
-    features->m_name = msra::strfun::utf16(featSect.first);
-    features->m_sampleLayout = std::make_shared<TensorShape>(w, h, c);
-    m_streams.push_back(features);
-
-    SectionT labSect{getter("labelDim")};
-    size_t labelDimension = labSect.second("labelDim");
-
-    auto labels = std::make_shared<StreamDescription>();
-    labels->m_id = 1;
-    labels->m_name = msra::strfun::utf16(labSect.first);
-    labels->m_sampleLayout = std::make_shared<TensorShape>(labelDimension);
-    m_streams.push_back(labels);
-
-    m_mapPath = config(L"file");
-
-    std::string mbFmt = featSect.second("mbFormat", "nchw");
-    if (AreEqualIgnoreCase(mbFmt, "nhwc"))
+    ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
+        : m_dataFormat(CHW)
     {
-        m_dataFormat = HWC;
+        std::vector<std::string> featureNames = GetSectionsWithParameter(config, "width");
+        std::vector<std::string> labelNames = GetSectionsWithParameter(config, "labelDim");
+
+        // REVIEW alexeyk: currently support only one feature and label section.
+        if (featureNames.size() != 1 || labelNames.size() != 1)
+        {
+            RuntimeError(
+                "ImageReader currently supports a single feature and label stream. '%d' features , '%d' labels found.",
+                featureNames.size(),
+                labelNames.size());
+        }
+
+        ConfigParameters featureSection = config(featureNames[0]);
+        size_t w = featureSection("width");
+        size_t h = featureSection("height");
+        size_t c = featureSection("channels");
+
+        auto features = std::make_shared<StreamDescription>();
+        features->m_id = 0;
+        features->m_name = msra::strfun::utf16(featureSection.ConfigName());
+        features->m_sampleLayout = std::make_shared<TensorShape>(w, h, c);
+        m_streams.push_back(features);
+
+        ConfigParameters label = config(labelNames[0]);
+        size_t labelDimension = label("labelDim");
+
+        auto labelSection = std::make_shared<StreamDescription>();
+        labelSection->m_id = 1;
+        labelSection->m_name = msra::strfun::utf16(label.ConfigName());
+        labelSection->m_sampleLayout = std::make_shared<TensorShape>(labelDimension);
+        m_streams.push_back(labelSection);
+
+        m_mapPath = config(L"file");
+
+        std::string rand = config(L"randomize", "auto");
+        if (!AreEqualIgnoreCase(rand, "auto"))
+        {
+            RuntimeError("'randomize' parameter currently supports only 'auto' value.");
+        }
+
+        std::string mbFmt = featureSection("mbFormat", "nchw");
+        if (AreEqualIgnoreCase(mbFmt, "nhwc"))
+        {
+            m_dataFormat = HWC;
+        }
+        else if (!AreEqualIgnoreCase(mbFmt, "nchw"))
+        {
+            RuntimeError("ImageReader does not support the mini-batch format %s.", mbFmt.c_str());
+        }
+
+        // Identify precision
+        string precision = config.Find("precision", "float");
+        if (AreEqualIgnoreCase(precision, "float"))
+        {
+            features->m_elementType = ElementType::tfloat;
+            labelSection->m_elementType = ElementType::tfloat;
+        }
+        else if (AreEqualIgnoreCase(precision, "double"))
+        {
+            features->m_elementType = ElementType::tdouble;
+            labelSection->m_elementType = ElementType::tdouble;
+        }
+        else
+        {
+            RuntimeError("Not supported precision '%s'", precision);
+        }
+
+        m_cpuThreadCount = config(L"numCPUThreads", 0);
     }
-    else if (!AreEqualIgnoreCase(mbFmt, "nchw"))
+
+    std::vector<StreamDescriptionPtr> ImageConfigHelper::GetStreams() const
     {
-        RuntimeError("ImageReader does not support the mini-batch format %s.", mbFmt.c_str());
+        return m_streams;
     }
 
-    // Identify precision
-    string precision = config.Find("precision", "float");
-    if (AreEqualIgnoreCase(precision, "float"))
+    size_t ImageConfigHelper::GetFeatureStreamId() const
     {
-        features->m_elementType = ElementType::tfloat;
-        labels->m_elementType = ElementType::tfloat;
+        // Currently we only support a single feature/label stream, so the index is hard-wired.
+        return 0;
     }
-    else if (AreEqualIgnoreCase(precision, "double"))
+
+    size_t ImageConfigHelper::GetLabelStreamId() const
     {
-        features->m_elementType = ElementType::tdouble;
-        labels->m_elementType = ElementType::tdouble;
+        // Currently we only support a single feature/label stream, so the index is hard-wired.
+        return 1;
     }
-    else
+
+    std::string ImageConfigHelper::GetMapPath() const
     {
-        RuntimeError("Not supported precision '%s'", precision);
+        return m_mapPath;
     }
-
-    m_cpuThreadCount = config(L"numCPUThreads", 0);
-}
-
-std::vector<StreamDescriptionPtr> ImageConfigHelper::GetStreams() const
-{
-    return m_streams;
-}
-
-size_t ImageConfigHelper::GetFeatureStreamId() const
-{
-    // Currently we only support a single feature/label stream, so the index is hard-wired.
-    return 0;
-}
-
-size_t ImageConfigHelper::GetLabelStreamId() const
-{
-    // Currently we only support a single feature/label stream, so the index is hard-wired.
-    return 1;
-}
-
-std::string ImageConfigHelper::GetMapPath() const
-{
-    return m_mapPath;
-}
-} } }
+}}}
