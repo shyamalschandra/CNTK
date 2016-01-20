@@ -65,7 +65,7 @@ ImageDataDeserializer::ImageDataDeserializer(const ConfigParameters& config)
     }
     else
     {
-        RuntimeError("Unsupported label element type %d.", label->m_elementType);
+        RuntimeError("Unsupported label element type '%d'.", label->m_elementType);
     }
 
     CreateSequenceDescriptions(configHelper.GetMapPath(), labelDimension);
@@ -119,18 +119,25 @@ std::vector<StreamDescriptionPtr> ImageDataDeserializer::GetStreams() const
 
 std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesById(const std::vector<size_t>& ids)
 {
-    assert(0 < ids.size());
-
-    std::vector<std::vector<SequenceDataPtr>> result;
+    if (ids.empty())
+    {
+        RuntimeError("Number of requested sequences cannot be zero.");
+    }
 
     m_currentImages.resize(ids.size());
     m_labels.resize(ids.size(), std::make_shared<SparseSequenceData>());
+
+    std::vector<std::vector<SequenceDataPtr>> result;
     result.resize(ids.size());
 
 #pragma omp parallel for ordered schedule(dynamic)
     for (int i = 0; i < ids.size(); ++i)
     {
-        assert(ids[i] < m_imageSequences.size());
+        if (ids[i] >= m_imageSequences.size())
+        {
+            RuntimeError("Invalid sequence id is provided '%d', expected range [0..%d].", ids[i], m_imageSequences.size() - 1);
+        }
+
         const auto& imageSequence = m_imageSequences[ids[i]];
 
         // Construct image
@@ -139,7 +146,7 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
         assert(cvImage.isContinuous());
 
         // Convert element type.
-        // TODO in original image reader, this conversion happened later. Should we support all native CV element types to be able to match this behavior?
+        // TODO We should all native CV element types to be able to match the behavior of the old reader.
         int dataType = m_featureElementType == ElementType::tfloat ? CV_32F : CV_64F;
         if (cvImage.type() != CV_MAKETYPE(dataType, cvImage.channels()))
         {
@@ -164,10 +171,14 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
 void ImageDataDeserializer::FillSequenceDescriptions(Timeline& timeline) const
 {
     timeline.resize(m_imageSequences.size());
-    std::transform(m_imageSequences.begin(), m_imageSequences.end(), timeline.begin(), [](const ImageSequenceDescription& desc)
-                   {
-                       return &desc;
-                   });
+    std::transform(
+        m_imageSequences.begin(),
+        m_imageSequences.end(),
+        timeline.begin(),
+        [](const ImageSequenceDescription& desc)
+        {
+            return &desc;
+        });
 }
 
 }}}

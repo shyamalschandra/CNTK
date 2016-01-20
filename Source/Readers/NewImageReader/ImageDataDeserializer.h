@@ -4,18 +4,17 @@
 //
 
 #pragma once
-
+#include <opencv2/core/mat.hpp>
 #include "DataDeserializerBase.h"
 #include "Config.h"
-#include <opencv2/core/mat.hpp>
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 // Image data deserializer based on the OpenCV library.
 // The deserializer currently supports two output streams only: a feature and a label stream.
 // All sequences consist only of a single sample (image/label).
-// For features it uses dense storage format with different layour (dimensions) between different sequences.
-// For labels it uses sparse storage format.
+// For features it uses dense storage format with different layout (dimensions) per sequence.
+// For labels it uses the csc sparse storage format.
 class ImageDataDeserializer : public DataDeserializerBase
 {
 public:
