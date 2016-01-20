@@ -44,24 +44,24 @@ Minibatch FrameModePacker::ReadMinibatch()
     Minibatch m;
     m.m_atEndOfEpoch = false;
 
-    auto images = m_transformer->GetNextSequences(m_mbSize);
+    auto sequences = m_transformer->GetNextSequences(m_mbSize);
 
-    if (images.m_endOfEpoch)
+    if (sequences.m_endOfEpoch)
     {
         m.m_atEndOfEpoch = true;
     }
 
-    for (size_t i = 0; i < images.m_data.size(); i++)
+    for (size_t i = 0; i < sequences.m_data.size(); i++)
     {
-        assert(m_streamBuffers.size() == images.m_data[i].size());
-        for (int j = 0; j < images.m_data[i].size(); ++j)
+        assert(m_streamBuffers.size() == sequences.m_data[i].size());
+        for (int j = 0; j < sequences.m_data[i].size(); ++j)
         {
             size_t elementSize = GetSizeByType(m_inputStreams[j]->m_elementType);
             size_t dimensions = m_inputStreams[j]->m_sampleLayout->GetNumElements() * elementSize;
-            const char* source = reinterpret_cast<char*>(images.m_data[i][j]->m_data);
+            auto source = reinterpret_cast<const char*>(sequences.m_data[i][j]->m_data);
             if (m_inputStreams[j]->m_storageType == StorageType::dense)
             {
-                DenseSequenceData& data = reinterpret_cast<DenseSequenceData&>(*images.m_data[i][j]);
+                auto data = reinterpret_cast<DenseSequenceData&>(*sequences.m_data[i][j]);
                 assert(data.m_numberOfSamples == 1);
 
                 std::copy(
@@ -71,7 +71,7 @@ Minibatch FrameModePacker::ReadMinibatch()
             }
             else if (m_inputStreams[j]->m_storageType == StorageType::sparse_csc)
             {
-                SparseSequenceData& data = reinterpret_cast<SparseSequenceData&>(*images.m_data[i][j]);
+                auto data = reinterpret_cast<SparseSequenceData&>(*sequences.m_data[i][j]);
                 assert(data.m_indices.size() == 1);
 
                 std::fill(m_streamBuffers[j].get() + i * dimensions, m_streamBuffers[j].get() + (i + 1) * dimensions, 0);
@@ -90,18 +90,18 @@ Minibatch FrameModePacker::ReadMinibatch()
         }
     }
 
-    if (images.m_data.size() == 0)
+    if (sequences.m_data.size() == 0)
     {
         return m;
     }
 
-    m_minibatchLayout->InitAsFrameMode(images.m_data.size());
+    m_minibatchLayout->InitAsFrameMode(sequences.m_data.size());
     for (int i = 0; i < m_outputStreams.size(); ++i)
     {
         size_t dimensions = m_outputStreams[i]->m_sampleLayout->GetNumElements() * GetSizeByType(m_outputStreams[i]->m_elementType);
         auto stream = std::make_shared<Stream>();
         stream->m_data = m_streamBuffers[i].get();
-        stream->m_dataSize = images.m_data.size() * dimensions;
+        stream->m_dataSize = sequences.m_data.size() * dimensions;
         stream->m_layout = m_minibatchLayout;
 
         m.m_minibatch.push_back(stream);
