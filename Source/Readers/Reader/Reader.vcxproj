@@ -81,7 +81,7 @@
     <ClInclude Include="CudaMemoryProvider.h" />
     <ClInclude Include="DataDeserializer.h" />
     <ClInclude Include="ElementTypeUtils.h" />
-    <ClInclude Include="FrameModePacker.h" />
+    <ClInclude Include="SampleModePacker.h" />
     <ClInclude Include="HeapMemoryProvider.h" />
     <ClInclude Include="MemoryProvider.h" />
     <ClInclude Include="Reader.h" />
@@ -92,7 +92,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BlockRandomizer.cpp" />
-    <ClCompile Include="FrameModePacker.cpp" />
+    <ClCompile Include="SampleModePacker.cpp" />
     <ClCompile Include="ReaderShim.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

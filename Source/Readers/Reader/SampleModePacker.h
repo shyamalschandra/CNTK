@@ -11,10 +11,11 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
-class FrameModePacker
+// A sample packer that densly packs samples in parallel for GPU consumptions.
+class SampleModePacker
 {
 public:
-    FrameModePacker(
+    SampleModePacker(
         MemoryProviderPtr memoryProvider,
         TransformerPtr transformer,
         size_t minibatchSize,
@@ -24,6 +25,8 @@ public:
 
 private:
     std::shared_ptr<char> AllocateBuffer(size_t numElements, size_t elementSize);
+    size_t GetSampleSize(StreamDescriptionPtr stream);
+    void CopySequenceToBuffer(size_t sequenceIndex, size_t streamIndex, const std::vector<std::vector<SequenceDataPtr>>& sequences);
 
     MemoryProviderPtr m_memoryProvider;
     TransformerPtr m_transformer;
@@ -32,8 +35,8 @@ private:
     std::vector<std::shared_ptr<char>> m_streamBuffers;
 
     MBLayoutPtr m_minibatchLayout;
-    size_t m_mbSize;
+    size_t m_minibatchSize;
 };
 
-typedef std::shared_ptr<FrameModePacker> FrameModePackerPtr;
+typedef std::shared_ptr<SampleModePacker> SampleModePackerPtr;
 } } }

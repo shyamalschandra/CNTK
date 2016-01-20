@@ -7,9 +7,6 @@
     <ClInclude Include="CudaMemoryProvider.h">
       <Filter>MemoryProviders</Filter>
     </ClInclude>
-    <ClInclude Include="FrameModePacker.h">
-      <Filter>Packers</Filter>
-    </ClInclude>
     <ClInclude Include="HeapMemoryProvider.h">
       <Filter>MemoryProviders</Filter>
     </ClInclude>
@@ -43,16 +40,19 @@
     <ClInclude Include="DataDeserializerBase.h">
       <Filter>Deserializers</Filter>
     </ClInclude>
+    <ClInclude Include="SampleModePacker.h">
+      <Filter>Packers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BlockRandomizer.cpp">
       <Filter>Randomizers</Filter>
     </ClCompile>
-    <ClCompile Include="FrameModePacker.cpp">
-      <Filter>Packers</Filter>
-    </ClCompile>
     <ClCompile Include="ReaderShim.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleModePacker.cpp">
+      <Filter>Packers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
