@@ -95,7 +95,7 @@ namespace Microsoft { namespace MSR { namespace CNTK {
         }
         else
         {
-            RuntimeError("Not supported precision '%s'", precision);
+            RuntimeError("Not supported precision '%s'. Expected 'double' or 'float'.", precision);
         }
 
         m_cpuThreadCount = config(L"numCPUThreads", 0);
