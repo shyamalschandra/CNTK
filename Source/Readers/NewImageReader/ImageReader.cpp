@@ -15,10 +15,9 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
-ImageReader::ImageReader(
-    MemoryProviderPtr provider,
-    const ConfigParameters& config)
-    : m_provider(provider), m_seed(0)
+ImageReader::ImageReader(MemoryProviderPtr provider,
+                         const ConfigParameters& config)
+    : m_seed(0), m_provider(provider)
 {
     // In the future, deserializers and transformers will be dynamically loaded
     // from external libraries based on the configuration/brain script.
@@ -67,8 +66,10 @@ std::vector<StreamDescriptionPtr> ImageReader::GetStreams()
 
 void ImageReader::StartEpoch(const EpochConfiguration& config)
 {
-    assert(config.m_minibatchSizeInSamples > 0);
-    assert(config.m_totalEpochSizeInSamples > 0);
+    if (config.m_totalEpochSizeInSamples <= 0)
+    {
+        RuntimeError("Unsupported minibatch size %d", config.m_totalEpochSizeInSamples);
+    }
 
     m_transformer->StartEpoch(config);
     m_packer = std::make_shared<FrameModePacker>(

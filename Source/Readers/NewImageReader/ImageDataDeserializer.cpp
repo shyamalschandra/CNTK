@@ -125,7 +125,7 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
     }
 
     m_currentImages.resize(ids.size());
-    m_labels.resize(ids.size(), std::make_shared<SparseSequenceData>());
+    m_labels.resize(ids.size());
 
     std::vector<std::vector<SequenceDataPtr>> result;
     result.resize(ids.size());
@@ -160,8 +160,12 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
         image->m_numberOfSamples = 1;
         assert(imageSequence.m_numberOfSamples == image->m_numberOfSamples);
 
-        m_labelGenerator->CreateLabelFor(imageSequence.m_classId, *m_labels[i]);
+        if (m_labels[i] == nullptr)
+        {
+            m_labels[i] = std::make_shared<SparseSequenceData>();
+        }
 
+        m_labelGenerator->CreateLabelFor(imageSequence.m_classId, *m_labels[i]);
         result[i] = std::move(std::vector<SequenceDataPtr>{image, m_labels[i]});
     }
 
