@@ -64,7 +64,7 @@ public:
             for (int j = 0; j < appliedStreamIds.size(); ++j)
             {
                 size_t id = appliedStreamIds[j];
-                assert(m_inputStreams[id]->storageType == StorageType::dense);
+                assert(m_inputStreams[id]->m_storageType == StorageType::dense);
                 const DenseSequenceData &sequence =
                     reinterpret_cast<DenseSequenceData &>(*sample[id]);
                 sample[id] = Apply(sequence, *m_inputStreams[id], m_buffer[i][j],

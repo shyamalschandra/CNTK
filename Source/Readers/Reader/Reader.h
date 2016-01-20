@@ -21,11 +21,11 @@ typedef std::shared_ptr<MBLayout> MBLayoutPtr;
 // Each time the epoch is started CNTK should communicate the configuration to the reader.
 struct EpochConfiguration
 {
-    size_t numberOfWorkers; // Number of the Open MPI workers for the current epoch
-    size_t workerRank;      // Rank of the Open MPI worker, worker rank has to be less the the number of workers
-    size_t minibatchSize;   // Minibatch size for the epoch
-    size_t totalSize;       // Total size of the epoch in samples
-    size_t index;           // Current epoch index [0 .. max number of epochs)
+    size_t m_numberOfWorkers;          // Number of the Open MPI workers for the current epoch
+    size_t m_workerRank;               // Rank of the Open MPI worker, worker rank has to be less the the number of workers
+    size_t m_minibatchSizeInSamples;   // Maximum minibatch size for the epoch in samples
+    size_t m_totalEpochSizeInSamples;  // Total size of the epoch in samples
+    size_t m_epochIndex;                    // Current epoch index [0 .. max number of epochs)
 };
 
 // Supported primitive element types, will be extended in the future
@@ -48,11 +48,11 @@ typedef size_t StreamId;
 // This class describes a particular stream: its name, element type, storage, etc.
 struct StreamDescription
 {
-    std::wstring name;           // Uniquer name of the stream
-    StreamId id;                 // Unique identifier of the stream
-    StorageType storageType;     // Storage type of the stream
-    ElementType elementType;     // Element type of the stream
-    TensorShapePtr sampleLayout; // Layout of the sample for the stream
+    std::wstring m_name;           // Unique name of the stream
+    StreamId m_id;                 // Unique identifier of the stream
+    StorageType m_storageType;     // Storage type of the stream
+    ElementType m_elementType;     // Element type of the stream
+    TensorShapePtr m_sampleLayout; // Layout of the sample for the stream
                                  // If not specified - can be specified per sequence
 };
 typedef std::shared_ptr<StreamDescription> StreamDescriptionPtr;
@@ -60,25 +60,25 @@ typedef std::shared_ptr<StreamDescription> StreamDescriptionPtr;
 // Input data.
 struct Stream
 {
-    void* data;         // Continues array of data. Can be encoded in dense or sparse format
-    size_t dataSize;    // Dat size
-    MBLayoutPtr layout; // Layout out of the data
+    void* m_data;         // Continues array of data. Can be encoded in dense or sparse format
+    size_t m_dataSize;    // Dat size
+    MBLayoutPtr m_layout; // Layout out of the data
 };
 typedef std::shared_ptr<Stream> StreamPtr;
 
 // Represents a single minibatch, that contains information about all streams.
 struct Minibatch
 {
-    bool atEndOfEpoch;                // Signifies the end of the epoch
-    std::vector<StreamPtr> minibatch; // Minibatch data
+    bool m_atEndOfEpoch;                // Signifies the end of the epoch
+    std::vector<StreamPtr> m_minibatch; // Minibatch data
 
     Minibatch()
-        : atEndOfEpoch(false)
+        : m_atEndOfEpoch(false)
     {
     }
 
     Minibatch(Minibatch&& other)
-        : atEndOfEpoch(std::move(other.atEndOfEpoch)), minibatch(std::move(other.minibatch))
+        : m_atEndOfEpoch(std::move(other.m_atEndOfEpoch)), m_minibatch(std::move(other.m_minibatch))
     {
     }
 };
@@ -101,4 +101,4 @@ public:
 };
 
 typedef std::shared_ptr<Reader> ReaderPtr;
-} } }
+}}}

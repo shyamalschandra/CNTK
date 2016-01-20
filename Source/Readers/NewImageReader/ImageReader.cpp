@@ -67,14 +67,14 @@ std::vector<StreamDescriptionPtr> ImageReader::GetStreams()
 
 void ImageReader::StartEpoch(const EpochConfiguration& config)
 {
-    assert(config.minibatchSize > 0);
-    assert(config.totalSize > 0);
+    assert(config.m_minibatchSizeInSamples > 0);
+    assert(config.m_totalEpochSizeInSamples > 0);
 
     m_transformer->StartEpoch(config);
     m_packer = std::make_shared<FrameModePacker>(
         m_provider,
         m_transformer,
-        config.minibatchSize,
+        config.m_minibatchSizeInSamples,
         m_streams);
 }
 

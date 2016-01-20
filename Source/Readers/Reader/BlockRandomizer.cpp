@@ -58,7 +58,10 @@ bool BlockRandomizer::IsValid(const Timeline& timeline) const
     auto it = std::find_if_not(timeline.begin(), timeline.end(),
                                [&](const SequenceDescription* current)
                                {
-                                   bool result = previous.id + 1 == current->id && previous.chunkId <= current->chunkId && current->chunkId <= previous.chunkId + 1 && 0 < current->numberOfSamples;
+                                   bool result = previous.m_id + 1 == current->m_id
+                                       && previous.m_chunkId <= current->m_chunkId 
+                                       && current->m_chunkId <= previous.m_chunkId + 1
+                                       && 0 < current->m_numberOfSamples;
                                    previous = *current;
                                    return result;
                                });
@@ -142,7 +145,7 @@ void BlockRandomizer::RandomizeChunks()
 bool BlockRandomizer::IsValidForPosition(size_t targetPosition, const SequenceDescription& seqDesc) const
 {
     const auto& chunk = m_randomizedChunks[m_sequencePositionToChunkIndex[targetPosition]];
-    return chunk.windowbegin <= seqDesc.chunkId && seqDesc.chunkId < chunk.windowend;
+    return chunk.windowbegin <= seqDesc.m_chunkId && seqDesc.m_chunkId < chunk.windowend;
 }
 
 void BlockRandomizer::Randomize()
@@ -162,7 +165,7 @@ void BlockRandomizer::Randomize()
              sequencePosition++)
         {
             SequenceDescription randomizedSeqDesc = *timeline[sequencePosition];
-            randomizedSeqDesc.chunkId = chunkId;
+            randomizedSeqDesc.m_chunkId = chunkId;
             m_randomTimeline.push_back(randomizedSeqDesc);
         }
     }
@@ -254,8 +257,8 @@ BlockRandomizer::BlockRandomizer(int verbosity, size_t randomizationRangeInSampl
     const Timeline& timeline = m_deserializer->GetSequenceDescriptions();
     assert(IsValid(timeline));
 
-    m_numSequences = timeline.back()->id + 1;
-    m_numChunks = timeline.back()->chunkId + 1;
+    m_numSequences = timeline.back()->m_id + 1;
+    m_numChunks = timeline.back()->m_chunkId + 1;
 
     // Generate additional information about physical chunks
     assert(m_chunkInformation.size() == 0);
@@ -269,13 +272,13 @@ BlockRandomizer::BlockRandomizer(int verbosity, size_t randomizationRangeInSampl
     m_numSamples = 0;
     for (const auto& seqDesc : timeline)
     {
-        auto& chunkInformation = m_chunkInformation[seqDesc->chunkId];
+        auto& chunkInformation = m_chunkInformation[seqDesc->m_chunkId];
         chunkInformation.sequencePositionStart =
-            min(chunkInformation.sequencePositionStart, seqDesc->id);
+            min(chunkInformation.sequencePositionStart, seqDesc->m_id);
         chunkInformation.samplePositionStart =
             min(chunkInformation.samplePositionStart, m_numSamples);
-        maxNumberOfSamples = max(maxNumberOfSamples, seqDesc->numberOfSamples);
-        m_numSamples += seqDesc->numberOfSamples;
+        maxNumberOfSamples = max(maxNumberOfSamples, seqDesc->m_numberOfSamples);
+        m_numSamples += seqDesc->m_numberOfSamples;
     }
 
     // Add sentinel
@@ -296,22 +299,22 @@ void BlockRandomizer::StartEpoch(const EpochConfiguration& config)
 {
     m_deserializer->StartEpoch(config);
 
-    m_workerRank = config.workerRank;
-    m_numberOfWorkers = config.numberOfWorkers;
+    m_workerRank = config.m_workerRank;
+    m_numberOfWorkers = config.m_numberOfWorkers;
 
     // eldak: check partial minibatches.
-    if (config.totalSize == requestDataSize)
+    if (config.m_totalEpochSizeInSamples == requestDataSize)
     {
         m_epochSize = m_numSamples;
     }
     else
     {
-        m_epochSize = config.totalSize;
+        m_epochSize = config.m_totalEpochSizeInSamples;
     }
 
     // TODO add some asserts on EpochConfiguration
     m_samplePositionInEpoch = 0;
-    size_t timeframe = m_epochSize * config.index;
+    size_t timeframe = m_epochSize * config.m_epochIndex;
     assert(m_frameMode);           // TODO not (tested) yet
     assert(timeframe != SIZE_MAX); // used as special value for init
     RandomizeForGlobalSamplePosition(timeframe);
@@ -325,13 +328,13 @@ bool BlockRandomizer::AdvanceToNextPositionForThisWorker()
 
         const auto& seqDesc = m_randomTimeline[m_sequencePositionInSweep];
 
-        if ((seqDesc.chunkId % m_numberOfWorkers) == m_workerRank)
+        if ((seqDesc.m_chunkId % m_numberOfWorkers) == m_workerRank)
         {
             // Got one
             break;
         }
 
-        m_samplePositionInEpoch += seqDesc.numberOfSamples;
+        m_samplePositionInEpoch += seqDesc.m_numberOfSamples;
         m_sequencePositionInSweep++;
     }
 
@@ -358,7 +361,7 @@ Sequences BlockRandomizer::GetNextSequences(size_t count)
             assert(m_sequencePositionInSweep < m_numSequences);
             ids.push_back(m_sequencePositionInSweep);
             const auto& seqDesc = m_randomTimeline[m_sequencePositionInSweep];
-            m_samplePositionInEpoch += seqDesc.numberOfSamples;
+            m_samplePositionInEpoch += seqDesc.m_numberOfSamples;
             m_sequencePositionInSweep++;
         }
     };
@@ -393,7 +396,7 @@ Sequences BlockRandomizer::GetNextSequences(size_t count)
     for (auto id : ids)
     {
         const auto& seqDesc = m_randomTimeline[id];
-        originalIds.push_back(seqDesc.id);
+        originalIds.push_back(seqDesc.m_id);
     }
 
     result.m_data = m_deserializer->GetSequencesById(originalIds);

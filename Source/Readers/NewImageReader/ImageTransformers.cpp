@@ -40,17 +40,17 @@ CvMatTransformer::Apply(const DenseSequenceData &inputSequence,
                         const StreamDescription &inputStream, cv::Mat &buffer,
                         const StreamDescription & /*outputStream*/)
 {
-    ImageDimensions dimensions(*inputSequence.sampleLayout, HWC);
+    ImageDimensions dimensions(*inputSequence.m_sampleLayout, HWC);
     int columns = static_cast<int>(dimensions.m_width);
     int rows = static_cast<int>(dimensions.m_height);
     int channels = static_cast<int>(dimensions.m_numChannels);
 
     int typeId = 0;
-    if (inputStream.elementType == ElementType::tdouble)
+    if (inputStream.m_elementType == ElementType::tdouble)
     {
         typeId = CV_64F;
     }
-    else if (inputStream.elementType == ElementType::tfloat)
+    else if (inputStream.m_elementType == ElementType::tfloat)
     {
         typeId = CV_32F;
     }
@@ -60,13 +60,13 @@ CvMatTransformer::Apply(const DenseSequenceData &inputSequence,
     }
 
     int type = CV_MAKETYPE(typeId, channels);
-    buffer = cv::Mat(rows, columns, type, inputSequence.data);
+    buffer = cv::Mat(rows, columns, type, inputSequence.m_data);
     this->Apply(buffer);
 
     auto result = std::make_shared<DenseSequenceData>();
-    result->sampleLayout = std::make_shared<TensorShape>(buffer.cols, buffer.rows, buffer.channels());
-    result->numberOfSamples = inputSequence.numberOfSamples;
-    result->data = buffer.ptr();
+    result->m_sampleLayout = std::make_shared<TensorShape>(buffer.cols, buffer.rows, buffer.channels());
+    result->m_numberOfSamples = inputSequence.m_numberOfSamples;
+    result->m_data = buffer.ptr();
     return result;
 }
 
@@ -83,7 +83,7 @@ void CropTransformer::Initialize(TransformerPtr next,
         RuntimeError("Only a single feature stream is supported.");
     }
 
-    InitFromConfig(readerConfig(GetInputStreams()[featureStreamIds[0]]->name));
+    InitFromConfig(readerConfig(GetInputStreams()[featureStreamIds[0]]->m_name));
 }
 
 void CropTransformer::InitFromConfig(const ConfigParameters &config)
@@ -241,9 +241,9 @@ void ScaleTransformer::Initialize(TransformerPtr next,
     }
 
     const auto &feature = GetInputStreams()[featureStreamIds[0]];
-    m_dataType = feature->elementType == ElementType::tfloat ? CV_32F : CV_64F;
+    m_dataType = feature->m_elementType == ElementType::tfloat ? CV_32F : CV_64F;
 
-    InitFromConfig(readerConfig(feature->name));
+    InitFromConfig(readerConfig(feature->m_name));
 }
 
 void ScaleTransformer::InitFromConfig(const ConfigParameters &config)
@@ -361,11 +361,11 @@ void TransposeTransformer::Initialize(TransformerPtr next,
     {
         auto &stream = inputStreams[id];
 
-        ImageDimensions dimensions(*stream->sampleLayout, HWC);
+        ImageDimensions dimensions(*stream->m_sampleLayout, HWC);
 
         // Changing layout from NWH to NHW
         auto changedStream = std::make_shared<StreamDescription>(*stream);
-        changedStream->sampleLayout = std::make_shared<TensorShape>(dimensions.AsTensorShape(CHW));
+        changedStream->m_sampleLayout = std::make_shared<TensorShape>(dimensions.AsTensorShape(CHW));
         m_outputStreams[id] = changedStream;
     }
 }
@@ -376,12 +376,12 @@ TransposeTransformer::Apply(const DenseSequenceData &inputSequence,
                             vector<char> &buffer,
                             const StreamDescription &outputStream)
 {
-    if (inputStream.elementType == ElementType::tdouble)
+    if (inputStream.m_elementType == ElementType::tdouble)
     {
         return TypedApply<double>(inputSequence, inputStream, buffer, outputStream);
     }
 
-    if (inputStream.elementType == ElementType::tfloat)
+    if (inputStream.m_elementType == ElementType::tfloat)
     {
         return TypedApply<float>(inputSequence, inputStream, buffer, outputStream);
     }
@@ -396,32 +396,32 @@ TransposeTransformer::TypedApply(const DenseSequenceData &inputSequence,
                                  vector<char> &buffer,
                                  const StreamDescription &outputStream)
 {
-    assert(inputSequence.numberOfSamples == 1);
-    assert(inputStream.sampleLayout->GetNumElements() ==
-           outputStream.sampleLayout->GetNumElements());
+    assert(inputSequence.m_numberOfSamples == 1);
+    assert(inputStream.m_sampleLayout->GetNumElements() ==
+        outputStream.m_sampleLayout->GetNumElements());
 
-    size_t count = inputStream.sampleLayout->GetNumElements() * GetSizeByType(inputStream.elementType);
+    size_t count = inputStream.m_sampleLayout->GetNumElements() * GetSizeByType(inputStream.m_elementType);
     buffer.resize(count);
 
-    ImageDimensions dimensions(*inputStream.sampleLayout, ImageLayoutKind::HWC);
+    ImageDimensions dimensions(*inputStream.m_sampleLayout, ImageLayoutKind::HWC);
 
-    size_t crow = dimensions.m_height * dimensions.m_width;
-    size_t numberOfChannels = dimensions.m_numChannels;
+    size_t rowCount = dimensions.m_height * dimensions.m_width;
+    size_t channelCount = dimensions.m_numChannels;
 
-    for (size_t rowIndex = 0; rowIndex < crow; rowIndex++)
+    for (size_t rowIndex = 0; rowIndex < rowCount; rowIndex++)
     {
-        for (size_t columnIndex = 0; columnIndex < numberOfChannels;
+        for (size_t columnIndex = 0; columnIndex < channelCount;
              columnIndex++)
         {
-            buffer[columnIndex * crow + rowIndex] =
-                buffer[rowIndex * numberOfChannels + columnIndex];
+            buffer[columnIndex * rowCount + rowIndex] =
+                buffer[rowIndex * channelCount + columnIndex];
         }
     }
 
     auto result = std::make_shared<DenseSequenceData>();
-    result->sampleLayout = outputStream.sampleLayout;
-    result->data = &buffer[0];
-    result->numberOfSamples = inputSequence.numberOfSamples;
+    result->m_sampleLayout = outputStream.m_sampleLayout;
+    result->m_data = &buffer[0];
+    result->m_numberOfSamples = inputSequence.m_numberOfSamples;
     return result;
 }
 

@@ -30,9 +30,9 @@ public:
 
     virtual void ReadLabelDataFor(SparseSequenceData& data, size_t classId) override
     {
-        data.indices.resize(1);
-        data.indices[0] = std::vector<size_t>{classId};
-        data.data = &m_value;
+        data.m_indices.resize(1);
+        data.m_indices[0] = std::vector<size_t>{classId};
+        data.m_data = &m_value;
     }
 
 private:
@@ -47,23 +47,23 @@ ImageDataDeserializer::ImageDataDeserializer(const ConfigParameters& config)
     const auto& label = m_streams[configHelper.GetLabelStreamId()];
     const auto& feature = m_streams[configHelper.GetFeatureStreamId()];
 
-    label->storageType = StorageType::sparse_csc;
-    feature->storageType = StorageType::dense;
+    label->m_storageType = StorageType::sparse_csc;
+    feature->m_storageType = StorageType::dense;
 
-    m_featureElementType = feature->elementType;
-    size_t labelDimension = label->sampleLayout->GetDim(0);
+    m_featureElementType = feature->m_elementType;
+    size_t labelDimension = label->m_sampleLayout->GetDim(0);
 
-    if (label->elementType == ElementType::tfloat)
+    if (label->m_elementType == ElementType::tfloat)
     {
         m_labelGenerator = std::make_shared<TypedLabelGenerator<float>>();
     }
-    else if (label->elementType == ElementType::tdouble)
+    else if (label->m_elementType == ElementType::tdouble)
     {
         m_labelGenerator = std::make_shared<TypedLabelGenerator<double>>();
     }
     else
     {
-        RuntimeError("Unsupported label element type %ull.", label->elementType);
+        RuntimeError("Unsupported label element type %ull.", label->m_elementType);
     }
 
     CreateSequenceDescriptions(configHelper.GetMapPath(), labelDimension);
@@ -82,8 +82,8 @@ void ImageDataDeserializer::CreateSequenceDescriptions(std::string mapPath, size
     std::string line{""};
 
     ImageSequenceDescription description;
-    description.numberOfSamples = 1;
-    description.isValid = true;
+    description.m_numberOfSamples = 1;
+    description.m_isValid = true;
     for (size_t cline = 0; std::getline(mapFile, line); cline++)
     {
         std::stringstream ss{line};
@@ -94,8 +94,8 @@ void ImageDataDeserializer::CreateSequenceDescriptions(std::string mapPath, size
             RuntimeError("Invalid map file format, must contain 2 tab-delimited columns: %s, line: %d.", mapPath.c_str(), cline);
         }
 
-        description.id = cline;
-        description.chunkId = cline;
+        description.m_id = cline;
+        description.m_chunkId = cline;
         description.path = imgPath;
         description.classId = std::stoi(clsId);
         assert(description.classId < labelDimension);
@@ -139,10 +139,10 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
 
         ImageDimensions dimensions(cvImage.cols, cvImage.rows, cvImage.channels());
         auto image = std::make_shared<DenseSequenceData>();
-        image->data = cvImage.ptr();
-        image->sampleLayout = std::make_shared<TensorShape>(dimensions.AsTensorShape(HWC));
-        image->numberOfSamples = 1;
-        assert(imageSequence.numberOfSamples == image->numberOfSamples);
+        image->m_data = cvImage.ptr();
+        image->m_sampleLayout = std::make_shared<TensorShape>(dimensions.AsTensorShape(HWC));
+        image->m_numberOfSamples = 1;
+        assert(imageSequence.m_numberOfSamples == image->m_numberOfSamples);
 
         // Construct label
         if (m_labels[i] == nullptr)

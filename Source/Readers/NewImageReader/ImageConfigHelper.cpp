@@ -45,18 +45,18 @@ ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
     size_t c = featSect.second("channels");
 
     auto features = std::make_shared<StreamDescription>();
-    features->id = 0;
-    features->name = msra::strfun::utf16(featSect.first);
-    features->sampleLayout = std::make_shared<TensorShape>(w, h, c);
+    features->m_id = 0;
+    features->m_name = msra::strfun::utf16(featSect.first);
+    features->m_sampleLayout = std::make_shared<TensorShape>(w, h, c);
     m_streams.push_back(features);
 
     SectionT labSect{getter("labelDim")};
     size_t labelDimension = labSect.second("labelDim");
 
     auto labels = std::make_shared<StreamDescription>();
-    labels->id = 1;
-    labels->name = msra::strfun::utf16(labSect.first);
-    labels->sampleLayout = std::make_shared<TensorShape>(labelDimension);
+    labels->m_id = 1;
+    labels->m_name = msra::strfun::utf16(labSect.first);
+    labels->m_sampleLayout = std::make_shared<TensorShape>(labelDimension);
     m_streams.push_back(labels);
 
     m_mapPath = config(L"file");
@@ -75,13 +75,13 @@ ImageConfigHelper::ImageConfigHelper(const ConfigParameters& config)
     string precision = config.Find("precision", "float");
     if (AreEqualIgnoreCase(precision, "float"))
     {
-        features->elementType = ElementType::tfloat;
-        labels->elementType = ElementType::tfloat;
+        features->m_elementType = ElementType::tfloat;
+        labels->m_elementType = ElementType::tfloat;
     }
     else if (AreEqualIgnoreCase(precision, "double"))
     {
-        features->elementType = ElementType::tdouble;
-        labels->elementType = ElementType::tdouble;
+        features->m_elementType = ElementType::tdouble;
+        labels->m_elementType = ElementType::tdouble;
     }
     else
     {

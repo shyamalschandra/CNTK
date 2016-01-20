@@ -14,10 +14,10 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 // to define the global timeline of all input data.
 struct SequenceDescription
 {
-    size_t id;              // Sequence id, uniquely identifies the sequence.
-    size_t numberOfSamples; // Number of samples in a sequence.
-    size_t chunkId;         // Each sequence belongs to an I/O chunk, how chunk is defined is specific to a particular data deserializer.
-    bool isValid;
+    size_t m_id;              // Sequence id, uniquely identifies the sequence.
+    size_t m_numberOfSamples; // Number of samples in a sequence.
+    size_t m_chunkId;         // Each sequence belongs to an I/O chunk, how chunk is defined is specific to a particular data deserializer.
+    bool m_isValid;
 };
 typedef std::vector<const SequenceDescription*> Timeline;
 
@@ -27,12 +27,11 @@ typedef std::vector<const SequenceDescription*> Timeline;
 // data deserializer or transformer provides.
 struct SequenceData
 {
-    SequenceData()
-        : data(nullptr)
+    SequenceData() : m_data(nullptr)
     {
     }
 
-    void* data;
+    void* m_data;
 };
 typedef std::shared_ptr<SequenceData> SequenceDataPtr;
 
@@ -42,13 +41,12 @@ typedef std::shared_ptr<SequenceData> SequenceDataPtr;
 // All samples in the sequence should have the same layout.
 struct DenseSequenceData : SequenceData
 {
-    DenseSequenceData()
-        : numberOfSamples(0)
+    DenseSequenceData() : m_numberOfSamples(0)
     {
     }
 
-    TensorShapePtr sampleLayout; // Sample layout
-    size_t numberOfSamples;      // Number of samples in the sequence
+    TensorShapePtr m_sampleLayout; // Sample layout
+    size_t m_numberOfSamples;      // Number of samples in the sequence
 };
 typedef std::shared_ptr<DenseSequenceData> DenseSequenceDataPtr;
 
@@ -58,7 +56,7 @@ typedef std::shared_ptr<DenseSequenceData> DenseSequenceDataPtr;
 // All samples in the sequence should have the same layout.
 struct SparseSequenceData : SequenceData
 {
-    std::vector<std::vector<size_t>> indices;
+    std::vector<std::vector<size_t>> m_indices;
 };
 typedef std::shared_ptr<SparseSequenceData> SparseSequenceDataPtr;
 

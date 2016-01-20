@@ -43,7 +43,7 @@ void ReaderShim<ElemType>::Init(const ConfigParameters& config)
     m_streams = m_reader->GetStreams();
     for (auto i : m_streams)
     {
-        m_nameToStreamId.insert(std::make_pair(i->name, i->id));
+        m_nameToStreamId.insert(std::make_pair(i->m_name, i->m_id));
     }
 }
 
@@ -62,11 +62,11 @@ void ReaderShim<ElemType>::StartDistributedMinibatchLoop(
     size_t requestedEpochSamples /*= requestDataSize*/)
 {
     EpochConfiguration config;
-    config.workerRank = subsetNum;
-    config.numberOfWorkers = numSubsets;
-    config.minibatchSize = requestedMBSize;
-    config.totalSize = requestedEpochSamples;
-    config.index = epoch;
+    config.m_workerRank = subsetNum;
+    config.m_numberOfWorkers = numSubsets;
+    config.m_minibatchSizeInSamples = requestedMBSize;
+    config.m_totalEpochSizeInSamples = requestedEpochSamples;
+    config.m_epochIndex = epoch;
 
     m_reader->StartEpoch(config);
     m_endOfEpoch = false;
@@ -99,16 +99,16 @@ bool ReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
     assert(m_prefetchTask.valid());
 
     Minibatch m = m_prefetchTask.get();
-    if (m.atEndOfEpoch)
+    if (m.m_atEndOfEpoch)
     {
         m_endOfEpoch = true;
-        if (m.minibatch.empty())
+        if (m.m_minibatch.empty())
         {
             return false;
         }
     }
 
-    if (!m.minibatch.empty())
+    if (!m.m_minibatch.empty())
     {
         // Copy returned minibatch to the matrices.
         for (const auto& mx : matrices)
@@ -116,13 +116,13 @@ bool ReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
             assert(m_nameToStreamId.find(mx.first) != m_nameToStreamId.end());
             size_t streamId = m_nameToStreamId[mx.first];
 
-            const auto& stream = m.minibatch[streamId];
-            m_layout = stream->layout;
+            const auto& stream = m.m_minibatch[streamId];
+            m_layout = stream->m_layout;
 
             size_t columnNumber = m_layout->GetNumCols();
-            size_t rowNumber = m_streams[streamId]->sampleLayout->GetNumElements();
+            size_t rowNumber = m_streams[streamId]->m_sampleLayout->GetNumElements();
 
-            auto data = reinterpret_cast<const ElemType*>(stream->data);
+            auto data = reinterpret_cast<const ElemType*>(stream->m_data);
             mx.second->SetValue(rowNumber, columnNumber, mx.second->GetDeviceId(), const_cast<ElemType*>(data), matrixFlagNormal);
         }
     }
@@ -132,7 +132,7 @@ bool ReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
         return m_reader->ReadMinibatch();
     });
 
-    return !m.minibatch.empty();
+    return !m.m_minibatch.empty();
 }
 
 template <class ElemType>

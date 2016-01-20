@@ -26,14 +26,14 @@ FrameModePacker::FrameModePacker(
             m_outputStreams.end(),
             [](const StreamDescriptionPtr& s)
             {
-                return s->storageType == StorageType::sparse_csc;
+                return s->m_storageType == StorageType::sparse_csc;
             }) == m_outputStreams.end());
 
     for (const auto& stream : streams)
     {
-        assert(stream->elementType == ElementType::tfloat || stream->elementType == ElementType::tdouble);
+        assert(stream->m_elementType == ElementType::tfloat || stream->m_elementType == ElementType::tdouble);
         m_streamBuffers.push_back(
-            AllocateBuffer(m_mbSize * stream->sampleLayout->GetNumElements(), GetSizeByType(stream->elementType)));
+            AllocateBuffer(m_mbSize * stream->m_sampleLayout->GetNumElements(), GetSizeByType(stream->m_elementType)));
     }
 }
 
@@ -42,13 +42,13 @@ Minibatch FrameModePacker::ReadMinibatch()
     assert(m_mbSize > 0);
 
     Minibatch m;
-    m.atEndOfEpoch = false;
+    m.m_atEndOfEpoch = false;
 
     auto images = m_transformer->GetNextSequences(m_mbSize);
 
     if (images.m_endOfEpoch)
     {
-        m.atEndOfEpoch = true;
+        m.m_atEndOfEpoch = true;
     }
 
     for (size_t i = 0; i < images.m_data.size(); i++)
@@ -56,36 +56,36 @@ Minibatch FrameModePacker::ReadMinibatch()
         assert(m_streamBuffers.size() == images.m_data[i].size());
         for (int j = 0; j < images.m_data[i].size(); ++j)
         {
-            size_t elementSize = GetSizeByType(m_inputStreams[j]->elementType);
-            size_t dimensions = m_inputStreams[j]->sampleLayout->GetNumElements() * elementSize;
-            const char* source = reinterpret_cast<char*>(images.m_data[i][j]->data);
-            if (m_inputStreams[j]->storageType == StorageType::dense)
+            size_t elementSize = GetSizeByType(m_inputStreams[j]->m_elementType);
+            size_t dimensions = m_inputStreams[j]->m_sampleLayout->GetNumElements() * elementSize;
+            const char* source = reinterpret_cast<char*>(images.m_data[i][j]->m_data);
+            if (m_inputStreams[j]->m_storageType == StorageType::dense)
             {
                 DenseSequenceData& data = reinterpret_cast<DenseSequenceData&>(*images.m_data[i][j]);
-                assert(data.numberOfSamples == 1);
+                assert(data.m_numberOfSamples == 1);
 
                 std::copy(
                     source,
                     source + dimensions,
                     m_streamBuffers[j].get() + dimensions * i);
             }
-            else if (m_inputStreams[j]->storageType == StorageType::sparse_csc)
+            else if (m_inputStreams[j]->m_storageType == StorageType::sparse_csc)
             {
                 SparseSequenceData& data = reinterpret_cast<SparseSequenceData&>(*images.m_data[i][j]);
-                assert(data.indices.size() == 1);
+                assert(data.m_indices.size() == 1);
 
                 std::fill(m_streamBuffers[j].get() + i * dimensions, m_streamBuffers[j].get() + (i + 1) * dimensions, 0);
-                size_t nonZeroCount = data.indices[0].size();
+                size_t nonZeroCount = data.m_indices[0].size();
                 for (size_t nonZeroIndex = 0; nonZeroIndex < nonZeroCount; ++nonZeroIndex)
                 {
-                    size_t rowIndex = data.indices[0][nonZeroIndex];
+                    size_t rowIndex = data.m_indices[0][nonZeroIndex];
                     char* destination = m_streamBuffers[j].get() + dimensions * i + rowIndex * elementSize;
                     std::copy(source + nonZeroIndex * elementSize, source + (nonZeroIndex + 1) * elementSize, destination);
                 }
             }
             else
             {
-                RuntimeError("Storage type %d is not supported.", m_inputStreams[j]->storageType);
+                RuntimeError("Storage type %d is not supported.", m_inputStreams[j]->m_storageType);
             }
         }
     }
@@ -98,13 +98,13 @@ Minibatch FrameModePacker::ReadMinibatch()
     m_minibatchLayout->InitAsFrameMode(images.m_data.size());
     for (int i = 0; i < m_outputStreams.size(); ++i)
     {
-        size_t dimensions = m_outputStreams[i]->sampleLayout->GetNumElements() * GetSizeByType(m_outputStreams[i]->elementType);
+        size_t dimensions = m_outputStreams[i]->m_sampleLayout->GetNumElements() * GetSizeByType(m_outputStreams[i]->m_elementType);
         auto stream = std::make_shared<Stream>();
-        stream->data = m_streamBuffers[i].get();
-        stream->dataSize = images.m_data.size() * dimensions;
-        stream->layout = m_minibatchLayout;
+        stream->m_data = m_streamBuffers[i].get();
+        stream->m_dataSize = images.m_data.size() * dimensions;
+        stream->m_layout = m_minibatchLayout;
 
-        m.minibatch.push_back(stream);
+        m.m_minibatch.push_back(stream);
     }
 
     return m;
