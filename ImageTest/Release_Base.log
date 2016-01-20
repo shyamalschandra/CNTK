@@ -1,17 +1,17 @@
 -------------------------------------------------------------------
 Build info: 
 
-		Built time: Jan 19 2016 15:45:23
+		Built time: Jan 19 2016 19:02:15
 		Last modified date: Tue Jan 19 12:45:07 2016
 		CUDA_PATH: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0
 		CUB_PATH: C:\R\cub-1.4.1
 		CUDNN_PATH: C:\R\cudnn-7.0-win-x64-v4.0-rc\cuda
 		Build Branch: mahilleb/ReaderProtoNew
-		Build SHA1: f37f7b7c9d45edeab9d0402bcfc7a11331e1116a
+		Build SHA1: cb98cb3840425f145511aa737cf0b04a2b203d47
 		Built by mahilleb on mahilleb57           
 		Build Path: C:\R\on-github\CNTK\Source\CNTK\
 -------------------------------------------------------------------
-running on mahilleb57 at 2016/01/19 17:26:11
+running on mahilleb57 at 2016/01/20 10:59:56
 command line: 
 C:\R\on-github\CNTK\x64\Release\CNTK.exe configFile=AlexNet.config ConfigName=Release 
 
@@ -175,12 +175,165 @@ Microsoft::MSR::CNTK::GPUMatrix<ElemType>::SetGaussianRandomValue (GPU): creatin
 Post-processing network...
 
 3 roots:
+	CE = CrossEntropyWithSoftmax
 	OutputNodes.z = Plus
 	Err = ErrorPrediction
-	CE = CrossEntropyWithSoftmax
+FormNestedNetwork: WARNING: Was called twice for CE CrossEntropyWithSoftmax operation
 FormNestedNetwork: WARNING: Was called twice for OutputNodes.z Plus operation
 FormNestedNetwork: WARNING: Was called twice for Err ErrorPrediction operation
-FormNestedNetwork: WARNING: Was called twice for CE CrossEntropyWithSoftmax operation
+
+
+Validating for node CE. 47 nodes to process in pass 1.
+
+Validating --> labels = InputValue -> [1000 [1000], MBSize 0]
+Validating --> OutputNodes.W = LearnableParameter -> [1000 [1000], 4096]
+Validating --> h2.W = LearnableParameter -> [4096 [4096], 4096]
+Validating --> h1.W = LearnableParameter -> [4096 [4096], 9216]
+Validating --> conv5_act.convW = LearnableParameter -> [256 [256], 2304]
+Validating --> conv4_act.convW = LearnableParameter -> [256 [256], 3456]
+Validating --> conv3_act.convW = LearnableParameter -> [384 [384], 1728]
+Validating --> conv2_act.convW = LearnableParameter -> [192 [192], 1600]
+Validating --> conv1_act.convW = LearnableParameter -> [64 [64], 363]
+Validating --> features = InputValue -> [150528 [3 x 224 x 224], MBSize 0]
+Validating --> conv1_act.conv = Convolution(conv1_act.convW[64, 363], features[150528 [3 x 224 x 224] {W=224, H=224, C=3}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> conv1_act.convB = LearnableParameter -> [64 [64], 1]
+Validating --> conv1_act.convPlusB = Plus(conv1_act.conv[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0], conv1_act.convB[64, 1]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> conv1_act.act = RectifiedLinear(conv1_act.convPlusB[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> pool1 = MaxPooling(conv1_act.act[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [46656 [64 x 27 x 27], MBSize 0]
+Validating --> conv2_act.conv = Convolution(conv2_act.convW[192, 1600], pool1[46656 [64 x 27 x 27] {W=27, H=27, C=64}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> conv2_act.convB = LearnableParameter -> [192 [192], 1]
+Validating --> conv2_act.convPlusB = Plus(conv2_act.conv[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0], conv2_act.convB[192, 1]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> conv2_act.act = RectifiedLinear(conv2_act.convPlusB[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> pool2 = MaxPooling(conv2_act.act[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [32448 [192 x 13 x 13], MBSize 0]
+Validating --> conv3_act.conv = Convolution(conv3_act.convW[384, 1728], pool2[32448 [192 x 13 x 13] {W=13, H=13, C=192}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv3_act.convB = LearnableParameter -> [384 [384], 1]
+Validating --> conv3_act.convPlusB = Plus(conv3_act.conv[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0], conv3_act.convB[384, 1]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv3_act.act = RectifiedLinear(conv3_act.convPlusB[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv4_act.conv = Convolution(conv4_act.convW[256, 3456], conv3_act.act[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv4_act.convB = LearnableParameter -> [256 [256], 1]
+Validating --> conv4_act.convPlusB = Plus(conv4_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv4_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv4_act.act = RectifiedLinear(conv4_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.conv = Convolution(conv5_act.convW[256, 2304], conv4_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.convB = LearnableParameter -> [256 [256], 1]
+Validating --> conv5_act.convPlusB = Plus(conv5_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv5_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.act = RectifiedLinear(conv5_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> pool3 = MaxPooling(conv5_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [9216 [256 x 6 x 6], MBSize 0]
+Validating --> h1.t = Times(h1.W[4096, 9216], pool3[9216 [256 x 6 x 6] {W=6, H=6, C=256}, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h1.b = LearnableParameter -> [4096 [4096], 1]
+Validating --> h1.z = Plus(h1.t[4096, MBSize 0], h1.b[4096, 1]) -> [4096 [4096], MBSize 0]
+Validating --> h1.y = RectifiedLinear(h1.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h1_d = Dropout(h1.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2.t = Times(h2.W[4096, 4096], h1_d[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2.b = LearnableParameter -> [4096 [4096], 1]
+Validating --> h2.z = Plus(h2.t[4096, MBSize 0], h2.b[4096, 1]) -> [4096 [4096], MBSize 0]
+Validating --> h2.y = RectifiedLinear(h2.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2_d = Dropout(h2.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> OutputNodes.t = Times(OutputNodes.W[1000, 4096], h2_d[4096, MBSize 0]) -> [1000 [1000], MBSize 0]
+Validating --> OutputNodes.b = LearnableParameter -> [1000 [1000], 1]
+Validating --> OutputNodes.z = Plus(OutputNodes.t[1000, MBSize 0], OutputNodes.b[1000, 1]) -> [1000 [1000], MBSize 0]
+Validating --> CE = CrossEntropyWithSoftmax(labels[1000, MBSize 0], OutputNodes.z[1000, MBSize 0]) -> [1 [1], 1]
+
+Validating for node CE. 29 nodes to process in pass 2.
+
+Validating --> labels = InputValue -> [1000 [1000], MBSize 0]
+Validating --> OutputNodes.W = LearnableParameter -> [1000 [1000], 4096]
+Validating --> h2.W = LearnableParameter -> [4096 [4096], 4096]
+Validating --> h1.W = LearnableParameter -> [4096 [4096], 9216]
+Validating --> conv5_act.convW = LearnableParameter -> [256 [256], 2304]
+Validating --> conv4_act.convW = LearnableParameter -> [256 [256], 3456]
+Validating --> conv3_act.convW = LearnableParameter -> [384 [384], 1728]
+Validating --> conv2_act.convW = LearnableParameter -> [192 [192], 1600]
+Validating --> conv1_act.convW = LearnableParameter -> [64 [64], 363]
+Validating --> features = InputValue -> [150528 [3 x 224 x 224], MBSize 0]
+Validating --> conv1_act.conv = Convolution(conv1_act.convW[64, 363], features[150528 [3 x 224 x 224] {W=224, H=224, C=3}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> conv1_act.convB = LearnableParameter -> [64 [64], 1]
+Validating --> conv1_act.convPlusB = Plus(conv1_act.conv[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0], conv1_act.convB[64, 1]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> conv1_act.act = RectifiedLinear(conv1_act.convPlusB[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> pool1 = MaxPooling(conv1_act.act[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [46656 [64 x 27 x 27], MBSize 0]
+Validating --> conv2_act.conv = Convolution(conv2_act.convW[192, 1600], pool1[46656 [64 x 27 x 27] {W=27, H=27, C=64}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> conv2_act.convB = LearnableParameter -> [192 [192], 1]
+Validating --> conv2_act.convPlusB = Plus(conv2_act.conv[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0], conv2_act.convB[192, 1]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> conv2_act.act = RectifiedLinear(conv2_act.convPlusB[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> pool2 = MaxPooling(conv2_act.act[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [32448 [192 x 13 x 13], MBSize 0]
+Validating --> conv3_act.conv = Convolution(conv3_act.convW[384, 1728], pool2[32448 [192 x 13 x 13] {W=13, H=13, C=192}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv3_act.convB = LearnableParameter -> [384 [384], 1]
+Validating --> conv3_act.convPlusB = Plus(conv3_act.conv[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0], conv3_act.convB[384, 1]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv3_act.act = RectifiedLinear(conv3_act.convPlusB[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv4_act.conv = Convolution(conv4_act.convW[256, 3456], conv3_act.act[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv4_act.convB = LearnableParameter -> [256 [256], 1]
+Validating --> conv4_act.convPlusB = Plus(conv4_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv4_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv4_act.act = RectifiedLinear(conv4_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.conv = Convolution(conv5_act.convW[256, 2304], conv4_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.convB = LearnableParameter -> [256 [256], 1]
+Validating --> conv5_act.convPlusB = Plus(conv5_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv5_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.act = RectifiedLinear(conv5_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> pool3 = MaxPooling(conv5_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [9216 [256 x 6 x 6], MBSize 0]
+Validating --> h1.t = Times(h1.W[4096, 9216], pool3[9216 [256 x 6 x 6] {W=6, H=6, C=256}, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h1.b = LearnableParameter -> [4096 [4096], 1]
+Validating --> h1.z = Plus(h1.t[4096, MBSize 0], h1.b[4096, 1]) -> [4096 [4096], MBSize 0]
+Validating --> h1.y = RectifiedLinear(h1.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h1_d = Dropout(h1.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2.t = Times(h2.W[4096, 4096], h1_d[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2.b = LearnableParameter -> [4096 [4096], 1]
+Validating --> h2.z = Plus(h2.t[4096, MBSize 0], h2.b[4096, 1]) -> [4096 [4096], MBSize 0]
+Validating --> h2.y = RectifiedLinear(h2.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2_d = Dropout(h2.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> OutputNodes.t = Times(OutputNodes.W[1000, 4096], h2_d[4096, MBSize 0]) -> [1000 [1000], MBSize 0]
+Validating --> OutputNodes.b = LearnableParameter -> [1000 [1000], 1]
+Validating --> OutputNodes.z = Plus(OutputNodes.t[1000, MBSize 0], OutputNodes.b[1000, 1]) -> [1000 [1000], MBSize 0]
+Validating --> CE = CrossEntropyWithSoftmax(labels[1000, MBSize 0], OutputNodes.z[1000, MBSize 0]) -> [1 [1], 1]
+
+Validating for node CE, final verification.
+
+Validating --> labels = InputValue -> [1000 [1000], MBSize 0]
+Validating --> OutputNodes.W = LearnableParameter -> [1000 [1000], 4096]
+Validating --> h2.W = LearnableParameter -> [4096 [4096], 4096]
+Validating --> h1.W = LearnableParameter -> [4096 [4096], 9216]
+Validating --> conv5_act.convW = LearnableParameter -> [256 [256], 2304]
+Validating --> conv4_act.convW = LearnableParameter -> [256 [256], 3456]
+Validating --> conv3_act.convW = LearnableParameter -> [384 [384], 1728]
+Validating --> conv2_act.convW = LearnableParameter -> [192 [192], 1600]
+Validating --> conv1_act.convW = LearnableParameter -> [64 [64], 363]
+Validating --> features = InputValue -> [150528 [3 x 224 x 224], MBSize 0]
+Validating --> conv1_act.conv = Convolution(conv1_act.convW[64, 363], features[150528 [3 x 224 x 224] {W=224, H=224, C=3}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> conv1_act.convB = LearnableParameter -> [64 [64], 1]
+Validating --> conv1_act.convPlusB = Plus(conv1_act.conv[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0], conv1_act.convB[64, 1]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> conv1_act.act = RectifiedLinear(conv1_act.convPlusB[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
+Validating --> pool1 = MaxPooling(conv1_act.act[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [46656 [64 x 27 x 27], MBSize 0]
+Validating --> conv2_act.conv = Convolution(conv2_act.convW[192, 1600], pool1[46656 [64 x 27 x 27] {W=27, H=27, C=64}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> conv2_act.convB = LearnableParameter -> [192 [192], 1]
+Validating --> conv2_act.convPlusB = Plus(conv2_act.conv[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0], conv2_act.convB[192, 1]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> conv2_act.act = RectifiedLinear(conv2_act.convPlusB[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
+Validating --> pool2 = MaxPooling(conv2_act.act[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [32448 [192 x 13 x 13], MBSize 0]
+Validating --> conv3_act.conv = Convolution(conv3_act.convW[384, 1728], pool2[32448 [192 x 13 x 13] {W=13, H=13, C=192}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv3_act.convB = LearnableParameter -> [384 [384], 1]
+Validating --> conv3_act.convPlusB = Plus(conv3_act.conv[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0], conv3_act.convB[384, 1]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv3_act.act = RectifiedLinear(conv3_act.convPlusB[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
+Validating --> conv4_act.conv = Convolution(conv4_act.convW[256, 3456], conv3_act.act[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv4_act.convB = LearnableParameter -> [256 [256], 1]
+Validating --> conv4_act.convPlusB = Plus(conv4_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv4_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv4_act.act = RectifiedLinear(conv4_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.conv = Convolution(conv5_act.convW[256, 2304], conv4_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.convB = LearnableParameter -> [256 [256], 1]
+Validating --> conv5_act.convPlusB = Plus(conv5_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv5_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> conv5_act.act = RectifiedLinear(conv5_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
+Validating --> pool3 = MaxPooling(conv5_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [9216 [256 x 6 x 6], MBSize 0]
+Validating --> h1.t = Times(h1.W[4096, 9216], pool3[9216 [256 x 6 x 6] {W=6, H=6, C=256}, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h1.b = LearnableParameter -> [4096 [4096], 1]
+Validating --> h1.z = Plus(h1.t[4096, MBSize 0], h1.b[4096, 1]) -> [4096 [4096], MBSize 0]
+Validating --> h1.y = RectifiedLinear(h1.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h1_d = Dropout(h1.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2.t = Times(h2.W[4096, 4096], h1_d[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2.b = LearnableParameter -> [4096 [4096], 1]
+Validating --> h2.z = Plus(h2.t[4096, MBSize 0], h2.b[4096, 1]) -> [4096 [4096], MBSize 0]
+Validating --> h2.y = RectifiedLinear(h2.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> h2_d = Dropout(h2.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
+Validating --> OutputNodes.t = Times(OutputNodes.W[1000, 4096], h2_d[4096, MBSize 0]) -> [1000 [1000], MBSize 0]
+Validating --> OutputNodes.b = LearnableParameter -> [1000 [1000], 1]
+Validating --> OutputNodes.z = Plus(OutputNodes.t[1000, MBSize 0], OutputNodes.b[1000, 1]) -> [1000 [1000], MBSize 0]
+Validating --> CE = CrossEntropyWithSoftmax(labels[1000, MBSize 0], OutputNodes.z[1000, MBSize 0]) -> [1 [1], 1]
+
+17 out of 47 nodes do not share the minibatch layout with the input data.
 
 
 Validating for node OutputNodes.z. 45 nodes to process in pass 1.
@@ -482,159 +635,6 @@ Validating --> Err = ErrorPrediction(labels[1000, MBSize 0], OutputNodes.z[1000,
 
 17 out of 47 nodes do not share the minibatch layout with the input data.
 
-
-Validating for node CE. 47 nodes to process in pass 1.
-
-Validating --> labels = InputValue -> [1000 [1000], MBSize 0]
-Validating --> OutputNodes.W = LearnableParameter -> [1000 [1000], 4096]
-Validating --> h2.W = LearnableParameter -> [4096 [4096], 4096]
-Validating --> h1.W = LearnableParameter -> [4096 [4096], 9216]
-Validating --> conv5_act.convW = LearnableParameter -> [256 [256], 2304]
-Validating --> conv4_act.convW = LearnableParameter -> [256 [256], 3456]
-Validating --> conv3_act.convW = LearnableParameter -> [384 [384], 1728]
-Validating --> conv2_act.convW = LearnableParameter -> [192 [192], 1600]
-Validating --> conv1_act.convW = LearnableParameter -> [64 [64], 363]
-Validating --> features = InputValue -> [150528 [3 x 224 x 224], MBSize 0]
-Validating --> conv1_act.conv = Convolution(conv1_act.convW[64, 363], features[150528 [3 x 224 x 224] {W=224, H=224, C=3}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> conv1_act.convB = LearnableParameter -> [64 [64], 1]
-Validating --> conv1_act.convPlusB = Plus(conv1_act.conv[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0], conv1_act.convB[64, 1]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> conv1_act.act = RectifiedLinear(conv1_act.convPlusB[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> pool1 = MaxPooling(conv1_act.act[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [46656 [64 x 27 x 27], MBSize 0]
-Validating --> conv2_act.conv = Convolution(conv2_act.convW[192, 1600], pool1[46656 [64 x 27 x 27] {W=27, H=27, C=64}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> conv2_act.convB = LearnableParameter -> [192 [192], 1]
-Validating --> conv2_act.convPlusB = Plus(conv2_act.conv[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0], conv2_act.convB[192, 1]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> conv2_act.act = RectifiedLinear(conv2_act.convPlusB[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> pool2 = MaxPooling(conv2_act.act[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [32448 [192 x 13 x 13], MBSize 0]
-Validating --> conv3_act.conv = Convolution(conv3_act.convW[384, 1728], pool2[32448 [192 x 13 x 13] {W=13, H=13, C=192}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv3_act.convB = LearnableParameter -> [384 [384], 1]
-Validating --> conv3_act.convPlusB = Plus(conv3_act.conv[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0], conv3_act.convB[384, 1]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv3_act.act = RectifiedLinear(conv3_act.convPlusB[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv4_act.conv = Convolution(conv4_act.convW[256, 3456], conv3_act.act[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv4_act.convB = LearnableParameter -> [256 [256], 1]
-Validating --> conv4_act.convPlusB = Plus(conv4_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv4_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv4_act.act = RectifiedLinear(conv4_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.conv = Convolution(conv5_act.convW[256, 2304], conv4_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.convB = LearnableParameter -> [256 [256], 1]
-Validating --> conv5_act.convPlusB = Plus(conv5_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv5_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.act = RectifiedLinear(conv5_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> pool3 = MaxPooling(conv5_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [9216 [256 x 6 x 6], MBSize 0]
-Validating --> h1.t = Times(h1.W[4096, 9216], pool3[9216 [256 x 6 x 6] {W=6, H=6, C=256}, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h1.b = LearnableParameter -> [4096 [4096], 1]
-Validating --> h1.z = Plus(h1.t[4096, MBSize 0], h1.b[4096, 1]) -> [4096 [4096], MBSize 0]
-Validating --> h1.y = RectifiedLinear(h1.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h1_d = Dropout(h1.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2.t = Times(h2.W[4096, 4096], h1_d[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2.b = LearnableParameter -> [4096 [4096], 1]
-Validating --> h2.z = Plus(h2.t[4096, MBSize 0], h2.b[4096, 1]) -> [4096 [4096], MBSize 0]
-Validating --> h2.y = RectifiedLinear(h2.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2_d = Dropout(h2.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> OutputNodes.t = Times(OutputNodes.W[1000, 4096], h2_d[4096, MBSize 0]) -> [1000 [1000], MBSize 0]
-Validating --> OutputNodes.b = LearnableParameter -> [1000 [1000], 1]
-Validating --> OutputNodes.z = Plus(OutputNodes.t[1000, MBSize 0], OutputNodes.b[1000, 1]) -> [1000 [1000], MBSize 0]
-Validating --> CE = CrossEntropyWithSoftmax(labels[1000, MBSize 0], OutputNodes.z[1000, MBSize 0]) -> [1 [1], 1]
-
-Validating for node CE. 29 nodes to process in pass 2.
-
-Validating --> labels = InputValue -> [1000 [1000], MBSize 0]
-Validating --> OutputNodes.W = LearnableParameter -> [1000 [1000], 4096]
-Validating --> h2.W = LearnableParameter -> [4096 [4096], 4096]
-Validating --> h1.W = LearnableParameter -> [4096 [4096], 9216]
-Validating --> conv5_act.convW = LearnableParameter -> [256 [256], 2304]
-Validating --> conv4_act.convW = LearnableParameter -> [256 [256], 3456]
-Validating --> conv3_act.convW = LearnableParameter -> [384 [384], 1728]
-Validating --> conv2_act.convW = LearnableParameter -> [192 [192], 1600]
-Validating --> conv1_act.convW = LearnableParameter -> [64 [64], 363]
-Validating --> features = InputValue -> [150528 [3 x 224 x 224], MBSize 0]
-Validating --> conv1_act.conv = Convolution(conv1_act.convW[64, 363], features[150528 [3 x 224 x 224] {W=224, H=224, C=3}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> conv1_act.convB = LearnableParameter -> [64 [64], 1]
-Validating --> conv1_act.convPlusB = Plus(conv1_act.conv[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0], conv1_act.convB[64, 1]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> conv1_act.act = RectifiedLinear(conv1_act.convPlusB[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> pool1 = MaxPooling(conv1_act.act[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [46656 [64 x 27 x 27], MBSize 0]
-Validating --> conv2_act.conv = Convolution(conv2_act.convW[192, 1600], pool1[46656 [64 x 27 x 27] {W=27, H=27, C=64}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> conv2_act.convB = LearnableParameter -> [192 [192], 1]
-Validating --> conv2_act.convPlusB = Plus(conv2_act.conv[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0], conv2_act.convB[192, 1]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> conv2_act.act = RectifiedLinear(conv2_act.convPlusB[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> pool2 = MaxPooling(conv2_act.act[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [32448 [192 x 13 x 13], MBSize 0]
-Validating --> conv3_act.conv = Convolution(conv3_act.convW[384, 1728], pool2[32448 [192 x 13 x 13] {W=13, H=13, C=192}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv3_act.convB = LearnableParameter -> [384 [384], 1]
-Validating --> conv3_act.convPlusB = Plus(conv3_act.conv[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0], conv3_act.convB[384, 1]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv3_act.act = RectifiedLinear(conv3_act.convPlusB[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv4_act.conv = Convolution(conv4_act.convW[256, 3456], conv3_act.act[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv4_act.convB = LearnableParameter -> [256 [256], 1]
-Validating --> conv4_act.convPlusB = Plus(conv4_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv4_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv4_act.act = RectifiedLinear(conv4_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.conv = Convolution(conv5_act.convW[256, 2304], conv4_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.convB = LearnableParameter -> [256 [256], 1]
-Validating --> conv5_act.convPlusB = Plus(conv5_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv5_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.act = RectifiedLinear(conv5_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> pool3 = MaxPooling(conv5_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [9216 [256 x 6 x 6], MBSize 0]
-Validating --> h1.t = Times(h1.W[4096, 9216], pool3[9216 [256 x 6 x 6] {W=6, H=6, C=256}, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h1.b = LearnableParameter -> [4096 [4096], 1]
-Validating --> h1.z = Plus(h1.t[4096, MBSize 0], h1.b[4096, 1]) -> [4096 [4096], MBSize 0]
-Validating --> h1.y = RectifiedLinear(h1.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h1_d = Dropout(h1.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2.t = Times(h2.W[4096, 4096], h1_d[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2.b = LearnableParameter -> [4096 [4096], 1]
-Validating --> h2.z = Plus(h2.t[4096, MBSize 0], h2.b[4096, 1]) -> [4096 [4096], MBSize 0]
-Validating --> h2.y = RectifiedLinear(h2.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2_d = Dropout(h2.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> OutputNodes.t = Times(OutputNodes.W[1000, 4096], h2_d[4096, MBSize 0]) -> [1000 [1000], MBSize 0]
-Validating --> OutputNodes.b = LearnableParameter -> [1000 [1000], 1]
-Validating --> OutputNodes.z = Plus(OutputNodes.t[1000, MBSize 0], OutputNodes.b[1000, 1]) -> [1000 [1000], MBSize 0]
-Validating --> CE = CrossEntropyWithSoftmax(labels[1000, MBSize 0], OutputNodes.z[1000, MBSize 0]) -> [1 [1], 1]
-
-Validating for node CE, final verification.
-
-Validating --> labels = InputValue -> [1000 [1000], MBSize 0]
-Validating --> OutputNodes.W = LearnableParameter -> [1000 [1000], 4096]
-Validating --> h2.W = LearnableParameter -> [4096 [4096], 4096]
-Validating --> h1.W = LearnableParameter -> [4096 [4096], 9216]
-Validating --> conv5_act.convW = LearnableParameter -> [256 [256], 2304]
-Validating --> conv4_act.convW = LearnableParameter -> [256 [256], 3456]
-Validating --> conv3_act.convW = LearnableParameter -> [384 [384], 1728]
-Validating --> conv2_act.convW = LearnableParameter -> [192 [192], 1600]
-Validating --> conv1_act.convW = LearnableParameter -> [64 [64], 363]
-Validating --> features = InputValue -> [150528 [3 x 224 x 224], MBSize 0]
-Validating --> conv1_act.conv = Convolution(conv1_act.convW[64, 363], features[150528 [3 x 224 x 224] {W=224, H=224, C=3}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> conv1_act.convB = LearnableParameter -> [64 [64], 1]
-Validating --> conv1_act.convPlusB = Plus(conv1_act.conv[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0], conv1_act.convB[64, 1]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> conv1_act.act = RectifiedLinear(conv1_act.convPlusB[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [200704 [64 x 56 x 56], MBSize 0]
-Validating --> pool1 = MaxPooling(conv1_act.act[200704 [64 x 56 x 56] {W=56, H=56, C=64}, MBSize 0]) -> [46656 [64 x 27 x 27], MBSize 0]
-Validating --> conv2_act.conv = Convolution(conv2_act.convW[192, 1600], pool1[46656 [64 x 27 x 27] {W=27, H=27, C=64}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> conv2_act.convB = LearnableParameter -> [192 [192], 1]
-Validating --> conv2_act.convPlusB = Plus(conv2_act.conv[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0], conv2_act.convB[192, 1]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> conv2_act.act = RectifiedLinear(conv2_act.convPlusB[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [139968 [192 x 27 x 27], MBSize 0]
-Validating --> pool2 = MaxPooling(conv2_act.act[139968 [192 x 27 x 27] {W=27, H=27, C=192}, MBSize 0]) -> [32448 [192 x 13 x 13], MBSize 0]
-Validating --> conv3_act.conv = Convolution(conv3_act.convW[384, 1728], pool2[32448 [192 x 13 x 13] {W=13, H=13, C=192}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv3_act.convB = LearnableParameter -> [384 [384], 1]
-Validating --> conv3_act.convPlusB = Plus(conv3_act.conv[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0], conv3_act.convB[384, 1]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv3_act.act = RectifiedLinear(conv3_act.convPlusB[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [64896 [384 x 13 x 13], MBSize 0]
-Validating --> conv4_act.conv = Convolution(conv4_act.convW[256, 3456], conv3_act.act[64896 [384 x 13 x 13] {W=13, H=13, C=384}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv4_act.convB = LearnableParameter -> [256 [256], 1]
-Validating --> conv4_act.convPlusB = Plus(conv4_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv4_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv4_act.act = RectifiedLinear(conv4_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.conv = Convolution(conv5_act.convW[256, 2304], conv4_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.convB = LearnableParameter -> [256 [256], 1]
-Validating --> conv5_act.convPlusB = Plus(conv5_act.conv[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0], conv5_act.convB[256, 1]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> conv5_act.act = RectifiedLinear(conv5_act.convPlusB[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [43264 [256 x 13 x 13], MBSize 0]
-Validating --> pool3 = MaxPooling(conv5_act.act[43264 [256 x 13 x 13] {W=13, H=13, C=256}, MBSize 0]) -> [9216 [256 x 6 x 6], MBSize 0]
-Validating --> h1.t = Times(h1.W[4096, 9216], pool3[9216 [256 x 6 x 6] {W=6, H=6, C=256}, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h1.b = LearnableParameter -> [4096 [4096], 1]
-Validating --> h1.z = Plus(h1.t[4096, MBSize 0], h1.b[4096, 1]) -> [4096 [4096], MBSize 0]
-Validating --> h1.y = RectifiedLinear(h1.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h1_d = Dropout(h1.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2.t = Times(h2.W[4096, 4096], h1_d[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2.b = LearnableParameter -> [4096 [4096], 1]
-Validating --> h2.z = Plus(h2.t[4096, MBSize 0], h2.b[4096, 1]) -> [4096 [4096], MBSize 0]
-Validating --> h2.y = RectifiedLinear(h2.z[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> h2_d = Dropout(h2.y[4096, MBSize 0]) -> [4096 [4096], MBSize 0]
-Validating --> OutputNodes.t = Times(OutputNodes.W[1000, 4096], h2_d[4096, MBSize 0]) -> [1000 [1000], MBSize 0]
-Validating --> OutputNodes.b = LearnableParameter -> [1000 [1000], 1]
-Validating --> OutputNodes.z = Plus(OutputNodes.t[1000, MBSize 0], OutputNodes.b[1000, 1]) -> [1000 [1000], MBSize 0]
-Validating --> CE = CrossEntropyWithSoftmax(labels[1000, MBSize 0], OutputNodes.z[1000, MBSize 0]) -> [1 [1], 1]
-
-17 out of 47 nodes do not share the minibatch layout with the input data.
-
 Post-processing network complete.
 
 SGD using GPU 0.
@@ -652,14 +652,14 @@ Set Max Temp Mem Size For Convolution Nodes to 0 samples.
 Starting Epoch 1: learning rate per sample = 0.001250  effective momentum = 0.900000  momentum as time constant = 75.9 samples
 
 Starting minibatch loop.
-Finished Epoch[ 1 of 3]: [Training Set] TrainLossPerSample = 3.1190982; EvalErrPerSample = 0.5; AvgLearningRatePerSample = 0.00125; EpochTime=1.21278
+Finished Epoch[ 1 of 3]: [Training Set] TrainLossPerSample = 3.1052475; EvalErrPerSample = 0.5; AvgLearningRatePerSample = 0.00125; EpochTime=1.16905
 Starting Epoch 2: learning rate per sample = 0.001250  effective momentum = 0.900000  momentum as time constant = 75.9 samples
 
 Starting minibatch loop.
-Finished Epoch[ 2 of 3]: [Training Set] TrainLossPerSample = 0; EvalErrPerSample = 0; AvgLearningRatePerSample = 0.00125; EpochTime=0.20294
+Finished Epoch[ 2 of 3]: [Training Set] TrainLossPerSample = 0; EvalErrPerSample = 0; AvgLearningRatePerSample = 0.00125; EpochTime=0.214332
 Starting Epoch 3: learning rate per sample = 0.001250  effective momentum = 0.900000  momentum as time constant = 75.9 samples
 
 Starting minibatch loop.
-Finished Epoch[ 3 of 3]: [Training Set] TrainLossPerSample = 0; EvalErrPerSample = 0; AvgLearningRatePerSample = 0.00125; EpochTime=0.230533
+Finished Epoch[ 3 of 3]: [Training Set] TrainLossPerSample = 0; EvalErrPerSample = 0; AvgLearningRatePerSample = 0.00125; EpochTime=0.12316
 CNTKCommandTrainEnd: Train
 COMPLETED
