@@ -184,5 +184,5 @@ Source/CNTK/buildinfo.h$$
 # Unit test output
 Tests/UnitTests/ReaderTests/Control/*_Output.txt
 
-ImageTest/Data
+ImageTest/Data/image.nypl.org-*.jpg
 ImageTest/_out
