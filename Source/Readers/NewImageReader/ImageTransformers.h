@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <set>
 #include <unordered_map>
 #include <random>
 #include <opencv2/opencv.hpp>
@@ -20,7 +19,7 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 class ConfigParameters;
 
 // Base class for image transformations based on OpenCV.
-class CvMatTransformer : public TransformerBase<cv::Mat>
+class ImageTransformerBase : public TransformerBase<cv::Mat>
 {
 public:
     // Initializes the transformer.
@@ -62,7 +61,7 @@ private:
     unsigned int m_seed;
 };
 
-class CropTransformer : public CvMatTransformer
+class CropTransformer : public ImageTransformerBase
 {
 public:
     virtual void Initialize(TransformerPtr next,
@@ -99,7 +98,7 @@ private:
     bool m_hFlip;
 };
 
-class ScaleTransformer : public CvMatTransformer
+class ScaleTransformer : public ImageTransformerBase
 {
 public:
     virtual void Initialize(TransformerPtr next,
@@ -120,7 +119,7 @@ private:
     size_t m_imgChannels;
 };
 
-class MeanTransformer : public CvMatTransformer
+class MeanTransformer : public ImageTransformerBase
 {
 public:
     virtual void Initialize(TransformerPtr next,

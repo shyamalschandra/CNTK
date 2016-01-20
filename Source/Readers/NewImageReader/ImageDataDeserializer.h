@@ -57,4 +57,5 @@ private:
     // Element type of the feature/label stream (currently float/double only).
     ElementType m_featureElementType;
 };
-} } }
+
+}}}

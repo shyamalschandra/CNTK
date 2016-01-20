@@ -25,36 +25,38 @@ typedef std::vector<const SequenceDescription*> Timeline;
 // We support dense and sparse sequences.
 // The storageType in the corresponding stream description defines what type of SequenceData
 // data deserializer or transformer provides.
-struct SequenceData
+struct SequenceDataBase
 {
-    SequenceData() : m_data(nullptr)
+    SequenceDataBase() : m_data(nullptr)
     {
     }
 
+    // A non-owned pointer. The size is provided for particular sequences,
+    // i.e. see DenseSequenceData, or SparseSequenceData.
     void* m_data;
 };
-typedef std::shared_ptr<SequenceData> SequenceDataPtr;
+typedef std::shared_ptr<SequenceDataBase> SequenceDataPtr;
 
 // Dense sequence. Corresponds to the StorageType::dense of the stream.
 // All samples are store in the 'data' member as a continuous array.
 // The layout of samples are described in the sampleLayout.
 // All samples in the sequence should have the same layout.
-struct DenseSequenceData : SequenceData
+struct DenseSequenceData : SequenceDataBase
 {
     DenseSequenceData() : m_numberOfSamples(0)
     {
     }
 
-    TensorShapePtr m_sampleLayout; // Sample layout
+    TensorShapePtr m_sampleLayout; // Sample layout, can be shared by several sequences.
     size_t m_numberOfSamples;      // Number of samples in the sequence
 };
 typedef std::shared_ptr<DenseSequenceData> DenseSequenceDataPtr;
 
-// Dense sequence. Corresponds to the StorageType::css_sparse of the stream.
+// Sparse sequence. Corresponds to the StorageType::csc_sparse of the stream.
 // All non zero values are store in the 'data' member as a continuous array.
 // The corresponding row indices are stored in 'indices'.
 // All samples in the sequence should have the same layout.
-struct SparseSequenceData : SequenceData
+struct SparseSequenceData : SequenceDataBase
 {
     std::vector<std::vector<size_t>> m_indices;
 };
@@ -78,6 +80,7 @@ public:
 
     // Gets sequences by id.
     // The return value can be used until the next call to GetSequencesById.
+    // All non-owned pointers returned by the class are valid till the next call to this method.
     virtual std::vector<std::vector<SequenceDataPtr>> GetSequencesById(const std::vector<size_t>& ids) = 0;
 
     // Require chunk.

@@ -5,14 +5,12 @@
 //
 
 #include "stdafx.h"
-#include "ImageTransformers.h"
-
-#include "Config.h"
-#include "ConcStack.h"
 #include <algorithm>
 #include <unordered_map>
-#include <opencv2/opencv.hpp>
 #include <random>
+#include "ImageTransformers.h"
+#include "Config.h"
+#include "ConcStack.h"
 #include "ImageConfigHelper.h"
 #include "StringUtils.h"
 #include "ElementTypeUtils.h"
@@ -20,8 +18,8 @@
 namespace Microsoft { namespace MSR { namespace CNTK
 {
 
-void CvMatTransformer::Initialize(TransformerPtr next,
-                                  const ConfigParameters &readerConfig)
+void ImageTransformerBase::Initialize(TransformerPtr next,
+                                      const ConfigParameters &readerConfig)
 {
     Base::Initialize(next, readerConfig);
     m_seed = std::stoi(readerConfig(L"seed", "0"));
@@ -36,9 +34,9 @@ void CvMatTransformer::Initialize(TransformerPtr next,
 }
 
 SequenceDataPtr
-CvMatTransformer::Apply(const DenseSequenceData &inputSequence,
-                        const StreamDescription &inputStream, cv::Mat &buffer,
-                        const StreamDescription & /*outputStream*/)
+ImageTransformerBase::Apply(const DenseSequenceData &inputSequence,
+                            const StreamDescription &inputStream, cv::Mat &buffer,
+                            const StreamDescription & /*outputStream*/)
 {
     ImageDimensions dimensions(*inputSequence.m_sampleLayout, HWC);
     int columns = static_cast<int>(dimensions.m_width);
@@ -75,7 +73,7 @@ CvMatTransformer::Apply(const DenseSequenceData &inputSequence,
 void CropTransformer::Initialize(TransformerPtr next,
                                  const ConfigParameters &readerConfig)
 {
-    CvMatTransformer::Initialize(next, readerConfig);
+    ImageTransformerBase::Initialize(next, readerConfig);
     auto featureStreamIds = GetAppliedStreamIds();
 
     if (featureStreamIds.size() != 1)
@@ -227,7 +225,7 @@ cv::Rect CropTransformer::GetCropRect(CropType type, int crow, int ccol,
 void ScaleTransformer::Initialize(TransformerPtr next,
                                   const ConfigParameters &readerConfig)
 {
-    CvMatTransformer::Initialize(next, readerConfig);
+    ImageTransformerBase::Initialize(next, readerConfig);
     m_interpMap.emplace("nearest", cv::INTER_NEAREST);
     m_interpMap.emplace("linear", cv::INTER_LINEAR);
     m_interpMap.emplace("cubic", cv::INTER_CUBIC);
@@ -301,7 +299,8 @@ void ScaleTransformer::Apply(cv::Mat &mat)
 void MeanTransformer::Initialize(TransformerPtr next,
                                  const ConfigParameters &readerConfig)
 {
-    CvMatTransformer::Initialize(next, readerConfig);
+    ImageTransformerBase::Initialize(next, readerConfig);
+    InitFromConfig(readerConfig);
 }
 
 void MeanTransformer::InitFromConfig(const ConfigParameters &config)
