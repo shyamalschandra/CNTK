@@ -57,20 +57,26 @@ struct StreamDescription
 };
 typedef std::shared_ptr<StreamDescription> StreamDescriptionPtr;
 
-// Input data.
-struct Stream
+// Represent a minibatch date for a single stream formatted in according to the minibatch layout.
+// This data is returned per stream as a part of Minibatch from the ReadMinibatch function.
+struct StreamMinibatch
 {
-    void* m_data;         // Continues array of data. Can be encoded in dense or sparse format
-    size_t m_dataSize;    // Dat size
-    MBLayoutPtr m_layout; // Layout out of the data
+    void* m_data;         // Contiguous array of data. Can be encoded in dense or sparse formats depending on the stream description.
+    size_t m_dataSize;    // Data size in bytes.
+    MBLayoutPtr m_layout; // Layout of the data
 };
-typedef std::shared_ptr<Stream> StreamPtr;
+typedef std::shared_ptr<StreamMinibatch> StreamMinibatchPtr;
 
 // Represents a single minibatch, that contains information about all streams.
 struct Minibatch
 {
-    bool m_endOfEpoch;                // Signifies that the end of epoch has been reached.
-    std::vector<StreamPtr> m_data;    // Minibatch data
+    // Indicates that the end of epoch has been reached.
+    // It is set to true for the last minibatch, there still 
+    // can be data in m_data field even if this flag is set.
+    bool m_endOfEpoch;
+
+    // Minibatch data
+    std::vector<StreamMinibatchPtr> m_data;
 
     Minibatch() : m_endOfEpoch(false)
     {
@@ -78,7 +84,6 @@ struct Minibatch
 };
 
 // Main Reader interface. The border interface between the CNTK and Reader.
-// TODO: possibly except the matrices in the ReadMinibatch.
 class Reader
 {
 public:
@@ -89,6 +94,7 @@ public:
     virtual void StartEpoch(const EpochConfiguration& config) = 0;
 
     // Reads a minibatch that contains data across all streams.
+    // TODO: Expect stream matrices provided by the network as input.
     virtual Minibatch ReadMinibatch() = 0;
 
     virtual ~Reader() = 0 {};

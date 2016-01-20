@@ -12,7 +12,7 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 
 class ConfigParameters;
 
-// Defines a sequence.
+// Defines a set of sequences.
 struct Sequences
 {
     Sequences()
