@@ -98,17 +98,17 @@ bool ReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
 
     assert(m_prefetchTask.valid());
 
-    Minibatch m = m_prefetchTask.get();
-    if (m.m_atEndOfEpoch)
+    Minibatch minibatch = m_prefetchTask.get();
+    if (minibatch.m_endOfEpoch)
     {
         m_endOfEpoch = true;
-        if (m.m_minibatch.empty())
+        if (minibatch.m_data.empty())
         {
             return false;
         }
     }
 
-    if (!m.m_minibatch.empty())
+    if (!minibatch.m_data.empty())
     {
         // Copy returned minibatch to the matrices.
         for (const auto& mx : matrices)
@@ -116,7 +116,7 @@ bool ReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
             assert(m_nameToStreamId.find(mx.first) != m_nameToStreamId.end());
             size_t streamId = m_nameToStreamId[mx.first];
 
-            const auto& stream = m.m_minibatch[streamId];
+            const auto& stream = minibatch.m_data[streamId];
             m_layout = stream->m_layout;
 
             size_t columnNumber = m_layout->GetNumCols();
@@ -132,7 +132,7 @@ bool ReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
         return m_reader->ReadMinibatch();
     });
 
-    return !m.m_minibatch.empty();
+    return !minibatch.m_data.empty();
 }
 
 template <class ElemType>

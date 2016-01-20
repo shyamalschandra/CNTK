@@ -69,16 +69,10 @@ typedef std::shared_ptr<Stream> StreamPtr;
 // Represents a single minibatch, that contains information about all streams.
 struct Minibatch
 {
-    bool m_atEndOfEpoch;                // Signifies the end of the epoch
-    std::vector<StreamPtr> m_minibatch; // Minibatch data
+    bool m_endOfEpoch;                // Signifies that the end of epoch has been reached.
+    std::vector<StreamPtr> m_data;    // Minibatch data
 
-    Minibatch()
-        : m_atEndOfEpoch(false)
-    {
-    }
-
-    Minibatch(Minibatch&& other)
-        : m_atEndOfEpoch(std::move(other.m_atEndOfEpoch)), m_minibatch(std::move(other.m_minibatch))
+    Minibatch() : m_endOfEpoch(false)
     {
     }
 };

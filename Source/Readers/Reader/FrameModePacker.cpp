@@ -41,14 +41,14 @@ Minibatch FrameModePacker::ReadMinibatch()
 {
     assert(m_mbSize > 0);
 
-    Minibatch m;
-    m.m_atEndOfEpoch = false;
+    Minibatch minibatch;
+    minibatch.m_endOfEpoch = false;
 
     auto sequences = m_transformer->GetNextSequences(m_mbSize);
 
     if (sequences.m_endOfEpoch)
     {
-        m.m_atEndOfEpoch = true;
+        minibatch.m_endOfEpoch = true;
     }
 
     for (size_t i = 0; i < sequences.m_data.size(); i++)
@@ -92,7 +92,7 @@ Minibatch FrameModePacker::ReadMinibatch()
 
     if (sequences.m_data.size() == 0)
     {
-        return m;
+        return minibatch;
     }
 
     m_minibatchLayout->InitAsFrameMode(sequences.m_data.size());
@@ -104,10 +104,10 @@ Minibatch FrameModePacker::ReadMinibatch()
         stream->m_dataSize = sequences.m_data.size() * dimensions;
         stream->m_layout = m_minibatchLayout;
 
-        m.m_minibatch.push_back(stream);
+        minibatch.m_data.push_back(stream);
     }
 
-    return m;
+    return minibatch;
 }
 
 std::shared_ptr<char> FrameModePacker::AllocateBuffer(size_t numElements, size_t elementSize)
