@@ -402,18 +402,20 @@ TransposeTransformer::TypedApply(const DenseSequenceData &inputSequence,
     size_t count = inputStream.m_sampleLayout->GetNumElements() * GetSizeByType(inputStream.m_elementType);
     buffer.resize(count);
 
+    TElement* typedBuffer = reinterpret_cast<TElement*>(&buffer[0]);
     ImageDimensions dimensions(*inputStream.m_sampleLayout, ImageLayoutKind::HWC);
 
     size_t rowCount = dimensions.m_height * dimensions.m_width;
     size_t channelCount = dimensions.m_numChannels;
+    TElement* data = reinterpret_cast<TElement*>(inputSequence.m_data);
 
     for (size_t rowIndex = 0; rowIndex < rowCount; rowIndex++)
     {
         for (size_t columnIndex = 0; columnIndex < channelCount;
              columnIndex++)
         {
-            buffer[columnIndex * rowCount + rowIndex] =
-                buffer[rowIndex * channelCount + columnIndex];
+            typedBuffer[columnIndex * rowCount + rowIndex] =
+                data[rowIndex * channelCount + columnIndex];
         }
     }
 
