@@ -13,7 +13,7 @@
 namespace Microsoft { namespace MSR { namespace CNTK {
 
     // TODO: currently this code moved from the old block randomizer.
-    // The class will be further refactored and common based will be extranceted
+    // The class will be further refactored and common based will be extracted
     // with BlockRandomizer.
     // The class represents a transformer that does not randomize input.
     class NoRandomizer : public Transformer

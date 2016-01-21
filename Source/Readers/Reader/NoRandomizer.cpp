@@ -13,9 +13,9 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 
 NoRandomizer::NoRandomizer(DataDeserializerPtr deserializer)
     : m_deserializer(deserializer),
-    m_sequencePosition(0),
-    m_samplePositionInEpoch(SIZE_MAX), 
-    m_totalNumberOfSamples(0)
+      m_sequencePosition(0),
+      m_samplePositionInEpoch(SIZE_MAX), 
+      m_totalNumberOfSamples(0)
 {
     assert(deserializer != nullptr);
 
