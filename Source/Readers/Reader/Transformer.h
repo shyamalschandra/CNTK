@@ -54,7 +54,7 @@ public:
     // The return value can be used until the next call to GetNextSequences.
     virtual Sequences GetNextSequences(size_t count) = 0;
 
-    virtual ~Transformer() = 0
+    virtual ~Transformer()
     {
     }
 };

@@ -100,7 +100,7 @@ public:
     // Reads a minibatch that contains data across all streams.
     virtual Minibatch ReadMinibatch() = 0;
 
-    virtual ~Reader() = 0 {};
+    virtual ~Reader() {};
 };
 
 typedef std::shared_ptr<Reader> ReaderPtr;

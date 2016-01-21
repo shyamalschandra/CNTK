@@ -12,17 +12,29 @@
 
 #include "DataReader.h"
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(P) (P)
+#endif
+
 namespace Microsoft { namespace MSR { namespace CNTK {
+
+static inline size_t rand(const size_t begin, const size_t end)
+{
+    // eldak: this has already been changed by Alexey(alrezni)
+    // still only covers 32-bit range
+    const size_t randomNumber = ::rand() * RAND_MAX + ::rand();
+    return begin + randomNumber % (end - begin);
+}
 
 // Shuffle a vector into random order by randomly swapping elements
 // TODO: This functionality will be changed to std::shuffle - this work will be done during merging to master,
 // and based on the work Alexey(R) has already done.
 template <typename TVector>
-static void BlockRandomizer::RandomShuffle(TVector& v, size_t randomSeed)
+void RandomShuffle(TVector& v, size_t randomSeed)
 {
     if (v.size() > RAND_MAX * static_cast<size_t>(RAND_MAX))
     {
-        RuntimeError(__FUNCTION__ ": too large set: need to change to different random generator!");
+        RuntimeError("RandomShuffle: too large set: need to change to different random generator!");
     }
 
     srand(static_cast<unsigned int>(randomSeed));
@@ -32,14 +44,6 @@ static void BlockRandomizer::RandomShuffle(TVector& v, size_t randomSeed)
         const size_t randomLocation = rand(0, v.size());
         std::swap(v[currentLocation], v[randomLocation]);
     }
-}
-
-static inline size_t rand(const size_t begin, const size_t end)
-{
-    // eldak: this has already been changed by Alexey(alrezni)
-    // still only covers 32-bit range
-    const size_t randomNumber = ::rand() * RAND_MAX + ::rand();
-    return begin + randomNumber % (end - begin);
 }
 
 bool BlockRandomizer::TimelineIsValidForRandomization(const SequenceDescriptions& timeline) const
@@ -205,7 +209,7 @@ void BlockRandomizer::Randomize()
     {
         // TODO assert only
         if (!IsValidForPosition(i, m_randomTimeline[i]))
-            LogicError(__FUNCTION__ ": randomization logic mangled!");
+            LogicError("BlockRandomizer::Randomize: randomization logic mangled!");
     }
 }
 
@@ -214,7 +218,7 @@ void BlockRandomizer::RandomizeIfNewSweepIsEntered()
     if (m_sequencePositionInSweep >= m_numSequences)
     {
         if (m_verbosity > 0)
-            std::cerr << __FUNCTION__ ": re-randomizing for sweep " << m_sweep
+            std::cerr << __FUNCTION__ << ": re-randomizing for sweep " << m_sweep
                       << " in " << (m_frameMode ? "frame" : "utterance") << " mode" << endl;
         m_sweep++;
         m_sweepStartInSamples += m_numSamples;

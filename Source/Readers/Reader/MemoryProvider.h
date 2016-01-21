@@ -22,7 +22,7 @@ public:
     // Frees contiguous storage.
     virtual void Free(void* ptr) = 0;
 
-    virtual ~MemoryProvider() = 0 { }
+    virtual ~MemoryProvider() { }
 };
 
 typedef std::shared_ptr<MemoryProvider> MemoryProviderPtr;

@@ -96,7 +96,7 @@ public:
     // When randomizer read all sequences from a particular chunk it notifies the data deserializer that the chunk can be freed.
     virtual void ReleaseChunk(size_t chunkIndex) = 0;
 
-    virtual ~DataDeserializer() = 0 {};
+    virtual ~DataDeserializer() {};
 };
 
 typedef std::shared_ptr<DataDeserializer> DataDeserializerPtr;

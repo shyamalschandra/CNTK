@@ -9,6 +9,10 @@
 #include "NoRandomizer.h"
 #include "DataReader.h"
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(P) (P)
+#endif
+
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 NoRandomizer::NoRandomizer(DataDeserializerPtr deserializer)

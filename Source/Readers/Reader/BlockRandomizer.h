@@ -78,9 +78,6 @@ private:
     // with incrementing IDs and non-decreasing chunk identifiers.
     bool TimelineIsValidForRandomization(const SequenceDescriptions& timeline) const;
 
-    template <typename VECTOR>
-    static void RandomShuffle(VECTOR& v, size_t randomSeed);
-
     void RandomizeChunks();
 
     bool IsValidForPosition(size_t targetPosition, const SequenceDescription& seqDesc) const;
