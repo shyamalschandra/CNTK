@@ -69,11 +69,11 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 
         if (AreEqualIgnoreCase(rand, "auto"))
         {
-            m_listRand = true;
+            m_randomize = true;
         }
         else if (AreEqualIgnoreCase(rand, "none"))
         {
-            m_listRand = false;
+            m_randomize = false;
         }
         else
         {

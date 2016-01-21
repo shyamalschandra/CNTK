@@ -37,15 +37,13 @@ ImageReader::ImageReader(MemoryProviderPtr provider,
     auto deserializer = std::make_shared<ImageDataDeserializer>(config);
 
     TransformerPtr randomizer;
-
-    if (configHelper.GetListRand())
+    if (configHelper.ShouldRandomize())
     {
         randomizer = std::make_shared<BlockRandomizer>(0, SIZE_MAX, deserializer);
     }
     else
     {
         randomizer = std::make_shared<NoRandomizer>(deserializer);
-
     }
 
     randomizer->Initialize(nullptr, config);

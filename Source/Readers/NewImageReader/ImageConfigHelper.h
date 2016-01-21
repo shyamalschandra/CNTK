@@ -41,9 +41,9 @@ public:
         return m_cpuThreadCount;
     }
 
-    bool GetListRand() const
+    bool ShouldRandomize() const
     {
-        return m_listRand;
+        return m_randomize;
     }
 
 private:
@@ -54,7 +54,7 @@ private:
     std::vector<StreamDescriptionPtr> m_streams;
     ImageLayoutKind m_dataFormat;
     int m_cpuThreadCount;
-    bool m_listRand;
+    bool m_randomize;
 };
 
 typedef std::shared_ptr<ImageConfigHelper> ImageConfigHelperPtr;
