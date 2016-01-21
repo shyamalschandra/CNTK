@@ -112,7 +112,7 @@ void ImageDataDeserializer::CreateSequenceDescriptions(std::string mapPath, size
     }
 }
 
-std::vector<StreamDescriptionPtr> ImageDataDeserializer::GetStreams() const
+std::vector<StreamDescriptionPtr> ImageDataDeserializer::GetStreamDescriptions() const
 {
     return m_streams;
 }

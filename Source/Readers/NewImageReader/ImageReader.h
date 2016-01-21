@@ -19,7 +19,7 @@ public:
                 const ConfigParameters& parameters);
 
     // Description of streams that this reader provides.
-    std::vector<StreamDescriptionPtr> GetStreams() override;
+    std::vector<StreamDescriptionPtr> GetStreamDescriptions() override;
 
     // Starts a new epoch with the provided configuration.
     void StartEpoch(const EpochConfiguration& config) override;

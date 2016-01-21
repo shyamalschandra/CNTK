@@ -22,7 +22,7 @@ SampleModePacker::SampleModePacker(
     m_minibatchLayout(std::make_shared<MBLayout>()),
     m_memoryProvider(memoryProvider)
 {
-    m_inputStreams = m_transformer->GetStreams();
+    m_inputStreams = m_transformer->GetStreamDescriptions();
     assert(m_inputStreams.size() == m_outputStreams.size());
     assert(
         std::find_if(

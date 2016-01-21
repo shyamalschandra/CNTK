@@ -92,7 +92,7 @@ class Reader
 {
 public:
     // Describes the streams this reader produces.
-    virtual std::vector<StreamDescriptionPtr> GetStreams() = 0;
+    virtual std::vector<StreamDescriptionPtr> GetStreamDescriptions() = 0;
 
     // Starts a new epoch with the provided configuration
     virtual void StartEpoch(const EpochConfiguration& config) = 0;

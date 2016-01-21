@@ -57,7 +57,7 @@ ImageReader::ImageReader(MemoryProviderPtr provider,
     m_transformer = last;
 }
 
-std::vector<StreamDescriptionPtr> ImageReader::GetStreams()
+std::vector<StreamDescriptionPtr> ImageReader::GetStreamDescriptions()
 {
     assert(!m_streams.empty());
     return m_streams;

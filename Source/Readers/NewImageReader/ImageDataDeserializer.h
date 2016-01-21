@@ -21,7 +21,7 @@ public:
     explicit ImageDataDeserializer(const ConfigParameters& config);
 
     // Description of streams that this data deserializer provides.
-    std::vector<StreamDescriptionPtr> GetStreams() const override;
+    std::vector<StreamDescriptionPtr> GetStreamDescriptions() const override;
 
     // Get sequences by specified ids. Order of returned sequences correponds to the order of provided ids.
     std::vector<std::vector<SequenceDataPtr>> GetSequencesById(const std::vector<size_t>& ids) override;

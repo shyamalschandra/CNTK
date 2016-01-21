@@ -40,7 +40,7 @@ typedef std::shared_ptr<Transformer> TransformerPtr;
 // Defines a data transformation interface.
 // Transformers are responsible for doing custom transformation of sequences.
 // For example for images, there could be scale, crop, or median transformation.
-// Transformations can be chained together and
+// TODO: Adopt to the C#/Java iterator pattern.
 class Transformer
 {
 public:
@@ -50,7 +50,7 @@ public:
         const ConfigParameters& readerConfig) = 0;
 
     // Describes streams the transformer produces.
-    virtual std::vector<StreamDescriptionPtr> GetStreams() const = 0;
+    virtual std::vector<StreamDescriptionPtr> GetStreamDescriptions() const = 0;
 
     // Sets current epoch configuration.
     virtual void StartEpoch(const EpochConfiguration& config) = 0;

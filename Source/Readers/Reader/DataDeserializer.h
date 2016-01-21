@@ -11,7 +11,8 @@
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 // Defines main properties of a sequence. 
-// Sequence definitions are used by the randomizer to establish a global timeline for complete input.
+// Sequence descriptions are used by the randomizer to establish a global timeline for complete input.
+// A sequence is defined as an ordered set of samples (size == 1 is used for sample training).
 struct SequenceDescription
 {
     size_t m_id;              // Sequence id, uniquely identifies the sequence.
@@ -70,14 +71,14 @@ typedef std::shared_ptr<SparseSequenceData> SparseSequenceDataPtr;
 class DataDeserializer
 {
 public:
-    // Describes streams this data deserializer can produce.
-    virtual std::vector<StreamDescriptionPtr> GetStreams() const = 0;
-
-    // Sets epoch configuration.
-    virtual void StartEpoch(const EpochConfiguration& config) = 0;
+    // Describes streams this data deserializer can produce. Streams correspond to network inputs.
+    virtual std::vector<StreamDescriptionPtr> GetStreamDescriptions() const = 0;
 
     // Retrieves description of all sequences this data deserializer can produce.
     virtual const SequenceDescriptions& GetSequenceDescriptions() const = 0;
+
+    // Sets epoch configuration.
+    virtual void StartEpoch(const EpochConfiguration& config) = 0;
 
     // Gets sequences by id.
     // The return value can be used until the next call to GetSequencesById.

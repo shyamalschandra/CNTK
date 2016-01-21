@@ -40,7 +40,7 @@ void ReaderShim<ElemType>::Init(const ConfigParameters& config)
     m_layout->Init(numSeqsPerMBForAllEpochs[0], 0);
 
     m_reader = m_factory(config);
-    m_streams = m_reader->GetStreams();
+    m_streams = m_reader->GetStreamDescriptions();
     for (auto i : m_streams)
     {
         m_nameToStreamId.insert(std::make_pair(i->m_name, i->m_id));

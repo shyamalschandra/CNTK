@@ -22,7 +22,7 @@ public:
                             const ConfigParameters &) override
     {
         m_next = next;
-        m_inputStreams = m_next->GetStreams();
+        m_inputStreams = m_next->GetStreamDescriptions();
     }
 
     // Sets configuration for the current epoch.
@@ -33,7 +33,7 @@ public:
     }
 
     // Description of streams that the transformer provides.
-    virtual std::vector<StreamDescriptionPtr> GetStreams() const override
+    virtual std::vector<StreamDescriptionPtr> GetStreamDescriptions() const override
     {
         return this->GetOutputStreams();
     }
