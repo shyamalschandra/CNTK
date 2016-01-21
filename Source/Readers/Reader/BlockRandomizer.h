@@ -76,7 +76,7 @@ private:
 
     // Check that timeline has only valid sequences of non-zero length
     // with incrementing IDs and non-decreasing chunk identifiers.
-    bool TimelineIsValidForRandomization(const Timeline& timeline) const;
+    bool TimelineIsValidForRandomization(const SequenceDescriptions& timeline) const;
 
     template <typename VECTOR>
     static void RandomShuffle(VECTOR& v, size_t randomSeed);

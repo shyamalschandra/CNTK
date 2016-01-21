@@ -42,7 +42,7 @@ static inline size_t rand(const size_t begin, const size_t end)
     return begin + randomNumber % (end - begin);
 }
 
-bool BlockRandomizer::TimelineIsValidForRandomization(const Timeline& timeline) const
+bool BlockRandomizer::TimelineIsValidForRandomization(const SequenceDescriptions& timeline) const
 {
     SequenceDescription previous = { SIZE_MAX, 0, 0, true };
 
@@ -243,7 +243,7 @@ BlockRandomizer::BlockRandomizer(int verbosity, size_t randomizationRangeInSampl
     : m_verbosity(verbosity), m_randomizationRangeInSamples(randomizationRangeInSamples), m_deserializer(deserializer), m_sweep(SIZE_MAX), m_sequencePositionInSweep(SIZE_MAX), m_samplePositionInEpoch(SIZE_MAX), m_epochSize(SIZE_MAX)
 {
     assert(deserializer != nullptr);
-    const Timeline& timeline = m_deserializer->GetSequenceDescriptions();
+    const SequenceDescriptions& timeline = m_deserializer->GetSequenceDescriptions();
     assert(TimelineIsValidForRandomization(timeline));
 
     m_numSequences = timeline.back()->m_id + 1;

@@ -172,7 +172,7 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
     return result;
 }
 
-void ImageDataDeserializer::FillSequenceDescriptions(Timeline& timeline) const
+void ImageDataDeserializer::FillSequenceDescriptions(SequenceDescriptions& timeline) const
 {
     timeline.resize(m_imageSequences.size());
     std::transform(

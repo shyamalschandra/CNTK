@@ -27,7 +27,7 @@ public:
     std::vector<std::vector<SequenceDataPtr>> GetSequencesById(const std::vector<size_t>& ids) override;
 
 protected:
-    void FillSequenceDescriptions(Timeline& timeline) const override;
+    void FillSequenceDescriptions(SequenceDescriptions& timeline) const override;
 
 private:
     // Creates a set of sequence descriptions.
