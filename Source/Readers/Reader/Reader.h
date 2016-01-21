@@ -18,17 +18,18 @@ struct MBLayout;
 typedef std::shared_ptr<MBLayout> MBLayoutPtr;
 
 // Configuration for the current epoch.
-// Each time the epoch is started CNTK should communicate the configuration to the reader.
+// Each time the epoch is started CNTK should provide the configuration to the reader using StartEpoch method
+// and the below structure.
 struct EpochConfiguration
 {
-    size_t m_numberOfWorkers;          // Number of the Open MPI workers for the current epoch
-    size_t m_workerRank;               // Rank of the Open MPI worker, worker rank has to be less the the number of workers
-    size_t m_minibatchSizeInSamples;   // Maximum minibatch size for the epoch in samples
-    size_t m_totalEpochSizeInSamples;  // Total size of the epoch in samples
+    size_t m_numberOfWorkers;               // Number of the Open MPI workers for the current epoch
+    size_t m_workerRank;                    // Rank of the Open MPI worker, worker rank has to be less the the number of workers
+    size_t m_minibatchSizeInSamples;        // Maximum minibatch size for the epoch in samples
+    size_t m_totalEpochSizeInSamples;       // Total size of the epoch in samples
     size_t m_epochIndex;                    // Current epoch index [0 .. max number of epochs)
 };
 
-// Supported primitive element types, will be extended in the future
+// Supported primitive element types, will be extended in the future.
 enum class ElementType
 {
     tfloat,  // single precision
@@ -36,7 +37,7 @@ enum class ElementType
     tatom    // sizeof(atom) == 1 constitute of blobs -> sequences of atoms (i.e. used for lattices, hmmm, etc.)
 };
 
-// Supported storage types.
+// Supported storage types, will be extended in the future.
 enum class StorageType
 {
     dense,
@@ -53,7 +54,7 @@ struct StreamDescription
     StorageType m_storageType;     // Storage type of the stream
     ElementType m_elementType;     // Element type of the stream
     TensorShapePtr m_sampleLayout; // Layout of the sample for the stream
-                                 // If not specified - can be specified per sequence
+                                   // If not specified - can be specified per sequence
 };
 typedef std::shared_ptr<StreamDescription> StreamDescriptionPtr;
 
@@ -83,18 +84,20 @@ struct Minibatch
     }
 };
 
-// Main Reader interface. The border interface between the CNTK and Reader.
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Main Reader interface. The border interface between the CNTK and reader libraries.
+// TODO: Expect to change in a little bit: stream matrices provided by the network as input.
+//////////////////////////////////////////////////////////////////////////////////////////////////
 class Reader
 {
 public:
     // Describes the streams this reader produces.
     virtual std::vector<StreamDescriptionPtr> GetStreams() = 0;
 
-    // Starts a new epoch.
+    // Starts a new epoch with the provided configuration
     virtual void StartEpoch(const EpochConfiguration& config) = 0;
 
     // Reads a minibatch that contains data across all streams.
-    // TODO: Expect stream matrices provided by the network as input.
     virtual Minibatch ReadMinibatch() = 0;
 
     virtual ~Reader() = 0 {};

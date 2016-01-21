@@ -9,18 +9,20 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface used for allocating stream data returned by the reader.
-// Should be injected by CNTK into the reader (will be a member of Matrix class).
-// Should be used for allocating the stream data returned by the reader.
+// TODO: Should be injected by CNTK into the reader (will be a member of Matrix class).
+//////////////////////////////////////////////////////////////////////////////////////////////////
 class MemoryProvider
 {
 public:
-    virtual void* Alloc(size_t element, size_t numberOfElements) = 0;
+    // Allocates contiguous storage for specified number of elements of provided size.
+    virtual void* Alloc(size_t elementSize, size_t numberOfElements) = 0;
+
+    // Frees contiguous storage.
     virtual void Free(void* ptr) = 0;
 
-    virtual ~MemoryProvider() = 0
-    {
-    }
+    virtual ~MemoryProvider() = 0 { }
 };
 
 typedef std::shared_ptr<MemoryProvider> MemoryProviderPtr;

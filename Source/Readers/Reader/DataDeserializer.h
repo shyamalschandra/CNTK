@@ -17,6 +17,7 @@ struct SequenceDescription
     size_t m_id;              // Sequence id, uniquely identifies the sequence.
     size_t m_numberOfSamples; // Number of samples in a sequence.
     size_t m_chunkId;         // Each sequence belongs to an I/O chunk, how chunk is defined is specific to a particular data deserializer.
+                              // The randomizer guarantees to request sequences from only limited subset of chunks at any moment in time.
     bool m_isValid;           // Indicates whether the sequence is valid.
 };
 typedef std::vector<const SequenceDescription*> SequenceDescriptions;
@@ -58,12 +59,14 @@ struct SparseSequenceData : SequenceDataBase
 };
 typedef std::shared_ptr<SparseSequenceData> SparseSequenceDataPtr;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface all data deserializers should implmenent.
 // Data deserializers are intimately familiar with a particular input formats and responsible for bringing the serialized data
 // into sequences in memory. Very often data for different streams (i.e. features/lattices) reside in the same physical storage (file),
 // so the data deserializer can expose not a single but several streams. Examples of data include image data deserializer
 // or htkmlf data deserializer.
 // TODO: This interface will become ABI and deserializers can be implemented in different languages, i.e. Python.
+//////////////////////////////////////////////////////////////////////////////////////////////////
 class DataDeserializer
 {
 public:
