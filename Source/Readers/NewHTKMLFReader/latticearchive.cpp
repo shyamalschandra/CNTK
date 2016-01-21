@@ -58,7 +58,7 @@ static void writeunitmap(const wstring &symlistpath, const UNITMAP &unitmap)
     {
         const std::string unit = mappings[k];             // logical name
         const size_t unitid = unitmap.find(unit)->second; // get its unit id; this indexes the units array
-        const std::string tounit = units[unitid];         // and get the name from tehre
+        const std::string tounit = units[unitid];         // and get the name from there
         fprintfOrDie(flist, "%s %s\n", unit.c_str(), tounit.c_str());
     }
     fflushOrDie(flist);

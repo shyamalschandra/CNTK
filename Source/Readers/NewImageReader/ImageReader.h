@@ -11,7 +11,7 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
-// Imlementation of the image reader.
+// Implementation of the image reader.
 class ImageReader : public Reader
 {
 public:

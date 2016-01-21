@@ -23,7 +23,7 @@ public:
     // Description of streams that this data deserializer provides.
     std::vector<StreamDescriptionPtr> GetStreams() const override;
 
-    // Get sequences by specified ids. Order of returned sequences correponds to the order of provided ids.
+    // Get sequences by specified ids. Order of returned sequences corresponds to the order of provided ids.
     std::vector<std::vector<SequenceDataPtr>> GetSequencesById(const std::vector<size_t>& ids) override;
 
 protected:
