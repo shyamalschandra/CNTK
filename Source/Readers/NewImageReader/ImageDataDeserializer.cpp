@@ -158,7 +158,6 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
         image->m_data = cvImage.ptr();
         image->m_sampleLayout = std::make_shared<TensorShape>(dimensions.AsTensorShape(HWC));
         image->m_numberOfSamples = 1;
-        assert(imageSequence.m_numberOfSamples == image->m_numberOfSamples);
 
         if (m_labels[i] == nullptr)
         {
