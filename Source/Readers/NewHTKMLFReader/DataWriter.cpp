@@ -66,7 +66,7 @@ DataWriter<ElemType>::~DataWriter()
 }
 
 // GetSections - Get the sections of the file
-// sections - a map of section name to section. Data sepcifications from config file will be used to determine where and how to save data
+// sections - a map of section name to section. Data specifications from config file will be used to determine where and how to save data
 template <class ElemType>
 void DataWriter<ElemType>::GetSections(std::map<std::wstring, SectionType, nocase_compare>& sections)
 {
@@ -75,7 +75,7 @@ void DataWriter<ElemType>::GetSections(std::map<std::wstring, SectionType, nocas
 
 // SaveData - save data in the file/files
 // recordStart - Starting record number
-// matricies - a map of section name (section:subsection) to data pointer. Data sepcifications from config file will be used to determine where and how to save data
+// matrices - a map of section name (section:subsection) to data pointer. Data specifications from config file will be used to determine where and how to save data
 // numRecords - number of records we are saving, can be zero if not applicable
 // datasetSize - Size of the dataset
 // byteVariableSized - for variable sized data, size of current block to be written, zero when not used, or ignored if not variable sized data

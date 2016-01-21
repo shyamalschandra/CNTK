@@ -61,7 +61,7 @@ struct SparseSequenceData : SequenceDataBase
 typedef std::shared_ptr<SparseSequenceData> SparseSequenceDataPtr;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface all data deserializers should implmenent.
+// Interface all data deserializers should implement.
 // Data deserializers are intimately familiar with a particular input formats and responsible for bringing the serialized data
 // into sequences in memory. Very often data for different streams (i.e. features/lattices) reside in the same physical storage (file),
 // so the data deserializer can expose not a single but several streams. Examples of data include image data deserializer

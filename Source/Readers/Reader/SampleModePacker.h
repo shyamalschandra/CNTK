@@ -11,7 +11,7 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
-// A sample packer that densly packs samples in parallel for GPU consumptions.
+// A sample packer that densely packs samples in parallel for GPU consumptions.
 class SampleModePacker
 {
 public:

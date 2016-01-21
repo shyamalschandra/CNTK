@@ -23,7 +23,7 @@ typedef std::shared_ptr<MBLayout> MBLayoutPtr;
 struct EpochConfiguration
 {
     size_t m_numberOfWorkers;               // Number of the Open MPI workers for the current epoch
-    size_t m_workerRank;                    // Rank of the Open MPI worker, worker rank has to be less the the number of workers
+    size_t m_workerRank;                    // Rank of the Open MPI worker, worker rank has to be less than the number of workers
     size_t m_minibatchSizeInSamples;        // Maximum minibatch size for the epoch in samples
     size_t m_totalEpochSizeInSamples;       // Total size of the epoch in samples
     size_t m_epochIndex;                    // Current epoch index [0 .. max number of epochs)
