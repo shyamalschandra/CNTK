@@ -213,6 +213,7 @@ $(BUILDINFO): $(GENBUILD)
 READER_SRC =\
 	$(SOURCEDIR)/Readers/Reader/SampleModePacker.cpp \
 	$(SOURCEDIR)/Readers/Reader/BlockRandomizer.cpp \
+	$(SOURCEDIR)/Readers/Reader/NoRandomizer.cpp \
 	$(SOURCEDIR)/Readers/Reader/ReaderShim.cpp \
 
 COMMON_SRC =\
