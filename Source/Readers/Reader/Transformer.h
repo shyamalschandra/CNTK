@@ -27,11 +27,6 @@ struct Sequences
 
     // Indicates whether the epoch ends with the data returned.
     bool m_endOfEpoch;
-
-    Sequences(Sequences&& other)
-        : m_data(std::move(other.m_data)), m_endOfEpoch(std::move(other.m_endOfEpoch))
-    {
-    }
 };
 
 class Transformer;
