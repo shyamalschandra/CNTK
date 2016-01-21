@@ -78,6 +78,7 @@
     <ClInclude Include="DataDeserializerBase.h" />
     <ClInclude Include="TransformerBase.h" />
     <ClInclude Include="BlockRandomizer.h" />
+    <ClInclude Include="NoRandomizer.h" />
     <ClInclude Include="CudaMemoryProvider.h" />
     <ClInclude Include="DataDeserializer.h" />
     <ClInclude Include="ElementTypeUtils.h" />
@@ -92,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BlockRandomizer.cpp" />
+    <ClCompile Include="NoRandomizer.cpp" />
     <ClCompile Include="SampleModePacker.cpp" />
     <ClCompile Include="ReaderShim.cpp" />
   </ItemGroup>

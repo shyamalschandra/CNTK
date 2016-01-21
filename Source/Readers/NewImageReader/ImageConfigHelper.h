@@ -41,6 +41,11 @@ public:
         return m_cpuThreadCount;
     }
 
+    bool GetListRand() const
+    {
+        return m_listRand;
+    }
+
 private:
     ImageConfigHelper(const ImageConfigHelper&) = delete;
     ImageConfigHelper& operator=(const ImageConfigHelper&) = delete;
@@ -49,6 +54,7 @@ private:
     std::vector<StreamDescriptionPtr> m_streams;
     ImageLayoutKind m_dataFormat;
     int m_cpuThreadCount;
+    bool m_listRand;
 };
 
 typedef std::shared_ptr<ImageConfigHelper> ImageConfigHelperPtr;

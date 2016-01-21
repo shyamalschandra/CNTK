@@ -9,6 +9,7 @@
 #include "ImageConfigHelper.h"
 #include "ImageTransformers.h"
 #include "BlockRandomizer.h"
+#include "NoRandomizer.h"
 #include "ImageDataDeserializer.h"
 #include <omp.h>
 
@@ -35,7 +36,18 @@ ImageReader::ImageReader(MemoryProviderPtr provider,
 
     auto deserializer = std::make_shared<ImageDataDeserializer>(config);
 
-    auto randomizer = std::make_shared<BlockRandomizer>(0, SIZE_MAX, deserializer);
+    TransformerPtr randomizer;
+
+    if (configHelper.GetListRand())
+    {
+        randomizer = std::make_shared<BlockRandomizer>(0, SIZE_MAX, deserializer);
+    }
+    else
+    {
+        randomizer = std::make_shared<NoRandomizer>(deserializer);
+
+    }
+
     randomizer->Initialize(nullptr, config);
 
     auto cropper = std::make_shared<CropTransformer>();

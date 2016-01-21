@@ -66,9 +66,18 @@ namespace Microsoft { namespace MSR { namespace CNTK {
         m_mapPath = config(L"file");
 
         std::string rand = config(L"randomize", "auto");
-        if (!AreEqualIgnoreCase(rand, "auto"))
+
+        if (AreEqualIgnoreCase(rand, "auto"))
         {
-            RuntimeError("'randomize' parameter currently supports only 'auto' value.");
+            m_listRand = true;
+        }
+        else if (AreEqualIgnoreCase(rand, "none"))
+        {
+            m_listRand = false;
+        }
+        else
+        {
+            RuntimeError("'randomize' parameter must be set to 'auto' or 'none'");
         }
 
         std::string mbFmt = featureSection("mbFormat", "nchw");

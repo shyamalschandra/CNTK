@@ -4,6 +4,9 @@
     <ClInclude Include="BlockRandomizer.h">
       <Filter>Randomizers</Filter>
     </ClInclude>
+    <ClInclude Include="NoRandomizer.h">
+      <Filter>Randomizers</Filter>
+    </ClInclude>
     <ClInclude Include="CudaMemoryProvider.h">
       <Filter>MemoryProviders</Filter>
     </ClInclude>
@@ -46,6 +49,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BlockRandomizer.cpp">
+      <Filter>Randomizers</Filter>
+    </ClCompile>
+    <ClCompile Include="NoRandomizer.cpp">
       <Filter>Randomizers</Filter>
     </ClCompile>
     <ClCompile Include="ReaderShim.cpp">
