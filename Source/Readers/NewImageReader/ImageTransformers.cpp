@@ -60,9 +60,15 @@ ImageTransformerBase::Apply(const DenseSequenceData &inputSequence,
     int type = CV_MAKETYPE(typeId, channels);
     buffer = cv::Mat(rows, columns, type, inputSequence.m_data);
     this->Apply(buffer);
+    if (!buffer.isContinuous())
+    {
+        buffer = buffer.clone();
+    }
+    assert(buffer.isContinuous());
 
     auto result = std::make_shared<DenseSequenceData>();
-    result->m_sampleLayout = std::make_shared<TensorShape>(buffer.cols, buffer.rows, buffer.channels());
+    ImageDimensions outputDimensions(buffer.cols, buffer.rows, buffer.channels());
+    result->m_sampleLayout = std::make_shared<TensorShape>(outputDimensions.AsTensorShape(HWC));
     result->m_numberOfSamples = inputSequence.m_numberOfSamples;
     result->m_data = buffer.ptr();
     return result;
@@ -144,7 +150,9 @@ void CropTransformer::Apply(cv::Mat &mat)
 
     mat = mat(GetCropRect(m_cropType, mat.rows, mat.cols, ratio, *rng));
     if (m_hFlip && std::bernoulli_distribution()(*rng))
+    {
         cv::flip(mat, mat, 1);
+    }
 
     m_rngs.push(std::move(rng));
 }
@@ -276,7 +284,9 @@ void ScaleTransformer::Apply(cv::Mat &mat)
     // requires floating point type.
     //
     if (mat.type() != CV_MAKETYPE(m_dataType, m_imgChannels))
+    {
         mat.convertTo(mat, m_dataType);
+    }
 
     auto seed = GetSeed();
     auto rng = m_rngs.pop_or_create(
@@ -285,11 +295,13 @@ void ScaleTransformer::Apply(cv::Mat &mat)
             return std::make_unique<std::mt19937>(seed);
         });
 
+
+    auto index = UniIntT(0, static_cast<int>(m_interp.size()) - 1)(*rng);
     assert(m_interp.size() > 0);
     cv::resize(
         mat, mat,
         cv::Size(static_cast<int>(m_imgWidth), static_cast<int>(m_imgHeight)), 0,
-        0, m_interp[UniIntT(0, static_cast<int>(m_interp.size()) - 1)(*rng)]);
+        0, m_interp[index]);
 
     m_rngs.push(std::move(rng));
 }
@@ -300,7 +312,15 @@ void MeanTransformer::Initialize(TransformerPtr next,
                                  const ConfigParameters &readerConfig)
 {
     ImageTransformerBase::Initialize(next, readerConfig);
-    InitFromConfig(readerConfig);
+
+    auto featureStreamIds = GetAppliedStreamIds();
+
+    if (featureStreamIds.size() != 1)
+    {
+        RuntimeError("Only a single feature stream is supported.");
+    }
+
+    InitFromConfig(readerConfig(GetInputStreams()[featureStreamIds[0]]->m_name));
 }
 
 void MeanTransformer::InitFromConfig(const ConfigParameters &config)
@@ -339,7 +359,9 @@ void MeanTransformer::Apply(cv::Mat &mat)
 
     // REVIEW alexeyk: check type conversion (float/double).
     if (m_meanImg.size() == mat.size())
+    {
         mat = mat - m_meanImg;
+    }
 }
 
 void TransposeTransformer::Initialize(TransformerPtr next,

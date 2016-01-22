@@ -48,10 +48,20 @@ namespace Microsoft { namespace MSR { namespace CNTK {
         size_t h = featureSection("height");
         size_t c = featureSection("channels");
 
+        std::string mbFmt = featureSection("mbFormat", "nchw");
+        if (AreEqualIgnoreCase(mbFmt, "nhwc"))
+        {
+            m_dataFormat = HWC;
+        }
+        else if (!AreEqualIgnoreCase(mbFmt, "nchw"))
+        {
+            RuntimeError("ImageReader does not support the mini-batch format %s.", mbFmt.c_str());
+        }
+
         auto features = std::make_shared<StreamDescription>();
         features->m_id = 0;
         features->m_name = msra::strfun::utf16(featureSection.ConfigName());
-        features->m_sampleLayout = std::make_shared<TensorShape>(w, h, c);
+        features->m_sampleLayout = std::make_shared<TensorShape>(ImageDimensions(w, h, c).AsTensorShape(m_dataFormat));
         m_streams.push_back(features);
 
         ConfigParameters label = config(labelNames[0]);
@@ -78,16 +88,6 @@ namespace Microsoft { namespace MSR { namespace CNTK {
         else
         {
             RuntimeError("'randomize' parameter must be set to 'auto' or 'none'");
-        }
-
-        std::string mbFmt = featureSection("mbFormat", "nchw");
-        if (AreEqualIgnoreCase(mbFmt, "nhwc"))
-        {
-            m_dataFormat = HWC;
-        }
-        else if (!AreEqualIgnoreCase(mbFmt, "nchw"))
-        {
-            RuntimeError("ImageReader does not support the mini-batch format %s.", mbFmt.c_str());
         }
 
         // Identify precision

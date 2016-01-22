@@ -143,7 +143,6 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
         // Construct image
         m_currentImages[i] = std::move(cv::imread(imageSequence.m_path, cv::IMREAD_COLOR));
         cv::Mat& cvImage = m_currentImages[i];
-        assert(cvImage.isContinuous());
 
         // Convert element type.
         // TODO We should all native CV element types to be able to match the behavior of the old reader.
@@ -153,9 +152,15 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
             cvImage.convertTo(cvImage, dataType);
         }
 
+        if (!cvImage.isContinuous())
+        {
+            cvImage = cvImage.clone();
+        }
+        assert(cvImage.isContinuous());
+
         ImageDimensions dimensions(cvImage.cols, cvImage.rows, cvImage.channels());
         auto image = std::make_shared<DenseSequenceData>();
-        image->m_data = cvImage.ptr();
+        image->m_data = cvImage.data;
         image->m_sampleLayout = std::make_shared<TensorShape>(dimensions.AsTensorShape(HWC));
         image->m_numberOfSamples = 1;
 
