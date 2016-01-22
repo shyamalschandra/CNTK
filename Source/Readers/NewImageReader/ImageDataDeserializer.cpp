@@ -8,6 +8,10 @@
 #include "ImageDataDeserializer.h"
 #include "ImageConfigHelper.h"
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(P) (P)
+#endif
+
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 class ImageDataDeserializer::LabelGenerator
@@ -96,7 +100,9 @@ void ImageDataDeserializer::CreateSequenceDescriptions(std::string mapPath, size
         std::string classId;
         if (!std::getline(ss, imagePath, '\t') || !std::getline(ss, classId, '\t'))
         {
-            RuntimeError("Invalid map file format, must contain 2 tab-delimited columns: %s, line: %d.", mapPath.c_str(), lineIndex);
+            RuntimeError("Invalid map file format, must contain 2 tab-delimited columns: %s, line: %d.",
+                         mapPath.c_str(),
+                         static_cast<int>(lineIndex));
         }
 
         description.m_id = lineIndex;
@@ -109,8 +115,8 @@ void ImageDataDeserializer::CreateSequenceDescriptions(std::string mapPath, size
             RuntimeError(
                 "Image '%s' has invalid class id '%d'. Expected label dimension is '%d'.",
                 mapPath.c_str(),
-                description.m_classId,
-                labelDimension);
+                static_cast<int>(description.m_classId),
+                static_cast<int>(labelDimension));
         }
         m_imageSequences.push_back(description);
     }
@@ -139,7 +145,9 @@ std::vector<std::vector<SequenceDataPtr>> ImageDataDeserializer::GetSequencesByI
     {
         if (ids[i] >= m_imageSequences.size())
         {
-            RuntimeError("Invalid sequence id is provided '%d', expected range [0..%d].", ids[i], m_imageSequences.size() - 1);
+            RuntimeError("Invalid sequence id is provided '%d', expected range [0..%d].",
+                         static_cast<int>(ids[i]),
+                         static_cast<int>(m_imageSequences.size()) - 1);
         }
 
         const auto& imageSequence = m_imageSequences[ids[i]];

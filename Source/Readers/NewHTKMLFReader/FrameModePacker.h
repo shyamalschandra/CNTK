@@ -10,7 +10,7 @@
 #include "Reader.h"
 #include "MemoryProvider.h"
 #include "Transformer.h"
-#include "commandArgUtil.h"
+#include "Config.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
@@ -19,7 +19,7 @@ class FrameModePacker : public Reader
 public:
     FrameModePacker(const ConfigParameters& config, MemoryProviderPtr memoryProvider, size_t elementSize);
 
-    virtual std::vector<StreamDescriptionPtr> GetStreams() override;
+    virtual std::vector<StreamDescriptionPtr> GetStreamDescriptions() override;
     virtual void StartEpoch(const EpochConfiguration& config) override;
     virtual Minibatch ReadMinibatch() override;
 

@@ -17,7 +17,7 @@ MLFDataDeserializer::MLFDataDeserializer(const ConfigParameters& label, size_t e
     ConfigHelper::CheckLabelType(label);
 
     m_dimension = ConfigHelper::GetLabelDimension(label);
-    m_layout = std::make_shared<ImageLayout>(std::move(std::vector<size_t>{m_dimension}));
+    m_layout = std::make_shared<TensorShape>(m_dimension);
 
     m_stateListPath = label(L"labelMappingFile", L"");
 
@@ -40,8 +40,8 @@ MLFDataDeserializer::MLFDataDeserializer(const ConfigParameters& label, size_t e
         "Type 'msra::asr::htkmlfreader' should be move constructible!");
 
     MLFUtterance description;
-    description.id = 0;
-    description.isValid = true; // right now we throw for invalid sequences
+    description.m_id = 0;
+    description.m_isValid = true; // right now we throw for invalid sequences
     // TODO .chunk, .key
 
     size_t totalFrames = 0;
@@ -55,9 +55,9 @@ MLFDataDeserializer::MLFDataDeserializer(const ConfigParameters& label, size_t e
         const auto& labseq = l->second;
 
         description.sequenceStart = m_classIds.size(); // TODO
-        description.isValid = true;
+        description.m_isValid = true;
         size_t numofframes = 0;
-        description.id++;
+        description.m_id++;
 
         foreach_index (i, labseq)
         {
@@ -87,7 +87,7 @@ MLFDataDeserializer::MLFDataDeserializer(const ConfigParameters& label, size_t e
             }
         }
 
-        description.numberOfSamples = numofframes;
+        description.m_numberOfSamples = numofframes;
         totalFrames += numofframes;
         m_utterances.push_back(description);
     }
@@ -105,17 +105,17 @@ MLFDataDeserializer::MLFDataDeserializer(const ConfigParameters& label, size_t e
     {
         if (m_frameMode)
         {
-            for (size_t k = 0; k < m_utterances[i].numberOfSamples; ++k)
+            for (size_t k = 0; k < m_utterances[i].m_numberOfSamples; ++k)
             {
                 MLFFrame f;
-                f.id = m_frames.size();
-                f.chunkId = 0;
-                f.numberOfSamples = 1;
+                f.m_id = m_frames.size();
+                f.m_chunkId = 0;
+                f.m_numberOfSamples = 1;
                 f.index = m_utterances[i].sequenceStart + k;
-                assert(m_utterances[i].isValid); // TODO
-                f.isValid = m_utterances[i].isValid;
+                assert(m_utterances[i].m_isValid); // TODO
+                f.m_isValid = m_utterances[i].m_isValid;
                 m_frames.push_back(f);
-                m_sequences.push_back(&m_frames[f.id]);
+                m_sequences.push_back(&m_frames[f.m_id]);
             }
         }
         else
@@ -131,18 +131,18 @@ void Microsoft::MSR::CNTK::MLFDataDeserializer::StartEpoch(const EpochConfigurat
     throw std::logic_error("The method or operation is not implemented.");
 }
 
-const Timeline& Microsoft::MSR::CNTK::MLFDataDeserializer::GetSequenceDescriptions() const
+const SequenceDescriptions& Microsoft::MSR::CNTK::MLFDataDeserializer::GetSequenceDescriptions() const
 {
     return m_sequences;
 }
 
-std::vector<StreamDescriptionPtr> MLFDataDeserializer::GetStreams() const
+std::vector<StreamDescriptionPtr> MLFDataDeserializer::GetStreamDescriptions() const
 {
     StreamDescriptionPtr stream = std::make_shared<StreamDescription>();
-    stream->id = 0;
-    stream->name = m_name;
-    stream->sampleLayout = std::make_shared<ImageLayout>(std::move(std::vector<size_t>{m_dimension}));
-    stream->elementType = m_elementSize == sizeof(float) ? ElementType::tfloat : ElementType::tdouble;
+    stream->m_id = 0;
+    stream->m_name = m_name;
+    stream->m_sampleLayout = std::make_shared<TensorShape>(m_dimension);
+    stream->m_elementType = m_elementSize == sizeof(float) ? ElementType::tfloat : ElementType::tdouble;
     return std::vector<StreamDescriptionPtr>{stream};
 }
 
@@ -159,17 +159,17 @@ std::vector<std::vector<SequenceDataPtr>> MLFDataDeserializer::GetSequencesById(
         float* tmp = new float[m_dimension];
         memset(tmp, 0, m_elementSize * m_dimension);
         tmp[label] = 1;
-        r->data = tmp;
+        r->m_data = tmp;
     }
     else
     {
         double* tmp = new double[m_dimension];
         memset(tmp, 0, m_elementSize * m_dimension);
         tmp[label] = 1;
-        r->data = tmp;
+        r->m_data = tmp;
     }
 
-    r->numberOfSamples = m_sequences[id]->numberOfSamples;
+    r->m_numberOfSamples = m_sequences[id]->m_numberOfSamples;
 
     std::vector<std::vector<SequenceDataPtr>> result;
     result.push_back(std::vector<SequenceDataPtr>{r});

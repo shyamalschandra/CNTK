@@ -6,7 +6,7 @@
 #pragma once
 
 #include "DataDeserializer.h"
-#include "commandArgUtil.h" // for ConfigParameters
+#include "Config.h" // for ConfigParameters
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
@@ -30,8 +30,8 @@ public:
 
     virtual void StartEpoch(const EpochConfiguration& config) override;
 
-    virtual const Timeline& GetSequenceDescriptions() const override;
-    virtual std::vector<StreamDescriptionPtr> GetStreams() const override;
+    virtual const SequenceDescriptions& GetSequenceDescriptions() const override;
+    virtual std::vector<StreamDescriptionPtr> GetStreamDescriptions() const override;
     virtual std::vector<std::vector<SequenceDataPtr>> GetSequencesById(const std::vector<size_t>& ids) override;
     virtual void RequireChunk(size_t chunkindex) override;
     virtual void ReleaseChunk(size_t chunkIndex) override;

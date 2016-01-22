@@ -63,7 +63,7 @@ std::vector<DataDeserializerPtr> CreateDeserializers(const ConfigParameters& rea
 
         foreach_index (i, sequences)
         {
-            isValid[i] = isValid[i] && sequences[i]->isValid;
+            isValid[i] = isValid[i] && sequences[i]->m_isValid;
             assert(isValid[i]);
         }
     }
@@ -107,12 +107,12 @@ Bundler::Bundler(
     std::vector<StreamDescriptionPtr> streams;
     for (auto d : deserializers)
     {
-        for (auto i : d->GetStreams())
+        for (auto i : d->GetStreamDescriptions())
         {
             StreamDescriptionPtr stream = std::make_shared<StreamDescription>();
-            stream->id = streams.size();
-            stream->name = i->name;
-            stream->sampleLayout = i->sampleLayout;
+            stream->m_id = streams.size();
+            stream->m_name = i->m_name;
+            stream->m_sampleLayout = i->m_sampleLayout;
             streams.push_back(stream);
         }
     }
@@ -140,13 +140,13 @@ void Bundler::ReleaseChunk(size_t chunkIndex)
     }
 }
 
-const Timeline& Bundler::GetSequenceDescriptions() const
+const SequenceDescriptions& Bundler::GetSequenceDescriptions() const
 {
     // TODO: we probably will take different deserializers from here.
     return m_driver->GetSequenceDescriptions();
 }
 
-std::vector<StreamDescriptionPtr> Bundler::GetStreams() const
+std::vector<StreamDescriptionPtr> Bundler::GetStreamDescriptions() const
 {
     return m_streams;
 }

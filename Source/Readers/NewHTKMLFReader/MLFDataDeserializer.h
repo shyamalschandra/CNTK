@@ -37,7 +37,7 @@ class MLFDataDeserializer : public DataDeserializer
     std::vector<MLFUtterance> m_utterances;
     std::vector<MLFFrame> m_frames;
 
-    Timeline m_sequences;
+    SequenceDescriptions m_sequences;
     size_t m_elementSize;
     bool m_frameMode;
     std::wstring m_name;
@@ -47,9 +47,9 @@ public:
 
     virtual void StartEpoch(const EpochConfiguration& config) override;
 
-    virtual const Timeline& GetSequenceDescriptions() const override;
+    virtual const SequenceDescriptions& GetSequenceDescriptions() const override;
 
-    virtual std::vector<StreamDescriptionPtr> GetStreams() const override;
+    virtual std::vector<StreamDescriptionPtr> GetStreamDescriptions() const override;
 
     virtual std::vector<std::vector<SequenceDataPtr>> GetSequencesById(const std::vector<size_t>& ids) override;
 

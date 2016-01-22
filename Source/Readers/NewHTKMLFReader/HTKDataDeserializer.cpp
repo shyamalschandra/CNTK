@@ -22,7 +22,7 @@ HTKDataDeserializer::HTKDataDeserializer(const ConfigParameters& feature, size_t
     m_dimension = ConfigHelper::GetFeatureDimension(feature);
     m_dimension = m_dimension * (1 + context.first + context.second);
 
-    m_layout = std::make_shared<ImageLayout>(std::move(std::vector<size_t>{m_dimension}));
+    m_layout = std::make_shared<TensorShape>(m_dimension);
 
     size_t numSequences = m_featureFiles.size();
 
@@ -37,7 +37,7 @@ HTKDataDeserializer::HTKDataDeserializer(const ConfigParameters& feature, size_t
         const size_t uttframes = utterance.numframes(); // will throw if frame bounds not given --required to be given in this mode
 
         Utterance description(std::move(utterance));
-        description.id = i;
+        description.m_id = i;
         // description.chunkId, description.key // TODO
 
         // we need at least 2 frames for boundary markers to work
@@ -45,17 +45,17 @@ HTKDataDeserializer::HTKDataDeserializer(const ConfigParameters& feature, size_t
         {
             fprintf(stderr, "minibatchutterancesource: skipping %d-th file (%llu frames) because it has less than 2 frames: %ls\n",
                     i, uttframes, utterance.key().c_str());
-            description.numberOfSamples = 0;
-            description.isValid = false;
+            description.m_numberOfSamples = 0;
+            description.m_isValid = false;
         }
         else
         {
-            description.numberOfSamples = uttframes;
-            description.isValid = true;
+            description.m_numberOfSamples = uttframes;
+            description.m_isValid = true;
         }
 
         m_utterances.push_back(description);
-        totalFrames += description.numberOfSamples;
+        totalFrames += description.m_numberOfSamples;
     }
 
     size_t totalSize = std::accumulate(
@@ -64,7 +64,7 @@ HTKDataDeserializer::HTKDataDeserializer(const ConfigParameters& feature, size_t
         static_cast<size_t>(0),
         [](size_t sum, const Utterance& s)
         {
-            return s.numberOfSamples + sum;
+            return s.m_numberOfSamples + sum;
         });
 
     // distribute them over chunks
@@ -95,7 +95,7 @@ HTKDataDeserializer::HTKDataDeserializer(const ConfigParameters& feature, size_t
         chunkdata& currentchunk = m_chunks.back();
         m_utterances[i].indexInsideChunk = currentchunk.numutterances();
         currentchunk.push_back(&m_utterances[i].utterance); // move it out from our temp array into the chunk
-        m_utterances[i].chunkId = chunkId;
+        m_utterances[i].m_chunkId = chunkId;
         // TODO: above push_back does not actually 'move' because the internal push_back does not accept that
     }
 
@@ -116,18 +116,18 @@ HTKDataDeserializer::HTKDataDeserializer(const ConfigParameters& feature, size_t
     {
         if (m_frameMode)
         {
-            for (size_t k = 0; k < m_utterances[i].numberOfSamples; ++k)
+            for (size_t k = 0; k < m_utterances[i].m_numberOfSamples; ++k)
             {
                 Frame f(&m_utterances[i]);
-                f.id = m_frames.size();
-                f.chunkId = m_utterances[i].chunkId;
-                f.numberOfSamples = 1;
+                f.m_id = m_frames.size();
+                f.m_chunkId = m_utterances[i].m_chunkId;
+                f.m_numberOfSamples = 1;
                 f.frameIndexInUtterance = k;
-                assert(m_utterances[i].isValid); // TODO
-                f.isValid = m_utterances[i].isValid;
+                assert(m_utterances[i].m_isValid); // TODO
+                f.m_isValid = m_utterances[i].m_isValid;
                 m_frames.push_back(f);
 
-                m_sequences.push_back(&m_frames[f.id]);
+                m_sequences.push_back(&m_frames[f.m_id]);
             }
         }
         else
@@ -143,18 +143,18 @@ void HTKDataDeserializer::StartEpoch(const EpochConfiguration& /*config*/)
     throw std::logic_error("The method or operation is not implemented.");
 }
 
-const Timeline& HTKDataDeserializer::GetSequenceDescriptions() const
+const SequenceDescriptions& HTKDataDeserializer::GetSequenceDescriptions() const
 {
     return m_sequences;
 }
 
-std::vector<StreamDescriptionPtr> HTKDataDeserializer::GetStreams() const
+std::vector<StreamDescriptionPtr> HTKDataDeserializer::GetStreamDescriptions() const
 {
     StreamDescriptionPtr stream = std::make_shared<StreamDescription>();
-    stream->id = 0;
-    stream->name = m_featureName;
-    stream->sampleLayout = std::make_shared<ImageLayout>(std::move(std::vector<size_t>{m_dimension}));
-    stream->elementType = m_elementSize == sizeof(float) ? ElementType::tfloat : ElementType::tdouble;
+    stream->m_id = 0;
+    stream->m_name = m_featureName;
+    stream->m_sampleLayout = std::make_shared<TensorShape>(m_dimension);
+    stream->m_elementType = m_elementSize == sizeof(float) ? ElementType::tfloat : ElementType::tdouble;
     return std::vector<StreamDescriptionPtr>{stream};
 }
 
@@ -193,7 +193,7 @@ std::vector<std::vector<SequenceDataPtr>> HTKDataDeserializer::GetSequencesById(
 
         const std::vector<char> noboundaryflags; // dummy
 
-        const auto& chunkdata = m_chunks[utterance.chunkId];
+        const auto& chunkdata = m_chunks[utterance.m_chunkId];
 
         auto uttframes = chunkdata.getutteranceframes(utterance.indexInsideChunk);
         matrixasvectorofvectors uttframevectors(uttframes); // (wrapper that allows m[j].size() and m[j][i] as required by augmentneighbors())
@@ -214,7 +214,7 @@ std::vector<std::vector<SequenceDataPtr>> HTKDataDeserializer::GetSequencesById(
         msra::dbn::augmentneighbors(uttframevectors, noboundaryflags, frame.frameIndexInUtterance, leftextent, rightextent, feat, 0);
 
         DenseSequenceDataPtr r = std::make_shared<DenseSequenceData>();
-        r->numberOfSamples = utterance.numberOfSamples;
+        r->m_numberOfSamples = utterance.m_numberOfSamples;
 
         const msra::dbn::matrixstripe featOri = msra::dbn::matrixstripe(feat, 0, feat.cols());
         const size_t dimensions = featOri.rows();
@@ -233,7 +233,7 @@ std::vector<std::vector<SequenceDataPtr>> HTKDataDeserializer::GetSequencesById(
 
         memset(buffer, 0, m_elementSize * dimensions);
         memcpy_s(buffer, m_elementSize * dimensions, tmp, m_elementSize * dimensions);
-        r->data = buffer;
+        r->m_data = buffer;
 
         std::vector<std::vector<SequenceDataPtr>> result;
         result.push_back(std::vector<SequenceDataPtr>{r});
@@ -259,7 +259,8 @@ void HTKDataDeserializer::RequireChunk(size_t chunkIndex)
                             std::unordered_map<std::string, size_t> empty;
                             msra::dbn::latticesource lattices(
                                 std::pair<std::vector<std::wstring>, std::vector<std::wstring>>(),
-                                empty);
+                                empty,
+                                std::wstring());
                             chunkdata.requiredata(m_featKind, m_featdim, m_sampperiod, lattices, m_verbosity);
                         });
 

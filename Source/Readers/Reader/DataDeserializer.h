@@ -10,7 +10,7 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
-// Defines main properties of a sequence. 
+// Defines main properties of a sequence.
 // Sequence descriptions are used by the randomizer to establish a global timeline for complete input.
 // A sequence is defined as an ordered set of samples (size == 1 is used for sample training).
 struct SequenceDescription
@@ -92,7 +92,7 @@ public:
     // so that the data deserializer can load/cache sequences more efficiently (loading complete chunks in memory).
     virtual void RequireChunk(size_t chunkIndex) = 0;
 
-    // Releases the chunk. 
+    // Releases the chunk.
     // When randomizer read all sequences from a particular chunk it notifies the data deserializer that the chunk can be freed.
     virtual void ReleaseChunk(size_t chunkIndex) = 0;
 
