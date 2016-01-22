@@ -77,7 +77,8 @@ void ImageReader::StartEpoch(const EpochConfiguration& config)
 {
     if (config.m_totalEpochSizeInSamples <= 0)
     {
-        RuntimeError("Unsupported minibatch size %d", config.m_totalEpochSizeInSamples);
+        RuntimeError("Unsupported minibatch size %d",
+                     static_cast<int>(config.m_totalEpochSizeInSamples));
     }
 
     m_transformer->StartEpoch(config);

@@ -39,8 +39,8 @@ namespace Microsoft { namespace MSR { namespace CNTK {
         {
             RuntimeError(
                 "ImageReader currently supports a single feature and label stream. '%d' features , '%d' labels found.",
-                featureNames.size(),
-                labelNames.size());
+                static_cast<int>(featureNames.size()),
+                static_cast<int>(labelNames.size()));
         }
 
         ConfigParameters featureSection = config(featureNames[0]);
@@ -104,7 +104,7 @@ namespace Microsoft { namespace MSR { namespace CNTK {
         }
         else
         {
-            RuntimeError("Not supported precision '%s'. Expected 'double' or 'float'.", precision);
+            RuntimeError("Not supported precision '%s'. Expected 'double' or 'float'.", precision.c_str());
         }
 
         m_cpuThreadCount = config(L"numCPUThreads", 0);
