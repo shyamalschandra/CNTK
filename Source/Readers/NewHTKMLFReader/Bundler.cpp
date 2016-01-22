@@ -85,7 +85,10 @@ std::vector<DataDeserializerPtr> CreateDeserializers(const ConfigParameters& rea
     }
     else if (invalidUtts > 0)
     {
-        fprintf(stderr, "Found inconsistent durations across feature streams in %llu out of %llu files\n", invalidUtts, isValid.size());
+        fprintf(stderr,
+                "Found inconsistent durations across feature streams in %d out of %d files\n",
+                static_cast<int>(invalidUtts),
+                static_cast<int>(isValid.size()));
     }
 
     return deserializers;

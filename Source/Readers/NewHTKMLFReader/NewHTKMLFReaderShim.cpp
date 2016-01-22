@@ -51,7 +51,7 @@ void NewHTKMLFReaderShim<ElemType>::Init(const ConfigParameters& config)
 }
 
 template <class ElemType>
-void NewHTKMLFReaderShim<ElemType>::StartMinibatchLoop(size_t mbSize, size_t epoch, size_t requestedEpochSamples = requestDataSize)
+void NewHTKMLFReaderShim<ElemType>::StartMinibatchLoop(size_t mbSize, size_t epoch, size_t requestedEpochSamples)
 {
     return StartDistributedMinibatchLoop(mbSize, epoch, 0, 1, requestedEpochSamples);
 }

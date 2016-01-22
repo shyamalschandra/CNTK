@@ -19,7 +19,7 @@ MLFDataDeserializer::MLFDataDeserializer(const ConfigParameters& label, size_t e
     m_dimension = ConfigHelper::GetLabelDimension(label);
     m_layout = std::make_shared<TensorShape>(m_dimension);
 
-    m_stateListPath = label(L"labelMappingFile", L"");
+    m_stateListPath = static_cast<std::wstring>(label(L"labelMappingFile", L""));
 
     // TODO: currently assumes all Mlfs will have same root name (key)
     // restrict MLF reader to these files--will make stuff much faster without having to use shortened input files
@@ -71,8 +71,9 @@ MLFDataDeserializer::MLFDataDeserializer(const ConfigParameters& label, size_t e
 
             if (e.classid >= m_dimension)
             {
-                RuntimeError("minibatchutterancesource: class id %llu exceeds model output dimension %llu in file",
-                             e.classid, m_dimension);
+                RuntimeError("minibatchutterancesource: class id %d exceeds model output dimension %d in file",
+                             static_cast<int>(e.classid),
+                             static_cast<int>(m_dimension));
             }
 
             if (e.classid != static_cast<msra::dbn::CLASSIDTYPE>(e.classid))

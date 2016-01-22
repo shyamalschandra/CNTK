@@ -208,7 +208,7 @@ std::vector<std::wstring> ConfigHelper::GetFeaturePaths(const ConfigParameters& 
         n++;
     }
 
-    fprintf(stderr, " %llu entries\n", n);
+    fprintf(stderr, " %d entries\n", static_cast<int>(n));
 
     // post processing file list :
     //  - if users specified PrefixPath, add the prefix to each of path in filelist

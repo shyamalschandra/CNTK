@@ -517,7 +517,7 @@ void FrameModePacker::ReNewBufferForMultiIO(size_t parallelSequenceNumber)
     {
         for (const auto& i : s)
         {
-            delete[] i->m_data;
+            delete[] reinterpret_cast<char*>(i->m_data);
         }
     }
 }

@@ -43,8 +43,8 @@ HTKDataDeserializer::HTKDataDeserializer(const ConfigParameters& feature, size_t
         // we need at least 2 frames for boundary markers to work
         if (uttframes < 2)
         {
-            fprintf(stderr, "minibatchutterancesource: skipping %d-th file (%llu frames) because it has less than 2 frames: %ls\n",
-                    i, uttframes, utterance.key().c_str());
+            fprintf(stderr, "minibatchutterancesource: skipping %d-th file (%d frames) because it has less than 2 frames: %ls\n",
+                    i, static_cast<int>(uttframes), utterance.key().c_str());
             description.m_numberOfSamples = 0;
             description.m_isValid = false;
         }
@@ -99,8 +99,11 @@ HTKDataDeserializer::HTKDataDeserializer(const ConfigParameters& feature, size_t
         // TODO: above push_back does not actually 'move' because the internal push_back does not accept that
     }
 
-    fprintf(stderr, "minibatchutterancesource: %llu utterances grouped into %llu chunks, av. chunk size: %.1f utterances, %.1f frames\n",
-            m_utterances.size(), m_chunks.size(), m_utterances.size() / (double) m_chunks.size(), totalSize / (double) m_chunks.size());
+    fprintf(stderr, "minibatchutterancesource: %d utterances grouped into %d chunks, av. chunk size: %.1f utterances, %.1f frames\n",
+            static_cast<int>(m_utterances.size()),
+            static_cast<int>(m_chunks.size()),
+            m_utterances.size() / (double) m_chunks.size(),
+            totalSize / (double) m_chunks.size());
     // Now utterances are stored exclusively in allchunks[]. They are never referred to by a sequential utterance id at this point, only by chunk/within-chunk index.
 
     if (m_frameMode)

@@ -44,6 +44,9 @@ public:
 
     virtual bool GetMinibatch(std::map<std::wstring, Matrix<ElemType>*>& matrices);
 
+    using LabelType = typename IDataReader<ElemType>::LabelType;
+    using LabelIdType = typename IDataReader<ElemType>::LabelIdType;
+
     virtual const std::map<LabelIdType, LabelType>& GetLabelMapping(const std::wstring& /*sectionName*/)
     {
         assert(false);

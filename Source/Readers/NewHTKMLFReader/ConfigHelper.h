@@ -29,7 +29,7 @@ public:
         std::vector<std::wstring>& lattices);
 
     static std::vector<std::wstring> GetMlfPaths(const ConfigParameters& config);
-    static std::vector<std::wstring> ConfigHelper::GetFeaturePaths(const ConfigParameters& config);
+    static std::vector<std::wstring> GetFeaturePaths(const ConfigParameters& config);
 
     static size_t GetRandomizationWindow(const ConfigParameters& config);
     static std::wstring GetRandomizer(const ConfigParameters& config);

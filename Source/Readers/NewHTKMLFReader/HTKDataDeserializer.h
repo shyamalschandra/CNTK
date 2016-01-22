@@ -38,7 +38,7 @@ struct utterancedesc // data descriptor for one utterance
         static const wregex deleteextensionre(L"\\.[^\\.\\\\/:]*$");
         return regex_replace(logicalpath(), deleteextensionre, emptywstring); // delete extension (or not if none)
 #else
-        return removeExtension(logicalpath());
+        return msra::dbn::removeExtension(logicalpath());
 #endif
     }
 };
@@ -115,8 +115,8 @@ struct chunkdata // data for a chunk of utterances
             if (featdim == 0)
             {
                 reader.getinfo(utteranceset[0]->parsedpath, featkind, featdim, sampperiod);
-                fprintf(stderr, "requiredata: determined feature kind as %llu-dimensional '%s' with frame shift %.1f ms\n",
-                        featdim, featkind.c_str(), sampperiod / 1e4);
+                fprintf(stderr, "requiredata: determined feature kind as %d-dimensional '%s' with frame shift %.1f ms\n",
+                        static_cast<int>(featdim), featkind.c_str(), sampperiod / 1e4);
             }
             // read all utterances; if they are in the same archive, htkfeatreader will be efficient in not closing the file
             frames.resize(featdim, totalframes);
