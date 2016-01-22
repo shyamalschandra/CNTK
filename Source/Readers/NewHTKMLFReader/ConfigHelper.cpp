@@ -4,7 +4,7 @@
 //
 #include "stdafx.h"
 #include "ConfigHelper.h"
-#include <commandArgUtil.h>
+#include <Config.h>
 #include <DataReader.h>
 #include <regex>
 #include "Utils.h"

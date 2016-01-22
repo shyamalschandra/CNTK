@@ -7,7 +7,7 @@
 #include <utility>
 #include <string>
 #include <vector>
-#include "commandArgUtil.h"
+#include "Config.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 

@@ -16,7 +16,7 @@
 
 #define DATAREADER_EXPORTS // creating the exports here
 #include "DataReader.h"
-#include "commandArgUtil.h"
+#include "Config.h"
 #include "NewHTKMLFReaderShim.h"
 #ifdef LEAKDETECT
 #include <vld.h> // for memory leak detection
@@ -46,8 +46,8 @@ void NewHTKMLFReaderShim<ElemType>::Init(const ConfigParameters& config)
         config(L"nbruttsineachrecurrentiter", ConfigParameters::Array(intargvector(vector<int>{1})));
 
     auto numSeqsPerMBForAllEpochs = numberOfuttsPerMinibatchForAllEpochs;
-    m_layout->Init(numSeqsPerMBForAllEpochs[0], 0, true);
-    m_streams = m_packer->GetStreams();
+    m_layout->Init(numSeqsPerMBForAllEpochs[0], 0);
+    m_streams = m_packer->GetStreamDescriptions();
 }
 
 template <class ElemType>
@@ -60,11 +60,11 @@ template <class ElemType>
 void NewHTKMLFReaderShim<ElemType>::StartDistributedMinibatchLoop(size_t requestedMBSize, size_t epoch, size_t subsetNum, size_t numSubsets, size_t requestedEpochSamples /*= requestDataSize*/)
 {
     EpochConfiguration config;
-    config.workerRank = subsetNum;
-    config.numberOfWorkers = numSubsets;
-    config.minibatchSize = requestedMBSize;
-    config.totalSize = requestedEpochSamples;
-    config.index = epoch;
+    config.m_workerRank = subsetNum;
+    config.m_numberOfWorkers = numSubsets;
+    config.m_minibatchSizeInSamples = requestedMBSize;
+    config.m_totalEpochSizeInSamples = requestedEpochSamples;
+    config.m_epochIndex = epoch;
 
     m_packer->StartEpoch(config);
 }
@@ -83,21 +83,21 @@ bool NewHTKMLFReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<E
     }
 
     Minibatch m = m_packer->ReadMinibatch();
-    if (m.atEndOfEpoch)
+    if (m.m_endOfEpoch)
     {
         return false;
     }
 
-    auto streams = m_packer->GetStreams();
+    auto streams = m_packer->GetStreamDescriptions();
     std::map<size_t, wstring> idToName;
     for (auto i : streams)
     {
-        idToName.insert(std::make_pair(i->id, i->name));
+        idToName.insert(std::make_pair(i->m_id, i->m_name));
     }
 
-    for (int i = 0; i < m.minibatch.size(); i++)
+    for (int i = 0; i < m.m_data.size(); i++)
     {
-        const auto& stream = m.minibatch[i];
+        const auto& stream = m.m_data[i];
         const std::wstring& name = idToName[i];
         if (matrices.find(name) == matrices.end())
         {
@@ -105,15 +105,15 @@ bool NewHTKMLFReaderShim<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<E
         }
 
         // Current hack.
-        m_layout = stream->layout;
+        m_layout = stream->m_layout;
         size_t columnNumber = m_layout->GetNumCols();
-        size_t rowNumber = m_streams[i]->sampleLayout->GetNumElements();
+        size_t rowNumber = m_streams[i]->m_sampleLayout->GetNumElements();
 
-        auto data = reinterpret_cast<const ElemType*>(stream->data);
+        auto data = reinterpret_cast<const ElemType*>(stream->m_data);
         matrices[name]->SetValue(rowNumber, columnNumber, matrices[name]->GetDeviceId(), const_cast<ElemType*>(data), matrixFlagNormal);
     }
 
-    return !m.atEndOfEpoch;
+    return !m.m_endOfEpoch;
 }
 
 template <class ElemType>

@@ -6,7 +6,7 @@
 #pragma once
 
 #include "DataDeserializer.h"
-#include "commandArgUtil.h" // for ConfigParameters
+#include "Config.h" // for ConfigParameters
 #include "htkfeatio.h"      // for htkfeatreader
 #include "minibatchiterator.h"
 
@@ -189,7 +189,7 @@ class HTKDataDeserializer : public DataDeserializer
     std::vector<Frame> m_frames;
 
     size_t m_elementSize;
-    Timeline m_sequences;
+    SequenceDescriptions m_sequences;
 
     std::vector<chunkdata> m_chunks;
     size_t m_chunksinram; // (for diagnostics messages)
@@ -207,9 +207,9 @@ public:
 
     virtual void StartEpoch(const EpochConfiguration& config) override;
 
-    virtual const Timeline& GetSequenceDescriptions() const override;
+    virtual const SequenceDescriptions& GetSequenceDescriptions() const override;
 
-    virtual std::vector<StreamDescriptionPtr> GetStreams() const override;
+    virtual std::vector<StreamDescriptionPtr> GetStreamDescriptions() const override;
 
     virtual std::vector<std::vector<SequenceDataPtr>> GetSequencesById(const std::vector<size_t>& ids) override;
 

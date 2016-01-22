@@ -72,7 +72,7 @@ typedef std::shared_ptr<StreamMinibatch> StreamMinibatchPtr;
 struct Minibatch
 {
     // Indicates that the end of epoch has been reached.
-    // It is set to true for the last minibatch, there still 
+    // It is set to true for the last minibatch, there still
     // can be data in m_data field even if this flag is set.
     bool m_endOfEpoch;
 

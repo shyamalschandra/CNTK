@@ -17,7 +17,7 @@ StreamDescriptionPtr GetStreamByName(const std::wstring& name, const std::vector
 {
     auto predicate = [name](StreamDescriptionPtr stream)
     {
-        return stream->name == name;
+        return stream->m_name == name;
     };
 
     auto stream = std::find_if(std::begin(streams), std::end(streams), predicate);
@@ -35,19 +35,19 @@ FrameModePacker::FrameModePacker(const ConfigParameters& config, MemoryProviderP
     InitFromConfig(config);
 }
 
-std::vector<StreamDescriptionPtr> FrameModePacker::GetStreams()
+std::vector<StreamDescriptionPtr> FrameModePacker::GetStreamDescriptions()
 {
     return m_streams;
 }
 
 void FrameModePacker::StartEpoch(const EpochConfiguration& config)
 {
-    assert(config.workerRank < config.numberOfWorkers);
+    assert(config.m_workerRank < config.m_numberOfWorkers);
 
     // TODO: what to do with partial minibatches? Is it important to propagate this information to lower layers?
     m_transformer->StartEpoch(config);
 
-    StartDistributedMinibatchLoop(config.minibatchSize, config.index, config.workerRank, config.numberOfWorkers, config.totalSize);
+    StartDistributedMinibatchLoop(config.m_minibatchSizeInSamples, config.m_epochIndex, config.m_workerRank, config.m_numberOfWorkers, config.m_totalEpochSizeInSamples);
 }
 
 void FrameModePacker::InitFromConfig(const ConfigParameters& readerConfig)
@@ -58,7 +58,7 @@ void FrameModePacker::InitFromConfig(const ConfigParameters& readerConfig)
     assert(deserializers.size() == 2);
 
     auto bundler = std::make_shared<Bundler>(readerConfig, true, m_verbosity, deserializers[0], deserializers);
-    m_streams = bundler->GetStreams();
+    m_streams = bundler->GetStreamDescriptions();
 
     std::wstring readMethod = ConfigHelper::GetRandomizer(readerConfig);
     if (_wcsicmp(readMethod.c_str(), L"blockRandomize"))
@@ -75,7 +75,7 @@ void FrameModePacker::InitFromConfig(const ConfigParameters& readerConfig)
 
     // (SGD will ask before entering actual reading --TODO: This is hacky.)
     m_numSeqsPerMB = m_numSeqsPerMBForAllEpochs[0];
-    m_pMBLayout->Init(m_numSeqsPerMB, 0, true);
+    m_pMBLayout->Init(m_numSeqsPerMB, 0);
     m_noData = false;
 
     if (readerConfig.Exists(L"legacyMode"))
@@ -84,7 +84,7 @@ void FrameModePacker::InitFromConfig(const ConfigParameters& readerConfig)
     // eldak: we should introduce a separate class describing inputs with proper interface.
     for (size_t i = 0; i < m_streams.size(); ++i)
     {
-        m_nameToId.insert(std::make_pair(m_streams[i]->name, m_streams[i]->id));
+        m_nameToId.insert(std::make_pair(m_streams[i]->m_name, m_streams[i]->m_id));
     }
 
     size_t iFeat = 0, iLabel = 0;
@@ -101,7 +101,7 @@ void FrameModePacker::InitFromConfig(const ConfigParameters& readerConfig)
         auto stream = GetStreamByName(featureName, m_streams);
 
         const ConfigParameters& thisFeature = readerConfig(featureName);
-        m_featDims.push_back(stream->sampleLayout->GetNumElements());
+        m_featDims.push_back(stream->m_sampleLayout->GetNumElements());
 
         wstring type = thisFeature(L"type", L"real");
         if (!_wcsicmp(type.c_str(), L"real"))
@@ -125,7 +125,7 @@ void FrameModePacker::InitFromConfig(const ConfigParameters& readerConfig)
         const std::wstring& labelName = labelNames[i];
         auto stream = GetStreamByName(labelName, m_streams);
 
-        m_labelDims.push_back(stream->sampleLayout->GetNumElements());
+        m_labelDims.push_back(stream->m_sampleLayout->GetNumElements());
 
         const ConfigParameters& thisLabel = readerConfig(labelName);
         wstring type;
@@ -161,7 +161,7 @@ void FrameModePacker::StartDistributedMinibatchLoop(size_t requestedMBSize, size
 {
     m_mbNumTimeSteps = requestedMBSize;
     m_numSeqsPerMB = m_numSeqsPerMBForAllEpochs[epoch];
-    m_pMBLayout->Init(m_numSeqsPerMB, 0, false); // (SGD will ask before entering actual reading --TODO: This is hacky.)
+    m_pMBLayout->Init(m_numSeqsPerMB, 0); // (SGD will ask before entering actual reading --TODO: This is hacky.)
 
     // resize the arrays
     // These are sized to the requested number. If not all can be filled, it will still return this many, just with gaps.
@@ -240,7 +240,7 @@ Minibatch FrameModePacker::ReadMinibatch()
         m_mbNumTimeSteps = m_numFramesToProcess[0];
         if (m_noData && m_mbNumTimeSteps == 0) //no data left for the first channel of this minibatch,
         {
-            mb.atEndOfEpoch = true;
+            mb.m_endOfEpoch = true;
             return mb;
         }
 
@@ -252,17 +252,17 @@ Minibatch FrameModePacker::ReadMinibatch()
         // }
     } while (skip); // keep going if we didn't get the right size minibatch
 
-    m_pMBLayout->Init(m_mbNumTimeSteps, 1, false /*ignored*/);
+    m_pMBLayout->Init(m_mbNumTimeSteps, 1);
     if (m_mbNumTimeSteps > 0)
     {
         FillOneUttDataforParallelmode(0, m_mbNumTimeSteps, 0, 0);
     }
 
     ReNewBufferForMultiIO(0);
-    mb.minibatch.resize(m_nameToTypeMap.size());
+    mb.m_data.resize(m_nameToTypeMap.size());
     PackToMinibatch(mb);
 
-    mb.atEndOfEpoch = false;
+    mb.m_endOfEpoch = false;
     return mb;
 }
 
@@ -279,11 +279,11 @@ void FrameModePacker::PackToMinibatch(Minibatch& mb)
             std::vector<size_t> dimensions;
             dimensions.push_back(dim);
 
-            StreamPtr stream = std::make_shared<Stream>();
-            stream->data = m_featuresBufferMultiIO[id].get();
-            stream->dataSize = dim * m_mbNumTimeSteps * m_numSeqsPerMB * m_elementSize;
-            stream->layout = m_pMBLayout;
-            mb.minibatch[m_nameToId[name.first]] = stream;
+            StreamMinibatchPtr stream = std::make_shared<StreamMinibatch>();
+            stream->m_data = m_featuresBufferMultiIO[id].get();
+            stream->m_dataSize = dim * m_mbNumTimeSteps * m_numSeqsPerMB * m_elementSize;
+            stream->m_layout = m_pMBLayout;
+            mb.m_data[m_nameToId[name.first]] = stream;
         }
         else if (m_nameToTypeMap[name.first] == InputOutputTypes::category)
         {
@@ -293,11 +293,11 @@ void FrameModePacker::PackToMinibatch(Minibatch& mb)
             std::vector<size_t> dimensions;
             dimensions.push_back(dim);
 
-            StreamPtr stream = std::make_shared<Stream>();
-            stream->data = m_labelsBufferMultiIO[id].get();
-            stream->dataSize = dim * m_mbNumTimeSteps * m_numSeqsPerMB * m_elementSize;
-            stream->layout = m_pMBLayout;
-            mb.minibatch[m_nameToId[name.first]] = stream;
+            StreamMinibatchPtr stream = std::make_shared<StreamMinibatch>();
+            stream->m_data = m_labelsBufferMultiIO[id].get();
+            stream->m_dataSize = dim * m_mbNumTimeSteps * m_numSeqsPerMB * m_elementSize;
+            stream->m_layout = m_pMBLayout;
+            mb.m_data[m_nameToId[name.first]] = stream;
         }
     }
 }
@@ -404,7 +404,7 @@ void FrameModePacker::ReNewBufferForMultiIO(size_t parallelSequenceNumber)
         size_t id = m_featureNameToIdMap[it->first];
         size_t streamId = m_nameToId[it->first];
 
-        size_t dim = streams[streamId]->sampleLayout->GetNumElements();
+        size_t dim = streams[streamId]->m_sampleLayout->GetNumElements();
         const size_t actualmbsizeOri = sequences.size();
 
         m_featuresStartIndexMultiUtt[id + featureSequenceIndex] = totalFeatNum;
@@ -429,7 +429,7 @@ void FrameModePacker::ReNewBufferForMultiIO(size_t parallelSequenceNumber)
         size_t id = m_labelNameToIdMap[it->first];
         size_t streamId = m_nameToId[it->first];
 
-        size_t dim = streams[streamId]->sampleLayout->GetNumElements();
+        size_t dim = streams[streamId]->m_sampleLayout->GetNumElements();
         const size_t actualmbsizeOri = sequences.size();
 
         m_labelsStartIndexMultiUtt[id + labelSequenceIndex] = totalLabelsNum;
@@ -456,7 +456,7 @@ void FrameModePacker::ReNewBufferForMultiIO(size_t parallelSequenceNumber)
         size_t id = m_featureNameToIdMap[it->first];
         size_t streamId = m_nameToId[it->first];
 
-        size_t fdim = streams[streamId]->sampleLayout->GetNumElements();
+        size_t fdim = streams[streamId]->m_sampleLayout->GetNumElements();
         const size_t actualmbsizeOri = sequences.size();
 
         if (first)
@@ -475,7 +475,7 @@ void FrameModePacker::ReNewBufferForMultiIO(size_t parallelSequenceNumber)
 
         for (int k = 0; k < actualmbsizeOri; k++) // column major, so iterate columns
         {
-            const void* sequence = sequences[k][streamId]->data;
+            const void* sequence = sequences[k][streamId]->m_data;
 
             // copy over the entire column at once, need to do this because SSEMatrix may have gaps at the end of the columns
             memcpy_s(&((char*) m_featuresBufferMultiUtt[parallelSequenceNumber].get())[(k * fdim + m_featuresStartIndexMultiUtt[id + featureSequenceIndex]) * m_elementSize], m_elementSize * fdim, sequence, m_elementSize * fdim);
@@ -487,7 +487,7 @@ void FrameModePacker::ReNewBufferForMultiIO(size_t parallelSequenceNumber)
         size_t id = m_labelNameToIdMap[it->first];
         size_t streamId = m_nameToId[it->first];
 
-        size_t fdim = streams[streamId]->sampleLayout->GetNumElements();
+        size_t fdim = streams[streamId]->m_sampleLayout->GetNumElements();
         const size_t actualmbsizeOri = sequences.size();
 
         if (first)
@@ -506,7 +506,7 @@ void FrameModePacker::ReNewBufferForMultiIO(size_t parallelSequenceNumber)
 
         for (int k = 0; k < actualmbsizeOri; k++) // column major, so iterate columns
         {
-            const void* sequence = sequences[k][streamId]->data;
+            const void* sequence = sequences[k][streamId]->m_data;
 
             // copy over the entire column at once, need to do this because SSEMatrix may have gaps at the end of the columns
             memcpy_s(&((char*) m_labelsBufferMultiUtt[parallelSequenceNumber].get())[(k * fdim + m_labelsStartIndexMultiUtt[id + labelSequenceIndex]) * m_elementSize], m_elementSize * fdim, sequence, m_elementSize * fdim);
@@ -517,7 +517,7 @@ void FrameModePacker::ReNewBufferForMultiIO(size_t parallelSequenceNumber)
     {
         for (const auto& i : s)
         {
-            delete[] i->data;
+            delete[] i->m_data;
         }
     }
 }

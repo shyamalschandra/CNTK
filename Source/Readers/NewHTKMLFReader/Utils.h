@@ -7,7 +7,7 @@
 #include <vector>
 #include <memory>
 
-#include "commandArgUtil.h"
+#include "Config.h"
 
 #include "biggrowablevectors.h"
 #include "utterancesourcemulti.h"

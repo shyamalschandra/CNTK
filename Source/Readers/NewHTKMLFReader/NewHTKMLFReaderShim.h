@@ -8,7 +8,7 @@
 #pragma once
 
 #include "DataReader.h"
-#include "commandArgUtil.h"
+#include "Config.h"
 #include "FrameModePacker.h"
 #include "SubstitutingMemoryProvider.h"
 
