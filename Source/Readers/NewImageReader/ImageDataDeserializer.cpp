@@ -49,6 +49,10 @@ ImageDataDeserializer::ImageDataDeserializer(const ConfigParameters& config)
     const auto& label = m_streams[configHelper.GetLabelStreamId()];
     const auto& feature = m_streams[configHelper.GetFeatureStreamId()];
 
+    // Expect data in HWC.
+    ImageDimensions dimensions(*feature->m_sampleLayout, configHelper.GetDataFormat());
+    feature->m_sampleLayout = std::make_shared<TensorShape>(dimensions.AsTensorShape(HWC));
+
     label->m_storageType = StorageType::sparse_csc;
     feature->m_storageType = StorageType::dense;
 
