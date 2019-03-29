@@ -1,20 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\Common\File.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\fileutil.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="ComputationNode.cpp">
       <Filter>Nodes</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Misc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\TimerUtility.cpp">
-      <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\BestGpu.cpp">
       <Filter>GPU Interfacing</Filter>
@@ -36,6 +27,30 @@
     </ClCompile>
     <ClCompile Include="ComputationNetworkScripting.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="ReshapingNodes.cpp">
+      <Filter>Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputationNodeScripting.cpp">
+      <Filter>Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="SpecialPurposeNodes.cpp">
+      <Filter>Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="InputAndParamNodes.cpp">
+      <Filter>Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="LinearAlgebraNodes.cpp">
+      <Filter>Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="RNNNodes.cpp">
+      <Filter>Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="RecurrentNodes.cpp">
+      <Filter>Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="TrainingNodes.cpp">
+      <Filter>Nodes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +138,21 @@
     <ClInclude Include="TrainingNodes.h">
       <Filter>Nodes</Filter>
     </ClInclude>
+    <ClInclude Include="ComputationEnvironment.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="DeprecatedNodes.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="RNNNodes.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="UserDefinedV2FunctionNode.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="SequenceReshapeNodes.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -145,6 +175,9 @@
     </Filter>
     <Filter Include="from Math">
       <UniqueIdentifier>{7d838fa4-b5a1-4b8a-b37d-823fb026055b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment">
+      <UniqueIdentifier>{ed685e39-b7dd-4546-a865-149664fa71a4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

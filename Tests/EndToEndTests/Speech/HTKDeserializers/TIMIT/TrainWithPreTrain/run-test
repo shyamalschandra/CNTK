@@ -1,0 +1,13 @@
+#!/bin/bash
+
+. $TEST_ROOT_DIR/run-test-common
+
+OriginalTestDir=../../../../Examples/Speech/TIMIT/TrainWithPreTrain
+
+# Note: can directly use run-timit-test-common since it lives at the same level
+# in the directory hierarchy.
+. $TEST_DIR/$OriginalTestDir/../run-timit-test-common
+
+checkOriginalBaseline $TEST_DIR $OriginalTestDir
+
+cntkrun TIMIT_TrainWithPreTrain_ndl_deprecated.cntk "reader=[readerType=HTKDeserializers] $CntkArguments" || exit $?

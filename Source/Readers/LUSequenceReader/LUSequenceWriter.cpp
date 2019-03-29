@@ -4,7 +4,9 @@
 //
 
 #include "stdafx.h"
+#ifdef _WIN32
 #include <objbase.h>
+#endif
 #include "Basics.h"
 #include <fstream>
 #include <algorithm>
@@ -53,30 +55,24 @@ void LUSequenceWriter<ElemType>::InitFromConfig(const ConfigRecordType& writerCo
 
 template <class ElemType>
 void LUSequenceWriter<ElemType>::ReadLabelInfo(const wstring& vocfile,
-                                               map<string, int>& word4idx,
-                                               map<int, string>& idx4word)
+                                               map<string, int>& word4idx2,
+                                               map<int, string>& idx4word2)
 {
-    char strFileName[MAX_STRING];
     char stmp[MAX_STRING];
-    string strtmp;
-    size_t sz;
     int b;
 
-    wcstombs_s(&sz, strFileName, 2048, vocfile.c_str(), vocfile.length());
-
-    FILE* vin;
-    vin = fopen(strFileName, "rt");
+    FILE* vin = fopenOrDie(vocfile, L"rt");
 
     if (vin == nullptr)
     {
-        RuntimeError("cannot open word class file");
+        RuntimeError("cannot open word class file: %ls", vocfile.c_str());
     }
     b = 0;
     while (!feof(vin))
     {
-        fscanf_s(vin, "%s\n", stmp, _countof(stmp));
-        word4idx[stmp] = b;
-        idx4word[b++] = stmp;
+        fscanf_s(vin, "%s\n", stmp, (int)_countof(stmp));
+        word4idx2[stmp] = b;
+        idx4word2[b++] = stmp;
     }
     fclose(vin);
 }
@@ -123,7 +119,7 @@ void LUSequenceWriter<ElemType>::Save(std::wstring& outputFile, const Matrix<Ele
     {
         FILE* ofs;
         msra::files::make_intermediate_dirs(outputFile);
-        string str(outputFile.begin(), outputFile.end());
+        string str(Microsoft::MSR::CNTK::ToLegacyString(Microsoft::MSR::CNTK::ToUTF8(outputFile)));
         ofs = fopen(str.c_str(), "wt");
         if (ofs == nullptr)
             RuntimeError("Cannot open %s for writing", str.c_str());

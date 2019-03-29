@@ -71,6 +71,11 @@ protected:
         const unsigned char* b = (const unsigned char*) &v;
         return (short) ((b[0] << 8) + b[1]);
     }
+    static unsigned short swapunsignedshort(unsigned short v) throw()
+    {
+        const unsigned char* b = (const unsigned char*)&v;
+        return (unsigned short)((b[0] << 8) + b[1]);
+    }
     static int swapint(int v) throw()
     {
         const unsigned char* b = (const unsigned char*) &v;
@@ -81,13 +86,13 @@ protected:
     {
         int nsamples;
         int sampperiod;
-        short sampsize;
+        unsigned short sampsize;
         short sampkind;
         void read(FILE* f)
         {
             nsamples = fgetint(f);
             sampperiod = fgetint(f);
-            sampsize = fgetshort(f);
+            sampsize = (unsigned short) fgetshort(f);
             sampkind = fgetshort(f);
         }
 
@@ -102,21 +107,24 @@ protected:
             sampkind = (short) 9; // user type
             int nRows = swapint(fgetint(f));
             int nCols = swapint(fgetint(f));
-            sampsize = (short) (nRows * nCols); // features are stored as bytes;
+            int rawsampsize = nRows * nCols;
+            sampsize = (unsigned short) rawsampsize; // features are stored as bytes;
+            if (sampsize != rawsampsize)
+                RuntimeError("reading idx feature cache header: sample size overflow");
         }
 
         void write(FILE* f)
         {
             fputint(f, nsamples);
             fputint(f, sampperiod);
-            fputshort(f, sampsize);
+            fputshort(f, (short) sampsize);
             fputshort(f, sampkind);
         }
         void byteswap()
         {
             nsamples = swapint(nsamples);
             sampperiod = swapint(sampperiod);
-            sampsize = swapshort(sampsize);
+            sampsize = swapunsignedshort(sampsize);
             sampkind = swapshort(sampkind);
         }
     };
@@ -215,7 +223,10 @@ public:
         H.nsamples = 0; // unknown for now, updated in close()
         H.sampperiod = period;
         const int bytesPerValue = sizeof(float); // we do not support compression for now
-        H.sampsize = (short) featdim * bytesPerValue;
+        size_t rawsampsize = featdim * bytesPerValue;
+        H.sampsize = (unsigned short) rawsampsize;
+        if (H.sampsize != rawsampsize)
+            RuntimeError("htkfeatwriter: sample size overflow");
         H.sampkind = parsekind(kind);
         if (needbyteswapping)
             H.byteswap();
@@ -298,11 +309,9 @@ public:
 #else
         W.close(numframes);
 #endif
-#ifdef _WIN32 // BUGBUG: and on Linux??
         // rename to final destination
         // (This would only fail in strange circumstances such as accidental multiple processes writing to the same file.)
         renameOrDie(tmppath, path);
-#endif
     }
 };
 
@@ -341,20 +350,34 @@ public:
     // parser for complex a=b[s,e] syntax
     struct parsedpath
     {
+        // Note: This is not thread-safe
+        static std::unordered_map<std::wstring, unsigned int> archivePathStringMap;
+        static std::vector<std::wstring> archivePathStringVector;
+
     protected:
         friend class htkfeatreader;
-        wstring logicalpath; // virtual path that this file should be understood to belong to
-        wstring archivepath; // physical path of archive file
-        size_t s, e;         // first and last frame inside the archive file; (0, INT_MAX) if not given
+        msra::strfun::cstring logicalpath; // virtual path that this file should be understood to belong to
+
+    private:
+        unsigned int archivePathIdx;
+
+    protected:
+        // physical path of archive file
+        wstring archivepath() const
+        {
+            return archivePathStringVector[archivePathIdx];
+        }
+
         bool isarchive;      // true if archive (range specified)
         bool isidxformat;    // support reading of features in idxformat as well (it's a hack, but different format's are not supported yet)
+        size_t s, e;         // first and last frame inside the archive file; (0, INT_MAX) if not given
         void malformed(const wstring& path) const
         {
             RuntimeError("parsedpath: malformed path '%ls'", path.c_str());
         }
 
         // consume and return up to 'delim'; remove from 'input' (we try to avoid C++0x here for VS 2008 compat)
-        wstring consume(wstring& input, const wchar_t* delim)
+        static wstring consume(wstring& input, const wchar_t* delim)
         {
             vector<wstring> parts = msra::strfun::split(input, delim); // (not very efficient, but does not matter here)
             if (parts.size() == 1)
@@ -368,15 +391,17 @@ public:
         // constructor parses a=b[s,e] syntax and fills in the file
         // Can be used implicitly e.g. by passing a string to open().
         parsedpath(const wstring& pathParam)
+            : logicalpath("")
         {
             wstring xpath(pathParam);
+            wstring archivepath;
 
             // parse out logical path
-            logicalpath = consume(xpath, L"=");
+            wstring localLogicalpath = consume(xpath, L"=");
             isidxformat = false;
             if (xpath.empty()) // no '=' detected: pass entire file (it's not an archive)
             {
-                archivepath = logicalpath;
+                archivepath = localLogicalpath;
                 s = 0;
                 e = INT_MAX;
                 isarchive = false;
@@ -401,23 +426,53 @@ public:
                     if (xpath.empty())
                         malformed(pathParam);
                     e = msra::strfun::toint(consume(xpath, L"]"));
-                    if (!xpath.empty())
+                    // TODO \r should be handled elsewhere; refine this
+                    if (!xpath.empty() && xpath != L"\r")
                         malformed(pathParam);
                     isarchive = true;
                 }
             }
+
+            auto iter = archivePathStringMap.find(archivepath);
+            if (iter != archivePathStringMap.end())
+            {
+                archivePathIdx = iter->second;
+            }
+            else
+            {
+                archivePathIdx = (unsigned int)archivePathStringMap.size();
+                archivePathStringMap[archivepath] = archivePathIdx;
+                archivePathStringVector.push_back(archivepath);
+            }
+
+            logicalpath = Microsoft::MSR::CNTK::ToLegacyString(Microsoft::MSR::CNTK::ToUTF8(localLogicalpath));
         }
 
         // get the physical path for 'make' test
-        const wstring& physicallocation() const
+        wstring physicallocation() const
         {
-            return archivepath;
+            return archivepath();
+        }
+
+        // Gets logical path of the utterance.
+        string GetLogicalPath() const
+        {
+            assert(!logicalpath.empty());
+            return logicalpath.substr(0, logicalpath.find_last_of("."));
+        }
+
+        // Clears logical path after parsing, in order not to duplicate it 
+        // with the one stored in the corpus descriptor.
+        void ClearLogicalPath()
+        {
+            logicalpath.clear();
+            logicalpath.shrink_to_fit();
         }
 
         // casting to wstring yields the logical path
-        operator const wstring&() const
+        operator wstring() const
         {
-            return logicalpath;
+            return Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(logicalpath);
         }
 
         // get duration in frames
@@ -438,20 +493,20 @@ private:
     void openphysical(const parsedpath& ppath)
     {
         wstring physpath = ppath.physicallocation();
-        // auto_file_ptr f = fopenOrDie (physpath, L"rbS");
-        auto_file_ptr f(fopenOrDie(physpath, L"rb")); // removed 'S' for now, as we mostly run local anyway, and this will speed up debugging
+        // auto_file_ptr f2 = fopenOrDie (physpath, L"rbS");
+        auto_file_ptr f2(fopenOrDie(physpath, L"rb")); // removed 'S' for now, as we mostly run local anyway, and this will speed up debugging
 
         // read the header (12 bytes for htk feature files)
         fileheader H;
         isidxformat = ppath.isidxformat;
         if (!isidxformat)
-            H.read(f);
+            H.read(f2);
         else // read header of idxfile
-            H.idxRead(f);
+            H.idxRead(f2);
 
         // take a guess as to whether we need byte swapping or not
-        bool needbyteswapping = ((unsigned int) swapint(H.sampperiod) < (unsigned int) H.sampperiod);
-        if (needbyteswapping)
+        bool needbyteswapping2 = ((unsigned int) swapint(H.sampperiod) < (unsigned int) H.sampperiod);
+        if (needbyteswapping2)
             H.byteswap();
 
         // interpret sampkind
@@ -488,8 +543,8 @@ private:
             kind += "_A";
         if (H.sampkind & HASTHIRD)
             kind += "_T";
-        bool compressed = (H.sampkind & HASCOMPX) != 0;
-        bool hascrcc = (H.sampkind & HASCRCC) != 0;
+        bool compressed2 = (H.sampkind & HASCOMPX) != 0;
+        bool hascrcc2 = (H.sampkind & HASCRCC) != 0;
         if (H.sampkind & HASZEROM)
             kind += "_Z";
         if (H.sampkind & HASZEROC)
@@ -500,46 +555,47 @@ private:
         if (H.sampkind == FESTREAM)
         { // ... note: untested
             unsigned char guid[16];
-            freadOrDie(&guid, sizeof(guid), 1, f);
+            freadOrDie(&guid, sizeof(guid), 1, f2);
             kind += ";guid=";
             for (int i = 0; i < sizeof(guid) / sizeof(*guid); i++)
                 kind += msra::strfun::strprintf("%02x", guid[i]);
         }
 
         // other checks
-        size_t bytesPerValue = isidxformat ? 1 : (compressed ? sizeof(short) : sizeof(float));
+        size_t bytesPerValue = isidxformat ? 1 : (compressed2 ? sizeof(short) : sizeof(float));
 
         if (H.sampsize % bytesPerValue != 0)
             RuntimeError("htkfeatreader:sample size not multiple of dimension");
         size_t dim = H.sampsize / bytesPerValue;
 
         // read the values for decompressing
-        vector<float> a, b;
-        if (compressed)
+        vector<float> a2, b2;
+        if (compressed2)
         {
-            freadOrDie(a, dim, f);
-            freadOrDie(b, dim, f);
+            freadOrDie(a2, dim, f2);
+            freadOrDie(b2, dim, f2);
             H.nsamples -= 4; // these are counted as 4 frames--that's the space they use
-            if (needbyteswapping)
+            if (needbyteswapping2)
             {
-                msra::util::byteswap(a);
-                msra::util::byteswap(b);
+                msra::util::byteswap(a2);
+                msra::util::byteswap(b2);
             }
         }
 
         // done: swap it in
-        int64_t bytepos = fgetpos(f);
-        setkind(kind, dim, H.sampperiod, ppath); // this checks consistency
+        int64_t bytepos = fgetpos(f2);
+        auto location = ((std::wstring)ppath).empty() ? ppath.physicallocation() : (std::wstring)ppath;
+        setkind(kind, dim, H.sampperiod, location); // this checks consistency
         this->physicalpath.swap(physpath);
         this->physicaldatastart = bytepos;
         this->physicalframes = H.nsamples;
-        this->f.swap(f); // note: this will get the previous f auto-closed at the end of this function
-        this->needbyteswapping = needbyteswapping;
-        this->compressed = compressed;
-        this->a.swap(a);
-        this->b.swap(b);
+        this->f.swap(f2); // note: this will get the previous f2 auto-closed at the end of this function
+        this->needbyteswapping = needbyteswapping2;
+        this->compressed = compressed2;
+        this->a.swap(a2);
+        this->b.swap(b2);
         this->vecbytesize = H.sampsize;
-        this->hascrcc = hascrcc;
+        this->hascrcc = hascrcc2;
     }
     void close() // force close the open file --use this in case of read failure
     {
@@ -573,9 +629,9 @@ public:
         if (ppath.isarchive) // reading a sub-range from an archive
         {
             if (ppath.s > ppath.e)
-                RuntimeError("open: start frame %d > end frame %d in '%ls'", (int) ppath.s, (int) ppath.e, ppath.logicalpath.c_str());
+                RuntimeError("open: start frame %d > end frame %d in '%ls'", (int)ppath.s, (int)ppath.e, ((wstring)ppath).c_str());
             if (ppath.e >= physicalframes)
-                RuntimeError("open: end frame exceeds archive's total number of frames %d in '%ls'", (int) physicalframes, ppath.logicalpath.c_str());
+                RuntimeError("open: end frame exceeds archive's total number of frames %d in '%ls'", (int)physicalframes, ((wstring)ppath).c_str());
 
             int64_t dataoffset = physicaldatastart + ppath.s * vecbytesize;
             fsetpos(f, dataoffset); // we assume fsetpos(), which is our own, is smart to not flush the read buffer
@@ -592,19 +648,19 @@ public:
     }
     // get dimension and type information for a feature file
     // This will alter the state of this object in that it opens the file. It is efficient to read it right afterwards
-    void getinfo(const parsedpath& ppath, string& featkind, size_t& featdim, unsigned int& featperiod)
+    void getinfo(const parsedpath& ppath, string& featkind2, size_t& featdim2, unsigned int& featperiod2)
     {
         open(ppath);
-        featkind = this->featkind;
-        featdim = this->featdim;
-        featperiod = this->featperiod;
+        featkind2 = this->featkind;
+        featdim2 = this->featdim;
+        featperiod2 = this->featperiod;
     }
 
     // called to add energy as we read
-    void AddEnergy(size_t energyElements)
+    void AddEnergy(size_t energyElements2)
     {
-        this->energyElements = energyElements;
-        this->addEnergy = energyElements != 0;
+        this->energyElements = energyElements2;
+        this->addEnergy = energyElements2 != 0;
     }
     const string& getfeattype() const
     {
@@ -667,26 +723,46 @@ public:
                     v.insert(iter, 0.0f);
                 }
             }
-            foreach_index (k, v)
+            foreach_index(k, v)
                 feat(k, t) = v[k];
         }
     }
     // read an entire utterance into an already allocated matrix
     // Matrix type needs to have operator(i,j)
     template <class MATRIX>
-    void read(const parsedpath& ppath, const string& kindstr, const unsigned int period, MATRIX& feat)
+    void read(const parsedpath& ppath, const string& kindstr, const unsigned int period, MATRIX& feat, bool needsExpansion=false)
     {
         // open the file and check dimensions
-        size_t numframes = open(ppath);
-        if (feat.cols() != numframes || feat.rows() != featdim)
-            LogicError("read: stripe read called with wrong dimensions");
+        size_t numframes2 = open(ppath);
+        if (needsExpansion)
+        {
+            if (numframes2 != 1)
+                throw std::logic_error("read: if doing utterance-based expansion of features (e.g. ivectors), utterance must contain 1 frame only");
+            if (feat.rows() != featdim)
+                throw std::logic_error("read: stripe read called with wrong dimensions");
+        }
+        else
+        {
+            if (feat.cols() != numframes2 || feat.rows() != featdim)
+                LogicError("read: stripe read called with wrong dimensions");
+        }
         if (kindstr != featkind || period != featperiod)
             LogicError("read: attempting to mixing different feature kinds");
 
         // read vectors from file and push to our target structure
         try
         {
-            read(feat, 0, numframes);
+            read(feat, 0, numframes2);
+            if (needsExpansion) // copy first frame to all the frames in the stripe
+            {
+                for (int t = 1; t < feat.cols(); t++)
+                {
+                    for (int k = 0; k < feat.rows(); k++)
+                    {
+                        feat(k, t) = feat(k, 0);
+                    }
+                }
+            }
         }
         catch (...)
         {
@@ -700,13 +776,13 @@ public:
     void read(const parsedpath& ppath, string& kindstr, unsigned int& period, MATRIX& feat)
     {
         // get the file
-        size_t numframes = open(ppath);
-        feat.resize(featdim + energyElements, numframes); // result matrix--columns are features
+        size_t numframes2 = open(ppath);
+        feat.resize(featdim + energyElements, numframes2); // result matrix--columns are features
 
         // read vectors from file and push to our target structure
         try
         {
-            read(feat, 0, numframes);
+            read(feat, 0, numframes2);
         }
         catch (...)
         {
@@ -725,7 +801,6 @@ struct htkmlfentry
     unsigned int firstframe; // range [firstframe,firstframe+numframes)
     unsigned int numframes;
     msra::dbn::CLASSIDTYPE classid;  // numeric state id
-    msra::dbn::HMMIDTYPE phonestart; // numeric phone start  time
 
 private:
     // verify and save data
@@ -749,10 +824,10 @@ private:
     // We distinguish
     static void parseframerange(const vector<char*>& toks, size_t& ts, size_t& te, const double htkTimeToFrame)
     {
-        const double maxFrameNumber = htkTimeToFrame / 2.0; // if frame number is greater than this we assume it is time instead of frame
         double rts = msra::strfun::todouble(toks[0]);
         double rte = msra::strfun::todouble(toks[1]);
-        if (rte > maxFrameNumber) // convert time to frame
+        // if the difference between two frames is more than htkTimeToFrame, we expect conversion to time
+        if (rte - rts >= htkTimeToFrame - 1) // convert time to frame
         {
             ts = (size_t)(rts / htkTimeToFrame + 0.5); // get start frame
             te = (size_t)(rte / htkTimeToFrame + 0.5); // get end frame
@@ -766,8 +841,7 @@ private:
 
 public:
     // parse format with original HTK state align MLF format and state list
-    void parsewithstatelist(const vector<char*>& toks, const unordered_map<std::string, size_t>& statelisthash, const double htkTimeToFrame,
-                            std::unordered_map<std::string, size_t>& hmmnamehash)
+    void parsewithstatelist(const vector<char*>& toks, const unordered_map<std::string, size_t>& statelisthash, const double htkTimeToFrame)
     {
         size_t ts, te;
         parseframerange(toks, ts, te, htkTimeToFrame);
@@ -776,23 +850,6 @@ public:
             RuntimeError("htkmlfentry: state %s not found in statelist", toks[2]);
         const size_t uid = iter->second; // get state index
         setdata(ts, te, uid);
-        // phone boundary
-        if (hmmnamehash.size() > 0)
-        {
-            if (toks.size() > 4)
-            {
-                auto hmmiter = hmmnamehash.find(toks[4]);
-                if (hmmiter == hmmnamehash.end())
-                    RuntimeError("htkmlfentry: hmm %s not found in hmmlist", toks[4]);
-                phonestart = (msra::dbn::HMMIDTYPE)(hmmiter->second + 1);
-
-                // check for numeric overflow
-                if ((hmmiter->second + 1) != phonestart)
-                    RuntimeError("htkmlfentry: not enough bits for one of the values");
-            }
-            else
-                phonestart = 0;
-        }
     }
 
     // ... note: this will be too simplistic for parsing more complex MLF formats. Fix when needed.
@@ -814,7 +871,6 @@ class htkmlfreader : public map<wstring, vector<ENTRY>> // [key][i] the data
     wstring curpath;                                 // for error messages
     unordered_map<std::string, size_t> statelistmap; // for state <=> index
     map<wstring, WORDSEQUENCE> wordsequences;        // [key] word sequences (if we are building word entries as well, for MMI)
-    std::unordered_map<std::string, size_t> symmap;
 
     void strtok(char* s, const char* delim, vector<char*>& toks)
     {
@@ -859,7 +915,7 @@ class htkmlfreader : public map<wstring, vector<ENTRY>> // [key][i] the data
         if (filename.length() < 3 || filename[0] != '"' || filename[filename.length() - 1] != '"')
         {
             fprintf(stderr, "warning: filename entry (%s)\n", filename.c_str());
-            fprintf(stderr, "skip current mlf entry from line (%lu) until line (%lu).\n", line + idx, line + lines.size());
+            fprintf(stderr, "skip current mlf entry from line (%lu) until line (%lu).\n", (unsigned long)(line + idx), (unsigned long)(line + lines.size()));
             return;
         }
 
@@ -867,9 +923,9 @@ class htkmlfreader : public map<wstring, vector<ENTRY>> // [key][i] the data
         if (filename.find("*/") == 0)
             filename = filename.substr(2);
 #ifdef _MSC_VER
-        wstring key = msra::strfun::utf16(regex_replace(filename, regex("\\.[^\\.\\\\/:]*$"), string())); // delete extension (or not if none)
+        wstring key = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(regex_replace(filename, regex("\\.[^\\.\\\\/:]*$"), string())); // delete extension (or not if none)
 #else
-        wstring key = msra::strfun::utf16(msra::dbn::removeExtension(filename)); // note that c++ 4.8 is incomplete for supporting regex
+        wstring key = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(msra::dbn::removeExtension(filename)); // note that c++ 4.8 is incomplete for supporting regex
 #endif
 
         // determine lines range
@@ -895,7 +951,7 @@ class htkmlfreader : public map<wstring, vector<ENTRY>> // [key][i] the data
             if (statelistmap.size() == 0)
                 entries[i - s].parse(toks, htkTimeToFrame);
             else
-                entries[i - s].parsewithstatelist(toks, statelistmap, htkTimeToFrame, symmap);
+                entries[i - s].parsewithstatelist(toks, statelistmap, htkTimeToFrame);
             // if we also read word entries, do it here
             if (wordmap)
             {
@@ -974,20 +1030,8 @@ public:
         }
     }; // to satisfy a template, never used... :(
 
-    // constructor reads multiple MLF files
-    htkmlfreader(const vector<wstring>& paths, const set<wstring>& restricttokeys, const wstring& stateListPath = L"", const double htkTimeToFrame = 100000.0)
-    {
-        // read state list
-        if (stateListPath != L"")
-            readstatelist(stateListPath);
-
-        // read MLF(s) --note: there can be multiple, so this is a loop
-        foreach_index (i, paths)
-            read(paths[i], restricttokeys, (nullmap * /*to satisfy C++ template resolution*/) NULL, (map<string, size_t>*) NULL, htkTimeToFrame);
-    }
-
     // alternate constructor that optionally also reads word alignments (for MMI training); triggered by providing a 'wordmap'
-    // (We cannot use an optional arg in the constructor aboe because it interferes with teh template resolution.)
+    // (We cannot use an optional arg in the constructor above because it interferes with the template resolution.)
     template <typename WORDSYMBOLTABLE, typename UNITSYMBOLTABLE>
     htkmlfreader(const vector<wstring>& paths, const set<wstring>& restricttokeys, const wstring& stateListPath, const WORDSYMBOLTABLE* wordmap, const UNITSYMBOLTABLE* unitmap, const double htkTimeToFrame)
     {
@@ -996,18 +1040,6 @@ public:
             readstatelist(stateListPath);
 
         // read MLF(s) --note: there can be multiple, so this is a loop
-        foreach_index (i, paths)
-            read(paths[i], restricttokeys, wordmap, unitmap, htkTimeToFrame);
-    }
-
-    // phone boundary
-    template <typename WORDSYMBOLTABLE, typename UNITSYMBOLTABLE>
-    htkmlfreader(const vector<wstring>& paths, const set<wstring>& restricttokeys, const wstring& stateListPath, const WORDSYMBOLTABLE* wordmap, const UNITSYMBOLTABLE* unitmap,
-                 const double htkTimeToFrame, const msra::asr::simplesenonehmm& hset)
-    {
-        if (stateListPath != L"")
-            readstatelist(stateListPath);
-        symmap = hset.symmap;
         foreach_index (i, paths)
             read(paths[i], restricttokeys, wordmap, unitmap, htkTimeToFrame);
     }
@@ -1099,7 +1131,7 @@ public:
             malformed("unexpected end in mid-utterance");
 
         curpath.clear();
-        fprintf(stderr, " total %lu entries\n", this->size());
+        fprintf(stderr, " total %lu entries\n", (unsigned long)this->size());
     }
 
     // read state list, index is from 0
@@ -1120,7 +1152,7 @@ public:
                 RuntimeError("readstatelist: lines (%d) not equal to statelistmap size (%d)", (int) index, (int) statelistmap.size());
             if (statelistmap.size() != issilstatetable.size())
                 RuntimeError("readstatelist: size of statelookuparray (%d) not equal to statelistmap size (%d)", (int) issilstatetable.size(), (int) statelistmap.size());
-            fprintf(stderr, "total %lu state names in state list %ls\n", statelistmap.size(), stateListPath.c_str());
+            fprintf(stderr, "total %lu state names in state list %ls\n", (unsigned long)statelistmap.size(), stateListPath.c_str());
         }
     }
 

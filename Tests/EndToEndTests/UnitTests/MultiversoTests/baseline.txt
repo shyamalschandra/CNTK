@@ -1,0 +1,88 @@
+CPU info:
+    CPU Model Name: Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz
+    Hardware threads: 12
+    Total Memory: 57700428 kB
+-------------------------------------------------------------------
+--------------------------------------------------------------------------
+[[33530,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
+
+Module: OpenFabrics (openib)
+  Host: 7fee1579d8b2
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+Running 8 test cases...
+[INFO] [2018-01-16 19:07:26] multiverso MPI-Net is initialized under MPI_THREAD_SERIALIZED mode.
+[INFO] [2018-01-16 19:07:26] All nodes registered. System contains 1 nodes. num_worker = 1, num_server = 1
+[INFO] [2018-01-16 19:07:26] Create a async server
+[INFO] [2018-01-16 19:07:26] Rank 0: Multiverso start successfully
+[INFO] [2018-01-16 19:07:26] Multiverso Shutdown successfully
+[INFO] [2018-01-16 19:07:26] multiverso MPI-Net is initialized under MPI_THREAD_SERIALIZED mode.
+[INFO] [2018-01-16 19:07:26] All nodes registered. System contains 1 nodes. num_worker = 1, num_server = 1
+[INFO] [2018-01-16 19:07:26] Create a async server
+[INFO] [2018-01-16 19:07:26] Rank 0: Multiverso start successfully
+[INFO] [2018-01-16 19:07:26] Multiverso Shutdown successfully
+[INFO] [2018-01-16 19:07:26] multiverso MPI-Net is initialized under MPI_THREAD_SERIALIZED mode.
+[INFO] [2018-01-16 19:07:26] All nodes registered. System contains 1 nodes. num_worker = 1, num_server = 1
+[INFO] [2018-01-16 19:07:26] Create a async server
+[INFO] [2018-01-16 19:07:26] Rank 0: Multiverso start successfully
+[INFO] [2018-01-16 19:07:26] Multiverso Shutdown successfully
+[INFO] [2018-01-16 19:07:26] multiverso MPI-Net is initialized under MPI_THREAD_SERIALIZED mode.
+[INFO] [2018-01-16 19:07:26] All nodes registered. System contains 1 nodes. num_worker = 1, num_server = 1
+[INFO] [2018-01-16 19:07:26] Create a sync server
+[INFO] [2018-01-16 19:07:26] Rank 0: Multiverso start successfully
+[INFO] [2018-01-16 19:07:26] Multiverso Shutdown successfully
+
+Test module "multiverso" has passed with:
+  8 test cases out of 8 passed
+  83 assertions out of 83 passed
+
+  Test suite "array_test" has passed with:
+    2 test cases out of 2 passed
+    34 assertions out of 34 passed
+
+    Test case "array_test/array_access" has passed with:
+      20 assertions out of 20 passed
+
+    Test case "array_test/array_partition" has passed with:
+      14 assertions out of 14 passed
+
+  Test suite "blob" has passed with:
+    2 test cases out of 2 passed
+    7 assertions out of 7 passed
+
+    Test case "blob/blob_constructor_test" has passed with:
+      3 assertions out of 3 passed
+
+    Test case "blob/blob_access_test" has passed with:
+      4 assertions out of 4 passed
+
+  Test suite "test_kv" has passed with:
+    1 test case out of 1 passed
+    3 assertions out of 3 passed
+
+    Test case "test_kv/access" has passed with:
+      3 assertions out of 3 passed
+
+  Test suite "message" has passed with:
+    1 test case out of 1 passed
+    11 assertions out of 11 passed
+
+    Test case "message/message_access" has passed with:
+      11 assertions out of 11 passed
+
+  Test suite "node" has passed with:
+    1 test case out of 1 passed
+    8 assertions out of 8 passed
+
+    Test case "node/node_role" has passed with:
+      8 assertions out of 8 passed
+
+  Test suite "test_sync" has passed with:
+    1 test case out of 1 passed
+    20 assertions out of 20 passed
+
+    Test case "test_sync/sync" has passed with:
+      20 assertions out of 20 passed

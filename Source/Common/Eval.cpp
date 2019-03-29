@@ -65,19 +65,19 @@ void Eval<ElemType>::GetEvalClass(const std::string& config)
         std::string::size_type end = config.find_first_of("\n \t", found);
         if (end != std::string::npos)
         {
-            module = msra::strfun::utf16(config.substr(found, end - found));
+            module = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(config.substr(found, end - found));
         }
     }
     // create a variable of each type just to call the proper templated version
     ElemType elemType = ElemType();
-    GetEvalProc getEvalProc = (GetEvalProc) Plugin::Load(module, GetEvalName(elemType));
+    GetEvalProc getEvalProc = (GetEvalProc) m_plugin->Load(module, GetEvalName(elemType));
     getEvalProc(&m_eval);
 }
 
 // Eval Constructor
 // options - [in] string  of options (i.e. "-windowsize:11 -addenergy") data reader specific
 template <class ElemType>
-Eval<ElemType>::Eval(const std::string& config)
+Eval<ElemType>::Eval(const std::string& config) : m_plugin(make_shared<Plugin>())
 {
     GetEvalClass(config);
     m_eval->Init(config);
@@ -95,12 +95,13 @@ Eval<ElemType>::~Eval()
     }
 }
 
-// LoadModel - load a model from the specified path
-// modelFileName - file holding the model to load
+
+// CreateNetwork - create the network from the specified description
+// networkDescription - network description
 template <class ElemType>
-void Eval<ElemType>::LoadModel(const std::wstring& modelFileName)
+void Eval<ElemType>::CreateNetwork(const std::string& networkDescription)
 {
-    m_eval->LoadModel(modelFileName);
+    m_eval->CreateNetwork(networkDescription);
 }
 
 // GetNodeDimensions - Get the node dimensions of the specified nodes
@@ -113,7 +114,7 @@ void Eval<ElemType>::GetNodeDimensions(std::map<std::wstring, size_t>& dimension
 }
 
 // StartEvaluateMinibatchLoop - Prepare network for Evaluate() calls.
-// ouputNodeName - name of node that will be evaluated
+// outputNodeName - name of node that will be evaluated
 template <class ElemType>
 void Eval<ElemType>::StartEvaluateMinibatchLoop(const std::wstring& outputNodeName)
 {
@@ -127,6 +128,14 @@ template <class ElemType>
 void Eval<ElemType>::Evaluate(std::map<std::wstring, std::vector<ElemType>*>& inputs, std::map<std::wstring, std::vector<ElemType>*>& outputs)
 {
     m_eval->Evaluate(inputs, outputs);
+}
+
+// Evaluate - Evaluate using the network without input and provide the outputs
+// outputs - map from node name to output vector, outputs vectors need to be preallocated by caller, sizing will happen during evaluation
+template <class ElemType>
+void Eval<ElemType>::Evaluate(std::map<std::wstring, std::vector<ElemType>*>& outputs)
+{
+    m_eval->Evaluate(outputs);
 }
 
 // ResetState - Reset the cell state when we get the start of an utterance

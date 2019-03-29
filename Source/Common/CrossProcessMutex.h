@@ -7,6 +7,10 @@
 #include <cassert>
 #include <string>
 
+#define CLOSEHANDLE_ERROR 0
+#define RELEASEMUTEX_ERROR 0
+#define FCNTL_ERROR -1
+
 #ifdef WIN32 // --- Windows version
 
 #define NOMINMAX
@@ -29,33 +33,50 @@ public:
     }
 
     // Acquires the mutex. If 'wait' is true and mutex is acquired by someone else then
-    // function waits until mutex is releasd
-    // Returns true if successfull
+    // function waits until mutex is released
+    // Returns false if !wait and lock cannot be acquired, or in case of a system error that prevents us from acquiring the lock.
     bool Acquire(bool wait)
     {
         assert(m_handle == NULL);
         m_handle = ::CreateMutexA(NULL /*security attr*/, FALSE /*bInitialOwner*/, m_name.c_str());
         if (m_handle == NULL)
         {
-            return false;
+            if (!wait)
+                return false;   // can't lock due to access permissions: lock already exists, consider not available
+            else
+                RuntimeError("Acquire: Failed to create named mutex %s: %d.", m_name.c_str(), GetLastError());
         }
 
         if (::WaitForSingleObject(m_handle, wait ? INFINITE : 0) != WAIT_OBJECT_0)
         {
-            ::CloseHandle(m_handle);
+            // failed to acquire
+            int rc = ::CloseHandle(m_handle);
+            if ((rc == CLOSEHANDLE_ERROR) && !std::uncaught_exception())
+            {
+                RuntimeError("Acquire: Handler close failure with error code %d", ::GetLastError());
+            }
             m_handle = NULL;
             return false;
         }
 
-        return true;
+        return true;   // succeeded
     }
 
     // Releases the mutex
     void Release()
     {
         assert(m_handle != NULL);
-        ::ReleaseMutex(m_handle);
-        ::CloseHandle(m_handle);
+        int rc = 0;
+        rc = ::ReleaseMutex(m_handle);
+        if ((rc == RELEASEMUTEX_ERROR) && !std::uncaught_exception())
+        {
+            RuntimeError("Mutex Release: Failed to release mutex %s: %d", m_name.c_str(), ::GetLastError());
+        }
+        rc = ::CloseHandle(m_handle);
+        if ((rc == CLOSEHANDLE_ERROR) && !std::uncaught_exception())
+        {
+            RuntimeError("Mutex Release: Failed to close handler %s: %d", m_name.c_str(), ::GetLastError());
+        }
         m_handle = NULL;
     }
 
@@ -112,19 +133,19 @@ public:
     }
 
     // Acquires the mutex. If 'wait' is true and mutex is acquired by someone else then
-    // function waits until mutex is releasd
-    // Returns true if successfull
+    // function waits until mutex is released
+    // Returns false if !wait and lock cannot be acquired, or in case of a system error that prevents us from acquiring the lock.
     bool Acquire(bool wait)
     {
+        mode_t mask = umask(0);
+
         assert(m_fd == -1);
         for (;;)
         {
             // opening a lock file
             int fd = open(m_fileName.c_str(), O_WRONLY | O_CREAT, 0666);
             if (fd < 0)
-            {
-                return false;
-            }
+                RuntimeError("Acquire: Failed to open lock file %s: %s.", m_fileName.c_str(), strerror(errno));
             // locking it with the fcntl API
             memset(&m_lock, 0, sizeof(m_lock));
             m_lock.l_type = F_WRLCK;
@@ -143,6 +164,7 @@ public:
             {
                 // acquire failed
                 close(fd);
+                umask(mask);
                 return false;
             }
             // we own the exclusive lock on file descriptor, but we need to double-check
@@ -162,6 +184,7 @@ public:
             {
                 // lock acquired successfully
                 m_fd = fd;
+                umask(mask);
                 return true;
             }
         }
@@ -178,7 +201,11 @@ public:
         m_lock.l_type = F_UNLCK;
         // Now removing the lock and closing the file descriptor
         // waiting processes will be notified
-        fcntl(m_fd, F_SETLKW, &m_lock);
+        int rc = fcntl(m_fd, F_SETLKW, &m_lock);
+        if (rc == FCNTL_ERROR)
+        {
+            RuntimeError("Mutex Release: Failed to release mutex %s", m_fileName.c_str());
+        }
         close(m_fd);
         m_fd = -1;
     }

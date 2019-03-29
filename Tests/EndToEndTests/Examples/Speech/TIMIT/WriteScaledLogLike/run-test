@@ -1,0 +1,41 @@
+#!/bin/bash
+
+. $TEST_ROOT_DIR/run-test-common
+
+# specific TIMIT variables
+. $TEST_DIR/../run-timit-test-common
+
+# Train:
+cntkrun TIMIT_TrainSimpleNetwork.cntk "$CntkArguments TIMIT_TrainSimple=[reader=[useMersenneTwisterRand=true]]" || exit $?
+
+# Copy the test data to the test run directory, so that we do not damage anything
+DataDir=$TEST_RUN_DIR/TestData
+mkdir $DataDir
+cp -R $DataSourceDir/* $DataDir || exit $?
+
+# Write:
+cntkrun TIMIT_WriteScaledLogLike.cntk "$CntkArguments TIMIT_WriteScaledLogLike=[reader=[useMersenneTwisterRand=true]]"
+ExitCode=$?
+
+if [ $ExitCode == 0 ]; then
+  echo Write succeeded.
+
+  # Restore DataDir prior to modification through cntkrun (on Cygwin)
+  DataDir=$TEST_RUN_DIR/TestData
+
+  # Compare the output files
+  OutputDir=$DataDir/scaledloglike
+
+  if [ "$OS" == "Windows_NT" ]; then
+      ExpectedOutputFile=$TEST_DIR/expected_output_md5sum.windows.txt
+      echo MD5 check disabled on Windows.
+  else
+      ExpectedOutputFile=$TEST_DIR/expected_output_md5sum.linux.txt
+      echo MD5 check disabled on Linux.
+  fi
+fi
+
+# Delete the test data
+rm -rf $DataDir
+
+exit $ExitCode

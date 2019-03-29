@@ -9,9 +9,9 @@
 #include "Helpers.h"
 #include "CommonMatrix.h"
 #include "TensorShape.h" // only for SmallVector; I was hoping to keep this out
-#include "DebugUtil.h"
 #include "BestGpu.h" // for CPUONLY macro
 #include "ConcStack.h"
+#include "GPURNGHandle.h"
 #include <string>
 #include <vector>
 #include <array>
@@ -19,6 +19,14 @@
 #include <iostream> // for cout/cerr
 #include <memory>   // for unique_ptr
 #include <limits.h> // for ULONG_MAX
+
+//#include "CPUMatrix.h"
+//#include "CPUSparseMatrix.h"
+//#include "GPUSparseMatrix.h"
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 // predeclare cublasHandle_t
 struct cublasContext;
@@ -42,11 +50,41 @@ typedef struct CUstream_st* cudaStream_t;
 #define USE_TIME_BASED_SEED ULONG_MAX
 #endif
 
+// Max number of GPUs on a _single_ node.
+#ifndef MAX_GPUS
+#define MAX_GPUS 16
+#endif
+
 // Stream management functions
 void MATH_API SetStream(cudaStream_t stream);
 cudaStream_t MATH_API GetStream();
 
 namespace Microsoft { namespace MSR { namespace CNTK {
+MATH_API std::size_t GetCUDNNVersion();
+
+class DataTransferer;
+
+// -----------------------------------------------------------------------
+// SyncGuard -- synchronize around CUDA calls
+// -----------------------------------------------------------------------
+
+class SyncGuard
+{
+private:
+    static bool s_isSyncEnabled;
+
+    bool m_forceSync;
+#ifndef CPUONLY
+    cudaEvent_t m_done;
+#endif
+
+public:
+    static MATH_API void EnableSync();
+    static MATH_API bool IsSyncEnabled();
+
+    SyncGuard(bool forceSync = false);
+    ~SyncGuard();
+};
 
 // -----------------------------------------------------------------------
 // DeviceBoundNumber -- This class represents a number which resides on a particular device. Use it to avoid unnecessary transfers between CPU and GPU
@@ -85,32 +123,46 @@ public:
 
 void PrepareDevice(DEVICEID_TYPE deviceId);
 
+template<class ElemType> class CuDnnRNNExecutor;
+
 template <class ElemType>
 class MATH_API GPUMatrix : public BaseMatrix<ElemType>
 {
-    typedef BaseMatrix<ElemType> B;
-    using B::m_numRows;
-    using B::m_numCols;
-    using B::m_pArray; // without this, base members would require to use thi-> in GCC
+    typedef BaseMatrix<ElemType> Base;
+    using Base::m_numRows;
+    using Base::m_numCols;
+    using Base::m_sliceViewOffset;
+    using Base::HasExternalBuffer;
+    using Base::SetBuffer;
+    using Base::SetComputeDeviceId;
+    using Base::ZeroInit;
+    using Base::ZeroValues;
+    using Base::m_sob;
+    using Base::ShallowCopyFrom;
+    using Base::ReleaseStorageMemory;
+    using Base::GetSizeAllocated;
+    using Base::SetSizeAllocated;
 
     template <typename T>
     friend class GPUMatrix;
 
 public:
-    static const int MaxGpus = 8; // support up to 8 GPUs
-    using BaseMatrix<ElemType>::m_computeDevice;
-    using BaseMatrix<ElemType>::m_elemSizeAllocated;
-    using BaseMatrix<ElemType>::m_matrixName;
-    using BaseMatrix<ElemType>::m_format;
-    using BaseMatrix<ElemType>::m_externalBuffer;
-    using BaseMatrix<ElemType>::m_nz;
-    using BaseMatrix<ElemType>::OwnBuffer;
-    using BaseMatrix<ElemType>::GetNumElements;
-    using BaseMatrix<ElemType>::IsEmpty;
-    using BaseMatrix<ElemType>::GetArray;
-    using BaseMatrix<ElemType>::GetNumRows;
-    using BaseMatrix<ElemType>::GetNumCols;
-    using BaseMatrix<ElemType>::SetMatrixName;
+    using Base::GetComputeDeviceId;
+    using Base::Buffer;
+    using Base::GetNumRows;
+    using Base::GetNumCols;
+    using Base::GetDiagSize;
+    using Base::GetNumElements;
+    using Base::OwnBuffer;
+    using Base::GetFormat;
+    using Base::SetFormat;
+    using Base::IsEmpty;
+    using Base::VerifyResizable;
+    using Base::VerifySize;
+
+public:
+    using Base::VerifyWritable;
+    static const int MaxGpus = MAX_GPUS;
 
 private:
     static cublasHandle_t s_cuHandle[MaxGpus];
@@ -122,6 +174,7 @@ private:
 #pragma warning(push)
 #pragma warning(disable : 4251)
     mutable std::unique_ptr<conc_stack<std::unique_ptr<GPUMatrix<ElemType>>>> m_workspace;
+    mutable std::shared_ptr<CuDnnRNNExecutor<ElemType>> m_rnnExecutor; // for cudnn5 RNN
 #pragma warning(pop)
 
 private:
@@ -130,13 +183,13 @@ private:
     size_t LocateColumn(const size_t j) const;
     void Clear();
     void ZeroInit(int deviceId);
+    void ZeroInit() { Base::ZeroInit(); }
 
     std::unique_ptr<GPUMatrix<ElemType>> GetOrCreateWorkspace() const;
     void ReleaseWorkspace(std::unique_ptr<GPUMatrix<ElemType>> src) const;
 
 public:
-    GPUMatrix(int deviceId);
-    GPUMatrix(FILE* f, const char* matrixName, int deviceId);
+    explicit GPUMatrix(int deviceId);
     GPUMatrix(const size_t numRows, const size_t numCols, int deviceId);
     GPUMatrix(const size_t numRows, const size_t numCols, int deviceId, ElemType* pArray, const size_t matrixFlags = matrixFlagNormal);
     GPUMatrix(const GPUMatrix<ElemType>& deepCopyFrom);
@@ -146,8 +199,6 @@ public:
     ~GPUMatrix(void);
 
     static void SetDevice(DEVICEID_TYPE deviceId);
-    static DEVICEID_TYPE GetBestGPUDeviceId();
-    int GetComputeDeviceId() const;
     DEVICEID_TYPE PrepareDevice(DEVICEID_TYPE deviceId = -1) const;
 
     static cublasHandle_t GetCublasHandle(int computeDevice = -1);
@@ -156,6 +207,9 @@ public:
     void CopySection(size_t numRows, size_t numCols, ElemType* dst, size_t colStride) const;
 
     void ChangeDeviceTo(DEVICEID_TYPE to_id);
+
+    template<class ElemType2>
+    void CastAssignValuesOf(const GPUMatrix<ElemType2>* other);
 
 public:
     GPUMatrix<ElemType> ColumnSlice(size_t startColumn, size_t numCols) const;
@@ -170,46 +224,81 @@ public:
     {
         return m_numRows * m_numCols * sizeof(ElemType);
     }
-    ElemType* BufferPointer() const
+    ElemType* Data() const
     {
-        return m_pArray;
+        return Buffer() + m_sliceViewOffset;
     }
 
     ElemType Adagrad(GPUMatrix<ElemType>& gradients, const bool needAveMultiplier);
-    void FSAdagrad(GPUMatrix<ElemType>& gradients, GPUMatrix<ElemType>& functionValues, ElemType learnRatePerSample, ElemType momentum, ElemType adaWeight, ElemType adaMul);
-    ElemType RmsProp(GPUMatrix<ElemType>& gradients, ElemType RMS_GAMMA, ElemType RMS_WGT_INC, ElemType RMS_WGT_MAX, ElemType RMS_WGT_DEC, ElemType RMS_WGT_MIN, const bool needAveMultiplier);
+
+    void FSAdagrad(GPUMatrix<ElemType>& gradients, GPUMatrix<ElemType>& functionValues, ElemType learnRatePerSample,
+                   ElemType momentum, ElemType adaWeight, ElemType adaMul, ElemType unitGainFactor);
+
+    void Adam(GPUMatrix<ElemType>& gradients, GPUMatrix<ElemType>& functionValues, ElemType learnRatePerSample,
+              ElemType momentum, ElemType adaWeight, ElemType adaMul, ElemType epsilon, ElemType unitGainFactor, bool adamax=false);
+
+    ElemType RmsProp(GPUMatrix<ElemType>& gradients, 
+                     ElemType RMS_GAMMA, 
+                     ElemType RMS_WGT_INC, 
+                     ElemType RMS_WGT_MAX, 
+                     ElemType RMS_WGT_DEC, 
+                     ElemType RMS_WGT_MIN, 
+                     const bool needAveMultiplier,
+                     const bool initialized);
+
+    template<typename GradType>
+    void AdaDelta(GPUMatrix<GradType>& gradients, GPUMatrix<ElemType>& functionValues, ElemType learningRate, ElemType rho, ElemType epsilon);
+
+    void AdaDeltaFlushTimestamps(size_t cols, ElemType rho, int* timestamps, int currentTimestamp);
 
     void Reshape(const size_t numRows, const size_t numCols);
+
+    // RequireSize is now the new preferred method of ensuring the correct size inside of the Matrix class. Since Resize will fail if the storage object has
+    // multiple views, RequireSize will first check to see if Resize is required. If it is not, then it short-circuits and is a noop. Otherwise, RequireSize
+    // will call Resize, which may fail if the matrix has multiple views.
+    void RequireSize(const size_t numRows, const size_t numCols, bool growOnly = true); // by default we only reallocate if need to grow
+    void RequireSize(const GPUMatrix<ElemType>& like, bool growOnly = true) { RequireSize(like.GetNumRows(), like.GetNumCols(), growOnly); }
+
+    // Resize first checks to ensure that the caller has the authority to call Resize (i.e., it checks to ensure the underlying data is owned by only this matrix), and then
+    // actually resizes the underlying matrix, doing any allocation as required.
     void Resize(const size_t numRows, const size_t numCols, bool growOnly = true); // by default we only reallocate if need to grow
 
-    ElemType& operator()(const size_t /*row*/, const size_t /*col*/)
-    {
-        LogicError("GPUMatrix doesn't support this");
-    }
-    const ElemType& operator()(const size_t /*row*/, const size_t /*col*/) const
-    {
-        LogicError("GPUMatrix doesn't support this");
-    }
+    ElemType&       operator()(const size_t /*row*/, const size_t /*col*/)       { LogicError("GPUMatrix doesn't support operator(,) on the CPU."); }
+    const ElemType& operator()(const size_t /*row*/, const size_t /*col*/) const { LogicError("GPUMatrix doesn't support operator(,) on the CPU."); }
     ElemType Get00Element() const;
 
     void SetValue(const ElemType v);
-    void SetValue(const ElemType* d_v); // d_v is pointer to the the value in GPU memory
+    void SetValue(const ElemType* d_v); // d_v is pointer to the value in GPU memory
     void SetColumn(const ElemType* colPointer, size_t colInd);
     void SetColumn(const GPUMatrix<ElemType>& valMat, size_t colInd);
 
-    void MaskColumnsValue(const GPUMatrix<char>& columnsMask, ElemType val);
+    void MaskColumnsValue(const GPUMatrix<char>& columnsMask, ElemType val, size_t numColsPerMaskEntry);
 
+    //void SetValue(const CPUMatrix<ElemType>& deepCopyFrom);
     void SetValue(const GPUMatrix<ElemType>& deepCopyFrom);
-    void SetValue(const size_t numRows, const size_t numCols, int deviceId, ElemType* pArray, size_t matrixFlags = matrixFlagNormal);
+    //void SetValue(const CPUSparseMatrix<ElemType>& deepCopyFrom);
+    //void SetValue(const GPUSparseMatrix<ElemType>& deepCopyFrom);
+    void SetValue(const size_t numRows, const size_t numCols, int deviceId, ElemType* pArray, size_t matrixFlags = matrixFlagNormal, DataTransferer* transferer = nullptr);
 
     void SetDiagonalValue(const ElemType v);
     void SetDiagonalValue(const GPUMatrix<ElemType>& vector);
     void SetUniformRandomValue(const ElemType low, const ElemType high, unsigned long seed = USE_TIME_BASED_SEED);
+    void SetUniformRandomValue(RNGHandle& rngHandle, const ElemType low, const ElemType high);
+    void SetGaussianRandomValue(RNGHandle& rngHandle, const ElemType mean, const ElemType stdev);
+    void SetGumbelRandomValue(RNGHandle& rngHandle, const ElemType loc, const ElemType scale);
     void SetGaussianRandomValue(const ElemType mean, const ElemType sigma, unsigned long seed = USE_TIME_BASED_SEED);
-    void SetUniformRandomMask(const ElemType maskRate, const ElemType scaleValue, unsigned long seed = USE_TIME_BASED_SEED);
+    void SetTruncatedNormalRandomValue(const ElemType mean, const ElemType sigma, unsigned long seed = USE_TIME_BASED_SEED); 
+    void SetUniformRandomMask(const ElemType maskRate, const ElemType scaleValue, RNGHandle& rngHandle);
+
+    GPUMatrix<ElemType>& AssignOneHot(const GPUMatrix<ElemType>& a, vector<size_t>& shape, size_t axis);
+    GPUMatrix<ElemType>& GatherFromTarget(const GPUMatrix<ElemType>& indices, const GPUMatrix<ElemType>& target, size_t row_elements);
+    GPUMatrix<ElemType>& ScatterToIndices(const GPUMatrix<ElemType>& values, const GPUMatrix<ElemType>& indices, size_t row_elements, const GPUMatrix<char>* mask = nullptr);
 
     GPUMatrix<ElemType> Transpose() const;
     GPUMatrix<ElemType>& AssignTransposeOf(const GPUMatrix<ElemType>& a);
+
+    GPUMatrix<ElemType>& DoGatherColumnsOf (ElemType beta, const GPUMatrix<ElemType>& idx, const GPUMatrix<ElemType>& a, ElemType alpha);
+    GPUMatrix<ElemType>& DoScatterColumnsOf(ElemType beta, const GPUMatrix<ElemType>& idx, const GPUMatrix<ElemType>& a, ElemType alpha, bool idxHaveDups);
 
     GPUMatrix<ElemType>& operator+=(const ElemType alpha);
     GPUMatrix<ElemType> operator+(const ElemType alpha) const;
@@ -270,6 +359,9 @@ public:
     GPUMatrix<ElemType>& InplaceTanh();
     GPUMatrix<ElemType>& AssignTanhOf(const GPUMatrix<ElemType>& a);
 
+    GPUMatrix<ElemType>& InplaceAtanh();
+    GPUMatrix<ElemType>& AssignAtanhOf(const GPUMatrix<ElemType>& a);
+
     GPUMatrix<ElemType>& InplaceLogSoftmax(const bool isColWise);
     GPUMatrix<ElemType>& AssignLogSoftmaxOf(const GPUMatrix<ElemType>& a, const bool isColWise);
 
@@ -279,6 +371,10 @@ public:
     // sequence training
     GPUMatrix<ElemType>& DropFrame(const GPUMatrix<ElemType>& label, const GPUMatrix<ElemType>& gamma, const ElemType& threshhold);
     GPUMatrix<ElemType>& AssignSequenceError(const ElemType hsmoothingWeight, const GPUMatrix<ElemType>& label, const GPUMatrix<ElemType>& dnnoutput, const GPUMatrix<ElemType>& gamma, ElemType alpha);
+
+    GPUMatrix<ElemType>& AssignCTCScore(const GPUMatrix<ElemType>& prob, GPUMatrix<ElemType>& alpha, GPUMatrix<ElemType>& beta,
+        const GPUMatrix<ElemType> phoneSeq, const GPUMatrix<ElemType> phoneBoundary, GPUMatrix<ElemType> & totalScore, const vector<size_t>& uttMap, const vector<size_t> & uttBeginFrame, const vector<size_t> & uttFrameNum,
+        const vector<size_t> & uttPhoneNum, const size_t samplesInRecurrentStep, const size_t maxFrameNum, const size_t blankTokenId, const int delayConstraint, const bool isColWise);
 
     GPUMatrix<ElemType>& InplaceSqrt();
     GPUMatrix<ElemType>& AssignSqrtOf(const GPUMatrix<ElemType>& a);
@@ -294,6 +390,27 @@ public:
 
     GPUMatrix<ElemType>& InplaceNegativeSine();
     GPUMatrix<ElemType>& AssignNegativeSineOf(const GPUMatrix<ElemType>& a);
+
+    GPUMatrix<ElemType>& InplaceTan();
+    GPUMatrix<ElemType>& AssignTanOf(const GPUMatrix<ElemType>& a);
+
+    GPUMatrix<ElemType>& InplaceAcos();
+    GPUMatrix<ElemType>& AssignAcosOf(const GPUMatrix<ElemType>& a);
+
+    GPUMatrix<ElemType>& InplaceAsin();
+    GPUMatrix<ElemType>& AssignAsinOf(const GPUMatrix<ElemType>& a);
+
+    GPUMatrix<ElemType>& InplaceAtan();
+    GPUMatrix<ElemType>& AssignAtanOf(const GPUMatrix<ElemType>& a);
+
+    GPUMatrix<ElemType>& InplaceCosh();
+    GPUMatrix<ElemType>& AssignCoshOf(const GPUMatrix<ElemType>& a);
+
+    GPUMatrix<ElemType>& InplaceSinh();
+    GPUMatrix<ElemType>& AssignSinhOf(const GPUMatrix<ElemType>& a);
+
+    GPUMatrix<ElemType>& InplaceAsinh();
+    GPUMatrix<ElemType>& AssignAsinhOf(const GPUMatrix<ElemType>& a);
 
     GPUMatrix<ElemType>& InplaceAbs();
     GPUMatrix<ElemType>& AssignAbsOf(const GPUMatrix<ElemType>& a);
@@ -312,7 +429,7 @@ public:
     ElemType SumOfElements() const;    // sum of all elements
     GPUMatrix<ElemType>& AssignSumOfElements(const GPUMatrix<ElemType>& a);
 
-    ElemType Max() const;
+    ElemType AbsoluteMax() const;
     bool IsEqualTo(const GPUMatrix<ElemType>& a, const ElemType threshold = 1e-8) const;
 
     static void VectorSum(const GPUMatrix<ElemType>& a, GPUMatrix<ElemType>& c, const bool isColWise);
@@ -370,9 +487,6 @@ public:
     void Print(const char* matrixName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd) const;
     void Print(const char* matrixName = NULL) const; // print whole matrix. can be expensive
 
-    void ReadFromFile(FILE* f, const char* matrixName); // matrixName is used to verify that correct matrix is read.
-    void WriteToFile(FILE* f, const char* matrixName);  // matrixName is used to verify that correct matrix is read.
-
     GPUMatrix<ElemType>& AssignPackedConvolutionInput(const GPUMatrix<ElemType>& inputSubBatch,
                                                       const size_t inputWidth, const size_t inputHeight, const size_t inputChannels,
                                                       const size_t outputWidth, const size_t outputHeight, const size_t outputChannels,
@@ -402,6 +516,45 @@ public:
                                                    const size_t outputWidth, const size_t outputHeight, const size_t outputSizePerSample,
                                                    const size_t windowWidth, const size_t windowHeight, const size_t horizontalSubsample, const size_t verticalSubsample);
 
+    void ConvolutionForward(const GPUMatrix<ElemType>& kernel, const GPUMatrix<int>& mpRowCol, const GPUMatrix<int>& mpRowIwht,
+                            const GPUMatrix<int>& mpRowRun, const GPUMatrix<int>& runs, GPUMatrix<ElemType>& output) const;
+    void ConvolutionBackwardData(const GPUMatrix<ElemType>& kernel, const GPUMatrix<int>& mpRowCol, const GPUMatrix<int>& mpRowIwht,
+                                 const GPUMatrix<int>& mpRowRun, const GPUMatrix<int>& runs, GPUMatrix<ElemType>& grad) const;
+    void ConvolutionBackwardKernel(const GPUMatrix<ElemType>& in, const GPUMatrix<int>& mpRowCol, const GPUMatrix<int>& mpRowIwht,
+                                   const GPUMatrix<int>& mpRowRun, const GPUMatrix<int>& runs, GPUMatrix<ElemType>& kernelGrad) const;
+
+    void MaxPoolingForward(const GPUMatrix<int>& mpRowCol, const GPUMatrix<int>& mpRowIndices, const GPUMatrix<int>& indices, GPUMatrix<ElemType>& output) const;
+    void MaxPoolingBackward(const GPUMatrix<ElemType>& out, const GPUMatrix<ElemType>& in,
+                            const GPUMatrix<int>& mpRowCol, const GPUMatrix<int>& mpRowIndices, const GPUMatrix<int>& indices,
+                            GPUMatrix<ElemType>& grad, bool accumulateGradient) const;
+    void MaxUnpooling(const GPUMatrix<int>& mpRowCol, const GPUMatrix<int>& mpRowIndices, const GPUMatrix<int>& indices, const GPUMatrix<ElemType>& poolInput, GPUMatrix<ElemType>& input) const;
+
+    void MaxROIPoolingForward(const size_t numRois, const size_t numImg, const size_t channels, const size_t width, const size_t height,
+                              const size_t pooledWidth, const size_t pooledHeight, const GPUMatrix<ElemType>& roiData, GPUMatrix<ElemType>& output, 
+                              GPUMatrix<ElemType>& argmax, double spatialScale) const;
+
+    void MaxROIPoolingBackward(const size_t numRois, const size_t numImg, const size_t channels, const size_t width, const size_t height,
+                               const size_t pooledWidth, const size_t pooledHeight, const GPUMatrix<ElemType>& roiData, GPUMatrix<ElemType>& grad, 
+                               GPUMatrix<ElemType>& argmax, double spatialScale) const;
+
+    void AveragePoolingForward(const GPUMatrix<int>& mpRowCol, const GPUMatrix<int>& mpRowIndices, const GPUMatrix<int>& indices, GPUMatrix<ElemType>& output) const;
+    void AveragePoolingBackward(const GPUMatrix<int>& mpRowCol, const GPUMatrix<int>& mpRowIndices, const GPUMatrix<int>& indices, GPUMatrix<ElemType>& grad, bool accumulateGradient) const;
+
+    template<class StatType>
+    void BatchNormalizationForward(const GPUMatrix<StatType>& scale, const GPUMatrix<StatType>& bias, bool inferenceOnly, double expAvgFactor, double blendFactor,
+                                   GPUMatrix<StatType>& runMean, GPUMatrix<StatType>& runVariance, GPUMatrix<ElemType>& out, double epsilon,
+                                   GPUMatrix<StatType>& saveMean, GPUMatrix<StatType>& saveInvStdDev) const;
+
+    template<class StatType>
+    void BatchNormalizationBackward(const GPUMatrix<ElemType>& in, GPUMatrix<ElemType>& grad, const GPUMatrix<StatType>& scale, double blendFactor,
+                                    const GPUMatrix<StatType>& saveMean, const GPUMatrix<StatType>& saveInvStdDev,
+                                    GPUMatrix<StatType>& scaleGrad, GPUMatrix<StatType>& biasGrad) const;
+
+    // RNN support functions
+    void RNNForward(const GPUMatrix<ElemType>& inputX, const GPUMatrix<ElemType>& paramW, size_t xDim, size_t yDim, const vector<size_t>& numSequencesForFrame, const struct RnnAttributes& rnnAttributes, GPUMatrix<ElemType>& reserve, GPUMatrix<ElemType>& workspace);
+    void RNNBackwardData(const GPUMatrix<ElemType>& outputDY, const GPUMatrix<ElemType>& paramW, GPUMatrix<ElemType>& outputDX, const struct RnnAttributes& rnnAttributes, GPUMatrix<ElemType>& reserve, GPUMatrix<ElemType>& workspace);
+    void RNNBackwardWeights(const GPUMatrix<ElemType>& inputX, const GPUMatrix<ElemType>& outputY, GPUMatrix<ElemType>& dw, const struct RnnAttributes& rnnAttributes, GPUMatrix<ElemType>& reserve, GPUMatrix<ElemType>& workspace);
+
 public:
     // static BLAS functions
     static void MultiplyAndWeightedAdd(ElemType alpha, const GPUMatrix<ElemType>& a, const bool transposeA, const GPUMatrix<ElemType>& b, const bool transposeB, ElemType beta, GPUMatrix<ElemType>& c);
@@ -410,6 +563,8 @@ public:
     static void Multiply(const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, GPUMatrix<ElemType>& c);
     static void Multiply1x1AndWeightedAdd(ElemType alpha, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, ElemType beta, GPUMatrix<ElemType>& c);
 
+    static void ColumnwiseScaleAndWeightedAdd(ElemType alpha, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& v, ElemType beta, GPUMatrix<ElemType>& c);
+
     static void ScaleAndAdd(ElemType alpha, const GPUMatrix<ElemType>& a, GPUMatrix<ElemType>& c);
     static void ScaleAndAdd(ElemType alpha, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, GPUMatrix<ElemType>& c);
     static void AddScaledDifference(const ElemType alpha, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, GPUMatrix<ElemType>& c);
@@ -417,7 +572,7 @@ public:
     static void AddScaledDifference(const GPUMatrix<ElemType>& alpha, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, GPUMatrix<ElemType>& c);
     static void AssignScaledDifference(const GPUMatrix<ElemType>& alpha, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, GPUMatrix<ElemType>& c);
 
-    static void AddElementToElement(const GPUMatrix<ElemType>& a, const size_t ai, const size_t aj, GPUMatrix<ElemType>& c, const size_t ci, const size_t cj);
+    static void AddElementToElement(ElemType beta, const GPUMatrix<ElemType>& a, const size_t ai, const size_t aj, GPUMatrix<ElemType>& c, const size_t ci, const size_t cj);
 
     // minus one at a specific position
     static void MinusOneAt(GPUMatrix<ElemType>& c, const size_t position);
@@ -428,23 +583,29 @@ public:
     static void InnerProduct(const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, GPUMatrix<ElemType>& c, const bool isColWise);
     static ElemType InnerProductOfMatrices(const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b);
     static void ElementWisePower(ElemType alpha, const GPUMatrix<ElemType>& a, GPUMatrix<ElemType>& c);
+    static void BatchMatMul(ElemType beta, const GPUMatrix<ElemType>& a, const bool transposeA, const int m, const GPUMatrix<ElemType>& b, const bool transposeB, const int n, GPUMatrix<ElemType>& c, const bool isColWise);
 
     static bool AreEqual(const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, const ElemType threshold = 1e-8);
 
     static void TensorShuffleScaleAndAdd(ElemType keepWeight, const GPUMatrix<ElemType>& a, size_t D, size_t S, size_t M, size_t K, size_t T, ElemType scaleFactor, const GPUMatrix<ElemType>& b, GPUMatrix<ElemType>& c);
 
-    void TensorOp(ElemType beta, const GPUMatrix<ElemType>& a, ElemType alpha, ElementWiseOperator op,
+    void TensorOp(ElemType beta, const GPUMatrix<ElemType>& a, ElemType alpha, ElementWiseOperator op, ElementWiseOperator reductionOp,
                   const std::array<size_t, 2>& offsets,
                   const SmallVector<size_t>& regularOpDims, const std::array<SmallVector<ptrdiff_t>, 2>& regularStrides,
                   const SmallVector<size_t>& reducingOpDims, const std::array<SmallVector<ptrdiff_t>, 2>& reducingStrides);
-    void TensorOp(ElemType beta, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, ElemType alpha, ElementWiseOperator op,
+    void TensorOp(ElemType beta, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, ElemType alpha, ElementWiseOperator op, ElementWiseOperator reductionOp,
                   const std::array<size_t, 3>& offsets,
                   const SmallVector<size_t>& regularOpDims, const std::array<SmallVector<ptrdiff_t>, 3>& regularStrides,
                   const SmallVector<size_t>& reducingOpDims, const std::array<SmallVector<ptrdiff_t>, 3>& reducingStrides);
-    void TensorOp(ElemType beta, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, const GPUMatrix<ElemType>& c, ElemType alpha, ElementWiseOperator op,
+    void TensorOp(ElemType beta, const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, const GPUMatrix<ElemType>& c, ElemType alpha, ElementWiseOperator op, ElementWiseOperator reductionOp,
                   const std::array<size_t, 4>& offsets,
                   const SmallVector<size_t>& regularOpDims, const std::array<SmallVector<ptrdiff_t>, 4>& regularStrides,
                   const SmallVector<size_t>& reducingOpDims, const std::array<SmallVector<ptrdiff_t>, 4>& reducingStrides);
+
+    void TensorArgOp(const GPUMatrix<ElemType>& a, ElementWiseOperator reductionOp,
+                     const std::array<size_t, 2>& offsets,
+                     const SmallVector<size_t>& regularOpDims, const std::array<SmallVector<ptrdiff_t>, 2>& regularStrides,
+                     const SmallVector<size_t>& reducingOpDims, const std::array<SmallVector<ptrdiff_t>, 2>& reducingStrides);
 
     static void CreateCurandObject(unsigned long seed, const char* caller);
     static void ResetCurandObject(unsigned long seed, const char* caller);
@@ -458,7 +619,7 @@ public:
 
     static ElemType GetLearnRateForBlock_Helper(const GPUMatrix<ElemType>& Gradients, const GPUMatrix<ElemType>& SmoothedGradients);
 
-    ElemType LogAddSumOfElements() const;
+    ElemType LogSumOfElements() const;
 
 public:
     GPUMatrix<ElemType>& AssignElementProductOfWithShiftNeg(const GPUMatrix<ElemType>& a, const GPUMatrix<ElemType>& b, const size_t shift, const size_t nt);
@@ -489,19 +650,16 @@ public:
         stream >> elsize;
         if (sizeof(ElemType) != elsize)
             LogicError("Template argument size doesn't match those in file");
-        std::wstring matrixName;
+        std::wstring matrixNameDummy; // Note this is not used anymore, just a dummy for compatability.
         size_t numRows, numCols;
         int format;
-        stream >> matrixName >> format >> numRows >> numCols;
+        stream >> matrixNameDummy >> format >> numRows >> numCols;
         ElemType* d_array = new ElemType[numRows * numCols];
         for (size_t i = 0; i < numRows * numCols; ++i)
             stream >> d_array[i];
         stream.GetMarker(fileMarkerEndSection, std::wstring(L"EMAT"));
         us.SetValue(numRows, numCols, us.GetComputeDeviceId(), d_array, matrixFlagNormal | format);
         delete[] d_array;
-        us.m_matrixName = new wchar_t[matrixName.length() + 1];
-        wmemcpy(us.m_matrixName, matrixName.c_str(), matrixName.length() + 1);
-        // us.m_matrixName = matrixName;
         return stream;
     }
     friend File& operator<<(File& stream, const GPUMatrix<ElemType>& us)
@@ -509,37 +667,54 @@ public:
         stream.PutMarker(fileMarkerBeginSection, std::wstring(L"BMAT"));
         stream << sizeof(ElemType);
 
-        std::wstring s = (us.m_matrixName == NULL) ? std::wstring(L"unnamed") : std::wstring(us.m_matrixName);
-        int format = us.m_format;
+        // TODO: This is now ignored on input, so we can should change to an empty string. This might break parsing, and must be tested first
+        std::wstring s = std::wstring(L"unnamed");
+        int format = us.GetFormat();
         stream << s << format;
 
         stream << us.m_numRows << us.m_numCols;
         ElemType* pArray = us.CopyToArray();
         for (size_t i = 0; i < us.GetNumElements(); ++i)
             stream << pArray[i];
+        
         delete[] pArray;
+
         stream.PutMarker(fileMarkerEndSection, std::wstring(L"EMAT"));
         return stream;
     }
 };
 
 typedef GPUMatrix<float> GPUSingleMatrix;
-}
-}
-}
 
+}}}
+
+#ifndef CPUONLY
+
+#include <cuda_runtime.h>
+
+// -----------------------------------------------------------------------
 // Error handling
+// -----------------------------------------------------------------------
+
 template <typename ERRTYPE>
 const char* CudaErrString(ERRTYPE x); // actual error function is defined inside .cu files
 template <typename ERRTYPE>
-static void CudaCall(ERRTYPE retCode, const char* exprString, const char* libName, ERRTYPE successCode)
+static void CudaCall(ERRTYPE retCode, const char* exprString, const char* libName, ERRTYPE successCode, const char* msg="")
 {
     if (retCode != successCode)
     {
         try
         {
-            const char* hostname = getenv("COMPUTERNAME"); // TODO: This is the easy way for Windows; likely different on Linux.
-            Microsoft::MSR::CNTK::RuntimeError("%s failure %d: %s ; GPU=%d ; hostname=%s ; expr=%s", libName, (int) retCode, CudaErrString(retCode), Microsoft::MSR::CNTK::GPUMatrix<float>::GetBestGPUDeviceId(), hostname ? hostname : "?", exprString);
+#ifdef _WIN32
+            const char* hostname = getenv("COMPUTERNAME");
+#else
+            char hostname[HOST_NAME_MAX];
+            if (gethostname(hostname, HOST_NAME_MAX) != 0)
+                strcpy(hostname, "?");
+#endif
+            int currentCudaDevice;
+            cudaGetDevice(&currentCudaDevice);
+            Microsoft::MSR::CNTK::RuntimeError("%s failure %d: %s ; GPU=%d ; hostname=%s ; expr=%s%s", libName, (int)retCode, CudaErrString(retCode), currentCudaDevice, hostname ? hostname : "?", exprString, msg);
         }
         catch (const std::exception& e) // catch, log, and rethrow since CUDA code sometimes hangs in destruction, so we'd never get to see the error
         {
@@ -549,8 +724,11 @@ static void CudaCall(ERRTYPE retCode, const char* exprString, const char* libNam
     }
 }
 
-#define CUDA_CALL(expr) (CudaCall((expr), #expr, "CUDA", cudaSuccess))
-#define CUBLAS_CALL(expr) (CudaCall((expr), #expr, "CUBLAS", CUBLAS_STATUS_SUCCESS))
+#define CUDA_CALL(expr)     (CudaCall((expr), #expr, "CUDA",     cudaSuccess))
+#define CUBLAS_CALL(expr)   (CudaCall((expr), #expr, "CUBLAS",   CUBLAS_STATUS_SUCCESS))
 #define CUSPARSE_CALL(expr) (CudaCall((expr), #expr, "CUSPARSE", CUSPARSE_STATUS_SUCCESS))
-#define CURAND_CALL(expr) (CudaCall((expr), #expr, "CURAND", CURAND_STATUS_SUCCESS))
-#define CUDNN_CALL(expr) (CudaCall((expr), #expr, "cuDNN", CUDNN_STATUS_SUCCESS))
+#define CURAND_CALL(expr)   (CudaCall((expr), #expr, "CURAND",   CURAND_STATUS_SUCCESS))
+#define CUDNN_CALL(expr)    (CudaCall((expr), #expr, "cuDNN",    CUDNN_STATUS_SUCCESS))
+#define CUDNN_CALL2(expr,m) (CudaCall((expr), #expr, "cuDNN",    CUDNN_STATUS_SUCCESS, m))
+
+#endif // CPUONLY

@@ -9,11 +9,13 @@
 
 #include "ModelEditLanguage.h"
 #include "ConvolutionalNodes.h"
+#include "InputAndParamNodes.h"
 #include <map>
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 // EqualInsensitive - check to see if two nodes are equal up to the length of the first string (must be at least half as long as actual node name)
+// TODO: Allowing partial matches seems misguided. We should discourage that, or just remove it.
 // string1 - [in,out] string to compare, if comparision is equal insensitive but not sensitive, will replace with sensitive version
 // string2 - second string to compare
 // alternate - alternate naming of the string
@@ -50,36 +52,29 @@ bool EqualInsensitive(std::string& string1, const char* string2, const char* alt
 enum MELProperty
 {
     melPropNull,
-    melPropComputeGradient,
+    melPropParameterUpdateRequired,
+    melPropLearningRateMultiplier,
     melPropFeature,
     melPropLabel,
     melPropFinalCriterion,
     melPropEvaluation,
     melPropOutput,
     melPropRecurrent,
-    melPropBatchNormMode
+    melPropFreezeParameters
 };
 
-// SetProperty - Set the Property on the passed node
+// SetGroupTag - Set the group tag on a node
 // nodeProp - node on which the property will be set/cleared
-// propArray - Array which contains all nodes that are associated with a particular property
+// grouptag - node will be added to/removed from this group
 // set - true if property is to be added, false if property is deleted
 template <typename ElemType>
-void MELScript<ElemType>::SetProperty(ComputationNodeBasePtr nodeProp, vector<ComputationNodeBasePtr>& propArray, bool set)
+void MELScript<ElemType>::SetGroupTag(ComputationNodeBasePtr nodeProp, ComputationNetworkPtr cn, const std::wstring& groupTag, bool set)
 {
-    auto found = propArray.begin();
-    for (; found != propArray.end() && *found != nodeProp; ++found)
-        ; // loop until you find the node, or the end
-
-    if (set && found == propArray.end())
-    {
-        propArray.push_back(nodeProp);
+    if (set)
+        cn->AddToNodeGroup(groupTag, nodeProp);
+    else
+        cn->RemoveFromNodeGroup(groupTag, nodeProp);
     }
-    else if (!set && found != propArray.end())
-    {
-        propArray.erase(found);
-    }
-}
 
 // ProcessNDLScript - Process the NDL script
 // netNdl - netNDL structure
@@ -264,7 +259,7 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
         {
             NetNdl<ElemType>* netNdl = &found->second;
             ProcessNDLScript(netNdl, ndlPassAll, true);
-            found->second.cn->DumpAllNodesToFile(includeData, fileName);
+            found->second.cn->DumpAllNodesToFile(includeData, true, fileName);
         }
     }
     else if (EqualInsensitive(name, "DumpNode"))
@@ -280,7 +275,7 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
         NetNdl<ElemType>* netNdl;
         vector<ComputationNodeBasePtr> nodes = FindSymbols(params[0], netNdl);
         ProcessNDLScript(netNdl, ndlPassAll);
-        netNdl->cn->DumpNodeInfoToFile(nodes, includeData, fileName);
+        netNdl->cn->DumpNodeInfoToFile(nodes, includeData, true, fileName);
     }
     else if (EqualInsensitive(name, "CopyNode", "Copy"))
     {
@@ -322,13 +317,13 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
             RuntimeError("CopyInputs requires two symbols from the same network, %s and %s belong to different networks", params[0].c_str(), params[1].c_str());
 
         ProcessNDLScript(netNdlFrom, ndlPassAll);
-        for (GenNameValue name : names)
+        for (GenNameValue name2 : names)
         {
-            auto& node = name.first;
+            auto& node = name2.first;
             std::wstring nodeName = node->NodeName();
-            std::wstring toNodeName = name.second;
+            std::wstring toNodeName = name2.second;
 
-            netNdlTo->cn->CopyNode(*netNdlFrom->cn, nodeName, toNodeName, CopyNodeFlags::copyNodeChildren);
+            netNdlTo->cn->CopyNode(*netNdlFrom->cn, nodeName, toNodeName, CopyNodeFlags::copyNodeInputLinks);
         }
     }
     else if (EqualInsensitive(name, "SetNodeInput", "SetInput"))
@@ -390,14 +385,7 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
             inputNodes[i - 1] = nodeFrom[0];
         }
 
-        if (inputNodes.size() == 1)
-            nodeTo[0]->AttachInputs(inputNodes[0]);
-        else if (inputNodes.size() == 2)
-            nodeTo[0]->AttachInputs(inputNodes[0], inputNodes[1]);
-        else if (inputNodes.size() == 3)
-            nodeTo[0]->AttachInputs(inputNodes[0], inputNodes[1], inputNodes[2]);
-        else
-            RuntimeError("SetNodeInputs(): You specified more than 3 input nodes.");
+        nodeTo[0]->AttachInputs(inputNodes);
     }
     else if (EqualInsensitive(name, "SetProperty"))
     {
@@ -406,46 +394,35 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
 
         std::string propName = params[1];
         MELProperty prop = melPropNull;
-        if (EqualInsensitive(propName, "computeGradient", "needsGradient"))
+#if 1   // legacy
+        // legacy names for some properties
+        if (EqualInsensitive(propName, "finalCriterion", "Criteria"))
         {
-            prop = melPropComputeGradient;
-        }
-        else if (EqualInsensitive(propName, "feature"))
-        {
-            prop = melPropFeature;
-        }
-        else if (EqualInsensitive(propName, "label"))
-        {
-            prop = melPropLabel;
-        }
-        else if (EqualInsensitive(propName, "finalCriterion", "criterion") || EqualInsensitive(propName, "finalCriterion", "Criteria"))
-        {
+            propName = "criterion";
             prop = melPropFinalCriterion;
         }
-        else if (EqualInsensitive(propName, "multiSeq", "reqMultiSeqHandling"))
+        else if (EqualInsensitive(propName, "eval"))
         {
-            fprintf(stderr, "WARNING: '%s' property is defunct and will be ignored.\n", propName.c_str());
-        }
-        else if (EqualInsensitive(propName, "evaluation", "eval"))
-        {
+            propName = "evaluation";
             prop = melPropEvaluation;
         }
-        else if (EqualInsensitive(propName, "batchNormEvalMode"))
-        {
-            prop = melPropBatchNormMode;
-        }
-        else if (EqualInsensitive(propName, "output"))
-        {
-            prop = melPropOutput;
-        }
-        else if (EqualInsensitive(propName, "recurrent"))
-        {
-            prop = melPropRecurrent;
-        }
+        // legacy property that now works differently
+        else if (EqualInsensitive(propName, "needGradient", "needsGradient") || EqualInsensitive(propName, "computeGradient"))
+            prop = melPropParameterUpdateRequired;  // for backward compatibility
         else
-        {
-            RuntimeError("Invalid property, %s, is not supported", propName.c_str());
-        }
+#endif
+
+        // map property name to property enum
+        // Please keep this table sorted.
+             if (EqualInsensitive(propName, "criterion"))              prop = melPropFinalCriterion;
+        else if (EqualInsensitive(propName, "evaluation"))             prop = melPropEvaluation;
+        else if (EqualInsensitive(propName, "feature"))                prop = melPropFeature;
+        else if (EqualInsensitive(propName, "label"))                  prop = melPropLabel;
+        else if (EqualInsensitive(propName, "learningRateMultiplier")) prop = melPropLearningRateMultiplier;
+        else if (EqualInsensitive(propName, "output"))                 prop = melPropOutput;
+        else if (EqualInsensitive(propName, "recurrent"))              prop = melPropRecurrent;
+        else if (EqualInsensitive(propName, "freezeParameters"))       prop = melPropFreezeParameters;
+        else InvalidArgument("Invalid property, %s, is not supported", propName.c_str());
 
         // get the nodes
         NetNdl<ElemType>* netNdl;
@@ -459,39 +436,44 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
         {
             switch (prop)
             {
-            case melPropComputeGradient:
+            case melPropParameterUpdateRequired:  // for backward compatibility
             {
-                node->SetParameterUpdateRequired(params[2]);
+                node->SetLearningRateMultiplier((bool)params[2] ? 1.0f : 0);
+                break;
+            }
+            case melPropLearningRateMultiplier:
+            {
+                node->SetLearningRateMultiplier((float)params[2]);
                 break;
             }
             case melPropFeature:
             {
                 bool set = params[2];
-                SetProperty(node, cn->FeatureNodes(), set);
+                SetGroupTag(node, cn, L"feature", set);
                 break;
             }
             case melPropLabel:
             {
                 bool set = params[2];
-                SetProperty(node, cn->LabelNodes(), set);
+                SetGroupTag(node, cn, L"label", set);
                 break;
             }
             case melPropFinalCriterion:
             {
                 bool set = params[2];
-                SetProperty(node, cn->FinalCriterionNodes(), set);
+                SetGroupTag(node, cn, L"criterion", set);
                 break;
             }
             case melPropEvaluation:
             {
                 bool set = params[2];
-                SetProperty(node, cn->EvaluationNodes(), set);
+                SetGroupTag(node, cn, L"evaluation", set);
                 break;
             }
             case melPropOutput:
             {
                 bool set = params[2];
-                SetProperty(node, cn->OutputNodes(), set);
+                SetGroupTag(node, cn, L"output", set);
                 break;
             }
             case melPropRecurrent:
@@ -499,29 +481,15 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
                 // what to do here?
                 break;
             }
-            case melPropBatchNormMode:
+            case melPropFreezeParameters:
             {
-                if (node->OperationName() != OperationNameOf(BatchNormalizationNode))
+                bool freeze = params[2];
+                auto freezableNode = dynamic_pointer_cast<IFreezable>(node);
+                if (freezableNode == nullptr)
+                    InvalidArgument("%ls (%ls) is not freezable.", node->GetName().c_str(), node->OperationName().c_str());
+                if (freeze)
                 {
-                    RuntimeError("Invalid node type: node %ls (type:%ls) is not a %ls node; therefore cannot apply batchNormEvalMode on it.",
-                                 node->NodeName().c_str(),
-                                 node->OperationName().c_str(),
-                                 OperationNameOf(BatchNormalizationNode).c_str());
-                }
-                bool property = params[2];
-                auto pnode = dynamic_pointer_cast<BatchNormalizationNode<float>>(node);
-                if (pnode)
-                    pnode->SetEvalMode(property);
-                else
-                {
-                    auto pnode2 = dynamic_pointer_cast<BatchNormalizationNode<double>>(node);
-                    if (pnode2)
-                        pnode2->SetEvalMode(property);
-                    else
-                    {
-                        RuntimeError("Invalid node type: node name=%ls. We assume either BatchNormalizationNode<float> or BatchNormalizationNode<double>\n",
-                                     node->NodeName().c_str());
-                    }
+                    freezableNode->FreezeParameters();
                 }
                 break;
             }
@@ -541,13 +509,14 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
 
         std::string propName = params[1];
         MELProperty prop = melPropNull;
-        if (EqualInsensitive(propName, "ComputeGradient", "NeedsGradient"))
+
+        if (EqualInsensitive(propName, "needGradient", "needsGradient") || EqualInsensitive(propName, "computeGradient"))
         {
-            prop = melPropComputeGradient;
+            prop = melPropParameterUpdateRequired;  // for backward compatability
         }
-        else if (EqualInsensitive(propName, "batchNormEvalMode"))
+        else if (EqualInsensitive(propName, "learningRateMultiplier"))
         {
-            prop = melPropBatchNormMode;
+            prop = melPropLearningRateMultiplier;
         }
         else
         {
@@ -565,16 +534,16 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
         {
             switch (prop)
             {
-            case melPropComputeGradient:
+            case melPropParameterUpdateRequired:  //for backward compatibility
             {
-                bool needGradient = params[2];
-                netNdl->cn->SetLearnableNodesBelowNeedGradient(needGradient, node);
+                float learningRateMultiplier = (bool)params[2] ? 1.0f : 0;
+                netNdl->cn->SetLearnableNodesBelowLearningRateMultiplier(learningRateMultiplier, node);
                 break;
             }
-            case melPropBatchNormMode:
+            case melPropLearningRateMultiplier:
             {
-                bool evalMode = params[2];
-                netNdl->cn->SetBatchNormlizationNodesBelowEvalMode(evalMode, node);
+                float learningRateMultiplier = (float)params[2];
+                netNdl->cn->SetLearnableNodesBelowLearningRateMultiplier(learningRateMultiplier, node);
                 break;
             }
             default:
@@ -644,7 +613,7 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
         std::string paramPath = params[1];
 
         NetNdl<ElemType>* netNdl;
-        vector<ComputationNodeBasePtr> nodes = FindSymbols(params[0], netNdl);
+        vector<ComputationNodeBasePtr> nodes = FindSymbols(nodeName, netNdl);
 
         for (auto& pNodes : nodes)
         {
@@ -655,7 +624,7 @@ void MELScript<ElemType>::CallFunction(const std::string& p_name, const ConfigPa
                 continue;
             }
             shared_ptr<LearnableParameterNode> pParamNode = std::dynamic_pointer_cast<LearnableParameterNode>(pNodes);
-            pParamNode->ReviseFromFile(msra::strfun::utf16(paramPath));
+            pParamNode->ReviseFromFile(Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(paramPath));
             fprintf(stderr, "Revise node %ls using parameter file %s\n", pNodes->NodeName().c_str(), paramPath.c_str());
         }
     }

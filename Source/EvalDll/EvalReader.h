@@ -12,12 +12,8 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 // Evaluation Reader class
 // interface to pass to evaluation DLL
 template <class ElemType>
-class EvalReader : public IDataReader<ElemType>
+class EvalReader : public DataReaderBase
 {
-    typedef typename IDataReader<ElemType>::LabelType LabelType;
-    typedef typename IDataReader<ElemType>::LabelIdType LabelIdType;
-
-private:
     std::map<std::wstring, std::vector<ElemType>*>* m_inputs; // our input data
     std::map<std::wstring, size_t>* m_dimensions;             // the number of rows for the input data
     size_t m_recordCount;                                     // count of records in this data
@@ -25,6 +21,7 @@ private:
     size_t m_mbSize;
     vector<size_t> m_switchFrame;
     size_t m_oldSig;
+    size_t m_rightSplice; // for latency control blstm
 
 public:
     // Method to setup the data for the reader
@@ -76,9 +73,11 @@ public:
         }
     }
 
-    virtual void Init(const ConfigParameters& /*config*/) override
+    virtual void Init(const ConfigParameters& config) override
     {
+        m_rightSplice = config(L"rightSplice", (size_t) 0);
     }
+
     virtual void Init(const ScriptableObjects::IConfigRecord& /*config*/) override
     {
     }
@@ -113,11 +112,11 @@ public:
         m_mbSize = min(mbSize, m_recordCount);
     }
 
-    // GetMinibatch - Get the next minibatch (features and labels)
+    // TryGetMinibatch - Get the next minibatch (features and labels)
     // matrices - [in] a map with named matrix types (i.e. 'features', 'labels') mapped to the corresponding matrix,
     //             [out] each matrix resized if necessary containing data.
-    // returns - true if there are more minibatches, false if no more minibatchs remain
-    virtual bool GetMinibatch(std::map<std::wstring, Matrix<ElemType>*>& matrices)
+    // returns - true if there are more minibatches, false if no more minibatches remain
+    virtual bool TryGetMinibatch(StreamMinibatchInputs& matrices)
     {
         // how many records are we reading this time
         size_t recordCount = min(m_mbSize, m_recordCount - m_currentRecord);
@@ -130,32 +129,21 @@ public:
         for (auto iter = m_inputs->begin(); iter != m_inputs->end(); ++iter)
         {
             // figure out the dimension of the data
-            std::wstring val = iter->first;
-            size_t rows = (*m_dimensions)[val];
+            const auto& name = iter->first;
+            size_t rows = (*m_dimensions)[name];
             // size_t count = rows*recordCount;
 
             // find the output matrix we want to fill
-            auto iterIn = matrices.find(val);
+            if (!matrices.HasInput(name))
+                RuntimeError("No matrix data found for key '%ls'.", name.c_str());
 
             // allocate the matrix if we don't have one yet
-            if (iterIn == matrices.end())
-            {
-                RuntimeError("No matrix data found for key '%ls', cannot continue", val.c_str());
-            }
-
-            Matrix<ElemType>* matrix = iterIn->second;
-
-            // resize to the proper size to hold the data
-            matrix->Resize(rows, recordCount);
+            auto& matrix = matrices.GetInputMatrix<ElemType>(name);
 
             // copy over the data
             std::vector<ElemType>* data = iter->second;
-            // size_t  = m_currentRecord*rows;
-            void* mat = &(*matrix)(0, 0);
-            size_t matSize = matrix->GetNumElements() * sizeof(ElemType);
-            void* dataPtr = (void*) ((ElemType*) data->data() + m_currentRecord * rows);
-            size_t dataSize = rows * recordCount * sizeof(ElemType);
-            memcpy_s(mat, matSize, dataPtr, dataSize);
+            ElemType* dataPtr = data->data() + (m_currentRecord * rows);
+            matrix.SetValue(rows, recordCount, matrix.GetDeviceId(), dataPtr, matrixFlagNormal);
         }
 
         // increment our record pointer
@@ -165,7 +153,7 @@ public:
         return true;
     }
 
-    size_t GetNumParallelSequences()
+    size_t GetNumParallelSequencesForFixingBPTTMode()
     {
         return 1;
     }
@@ -184,7 +172,7 @@ public:
     void CopyMBLayoutTo(MBLayoutPtr pMBLayout)
     {
         assert(m_switchFrame.size() == 1);
-        pMBLayout->Init(1, m_mbSize);
+        pMBLayout->Init(1, m_mbSize, m_rightSplice);
 
         // BUGBUG: The following code is somewhat broken in that the structure of this module only keeps track of new sentence starts,
         //         but not of ends. But end markers are now required by the MBLayout. So we must fake the end markers.
@@ -253,7 +241,7 @@ public:
         return false;
     }
 
-    virtual bool DataEnd(EndDataType /*endDataType*/)
+    virtual bool DataEnd()
     {
         return m_currentRecord < m_recordCount;
     }

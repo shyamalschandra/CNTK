@@ -39,6 +39,7 @@ std::string ConfigParameters::ParseCommandLine(int argc, wchar_t* argv[], Config
             wstring dir = str.substr(cdDescriptor.length());
             if (_wchdir(dir.c_str()) != 0)
                 InvalidArgument("Failed to set the current directory to '%ls'", dir.c_str());
+            fprintf(stderr, "Changed current directory to %ls\n", dir.c_str());
         }
 
         // see if they are loading a config file
@@ -48,11 +49,11 @@ std::string ConfigParameters::ParseCommandLine(int argc, wchar_t* argv[], Config
         // no config file, parse as regular argument
         if (compare)
         {
-            configString += (msra::strfun::utf8(str) + "\n");
+            configString += (Microsoft::MSR::CNTK::ToLegacyString(Microsoft::MSR::CNTK::ToUTF8(str)) + "\n");
         }
         else // One or more config file paths specified in a "+"-separated list.
         {
-            const std::string filePaths = msra::strfun::utf8(str.substr(configDescriptor.length()));
+            const std::string filePaths = Microsoft::MSR::CNTK::ToLegacyString(Microsoft::MSR::CNTK::ToUTF8(str.substr(configDescriptor.length())));
             std::vector<std::string> filePathsVec = msra::strfun::split(filePaths, "+");
             for (auto filePath : filePathsVec)
             {
@@ -61,6 +62,8 @@ std::string ConfigParameters::ParseCommandLine(int argc, wchar_t* argv[], Config
                     // if haven't already read this file, read it
                     resolvedConfigFiles.push_back(filePath);
                     configString += config.ReadConfigFile(filePath);
+                    // remember all config directories, for use as include paths by BrainScriptNetworkBuilder
+                    GetBrainScriptNetworkBuilderIncludePaths().push_back(File::DirectoryPathOf(Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(filePath)));
                 }
                 else
                     RuntimeError("Cannot specify same config file multiple times at the command line.");
@@ -169,7 +172,7 @@ void ConfigParser::LoadConfigFile(const std::wstring& filePath)
 // Same as "ReadConfigFiles" function below, but takes as input string instead of wstring
 std::string ConfigParser::ReadConfigFiles(const std::string& filePaths)
 {
-    return ReadConfigFiles(msra::strfun::utf16(filePaths));
+    return ReadConfigFiles(Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(filePaths));
 }
 
 // ReadConfigFiles - reads multiple config files, concatenates the content from each file, and returns a string
@@ -189,7 +192,7 @@ std::string ConfigParser::ReadConfigFiles(const std::wstring& filePaths)
 // Same as "ReadConfigFile" function below, but takes as input string instead of wstring
 std::string ConfigParser::ReadConfigFile(const std::string& filePath)
 {
-    return ReadConfigFile(msra::strfun::utf16(filePath));
+    return ReadConfigFile(Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(filePath));
 }
 
 // ReadConfigFile - read a configuration file, and return all lines, stripped of comments, concatenated by newlines, as one long string (no other processing, expansion etc.)
@@ -200,7 +203,7 @@ std::string ConfigParser::ReadConfigFile(const std::wstring& filePath)
     File file(filePath, fileOptionsRead);
 
     // initialize configName with file name
-    std::string configName = msra::strfun::utf8(filePath);
+    std::string configName = Microsoft::MSR::CNTK::ToLegacyString(Microsoft::MSR::CNTK::ToUTF8(filePath));
     auto location = configName.find_last_of("/\\");
     if (location != npos)
         configName = configName.substr(location + 1);
@@ -236,18 +239,18 @@ void GetFileConfigNames(const ConfigRecordType& config, std::vector<std::wstring
         if (!config.CanBeConfigRecord(id))
             continue;
         const ConfigRecordType& temp = config(id);
-        // see if we have a config parameters that contains a "dim" element, it's a sub key, use it
-        if (temp.ExistsCurrent(L"dim"))
-        {
-            if (temp.ExistsCurrent(L"labelMappingFile") || temp.ExistsCurrent(L"labelDim") || temp.ExistsCurrent(L"labelType") || (temp.ExistsCurrent(L"sectionType") && (const wstring&) temp(L"sectionType") == L"labels"))
-            {
-                labels.push_back(id);
-            }
-            else
-            {
-                features.push_back(id);
-            }
-        }
+        // ############### BREAKING ############
+        // Before it required a "dim" parameter, but that was unused for labels.
+        // ############### BREAKING ############
+        //// see if we have a config parameters that contains a "dim" element, it's a sub key, use it
+        //if (temp.ExistsCurrent(L"dim"))
+        //{
+        // any sub-dictionary that contains any relevant entries is considered an input stream, either label or features
+        if (temp.ExistsCurrent(L"labelMappingFile") || temp.ExistsCurrent(L"labelDim") || temp.ExistsCurrent(L"labelType") || (temp.ExistsCurrent(L"sectionType") && (const wstring&) temp(L"sectionType") == L"labels"))
+            labels.push_back(id);
+        else if (temp.ExistsCurrent(L"dim"))
+            features.push_back(id);
+        //}
     }
 }
 
@@ -304,4 +307,5 @@ void TrimQuotes(std::string& str)
     if (str.front() == '"' && str.back() == '"')
         str = str.substr(1, str.size() - 2);
 }
-} } }
+
+}}}

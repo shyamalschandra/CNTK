@@ -9,7 +9,7 @@
 #include "ComputationNetwork.h"
 #include "ComputationNetworkBuilder.h"
 #include "NetworkDescriptionLanguage.h"
-#include "SynchronousExecutionEngine.h"
+#include "NDLNetworkBuilder.h"
 #include "NDLUtil.h"
 #include <stdarg.h>
 
@@ -88,7 +88,7 @@ public:
         m_netNdlDefault = move(melScript.m_netNdlDefault);
     }
     void ProcessNDLScript(NetNdl<ElemType>* netNdl, NDLPass ndlPassUntil = ndlPassAll, bool fullValidate = false);
-    void SetProperty(ComputationNodeBasePtr nodeProp, vector<ComputationNodeBasePtr>& propArray, bool set);
+    void SetGroupTag(ComputationNodeBasePtr nodeProp, ComputationNetworkPtr cn, const std::wstring& groupTag, bool set);
     void CallFunction(const std::string& name, const ConfigParamList& params);
 
     // ParseName - Parse the name and find positions of the wildcard matches
@@ -158,7 +158,7 @@ public:
         }
 
         ComputationNetworkPtr cn = netNdl->cn;
-        wstring name = msra::strfun::utf16(search);
+        wstring name = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(search);
         vector<ComputationNodeBasePtr> nodes = cn->GetNodesFromName(name);
         // didn't find the name in the current symbols, try NDL
         if (nodes.empty() && netNdl->ndl != nullptr)
@@ -180,7 +180,7 @@ public:
                     auto nodePtr = builder.CreateLearnableParameter(name, 1, 1);
                     ndlNode->SetEvalValue(nodePtr.get());
                     ElemType val = ndlNode->GetScalar();
-                    nodePtr->Value().SetValue(val);
+                    cn->InitLearnableParameters(nodePtr, L"fixedValue", val);
                 }
             }
         }
@@ -218,7 +218,7 @@ public:
             search = symbolIn.substr(firstStart);
         }
 
-        wstring name = msra::strfun::utf16(search);
+        wstring name = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(search);
         vector<ComputationNodeBasePtr> nodes = netNdlIn->cn->GetNodesFromName(name);
 
         if (!nodes.size()) // found
@@ -242,7 +242,7 @@ public:
             search = symbolOut.substr(firstStartOut);
         }
 
-        wstring nameOut = msra::strfun::utf16(search);
+        wstring nameOut = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(search);
 
         bool singleInputMultiOutput = (outWildcard && !inWildcard);
 
@@ -255,8 +255,8 @@ public:
         }
 
         // get the first and last "unchanged" portions
-        std::wstring first = msra::strfun::utf16(symbolOut.substr(firstStartOut, firstCountOut));
-        std::wstring second = msra::strfun::utf16(symbolOut.substr(secondStartOut, secondCountOut));
+        std::wstring first = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(symbolOut.substr(firstStartOut, firstCountOut));
+        std::wstring second = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(symbolOut.substr(secondStartOut, secondCountOut));
 
         // now we have the original names from the input symbol, generate the output names
         vector<GenNameValue> ret;
@@ -322,8 +322,8 @@ public:
         }
 
         // if we are copying children, let the routine know we are handling cross network children
-        if ((copyFlags & CopyNodeFlags::copyNodeChildren) && crossNetwork)
-            copyFlags = CopyNodeFlags(copyFlags | CopyNodeFlags::copyNodeChildrenCrossNetwork);
+        if ((copyFlags & CopyNodeFlags::copyNodeInputLinks) && crossNetwork)
+            copyFlags = CopyNodeFlags(copyFlags | CopyNodeFlags::copyNodeAcrossNetworks);
 
         // now we have the original names from the input symbol, generate the output names
         for (GenNameValue name : copyNodes)
@@ -337,7 +337,7 @@ public:
         }
 
         // if we are doing a children link copy as well, so set the links up if the nodes were copied
-        if (copyFlags & CopyNodeFlags::copyNodeChildren)
+        if (copyFlags & CopyNodeFlags::copyNodeInputLinks)
         {
             // loop through the nodes that were copied and fixup all the child links
             for (GenNameValue nodeVal : copyNodes)
@@ -375,7 +375,7 @@ public:
             ProcessNDLScript(netNdlTo, ndlPassAll);
         }
 
-        std::wstring toNamePrefixW = msra::strfun::utf16(toNamePrefix);
+        std::wstring toNamePrefixW = Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(toNamePrefix);
 
         // now we have the original names from the input symbol, generate the output names
         for (int i = 0; i < fromNodes.size(); i++)

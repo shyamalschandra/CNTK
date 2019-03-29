@@ -20,7 +20,7 @@ QuantizedMatrix<ElemType>::QuantizedMatrix(const size_t numRows, const size_t nu
     }
     else
     {
-        m_quantizedData = new Matrix<char>(m_qColSize, m_numCols, (char*) m_allocator->Malloc(m_qColSize * m_numCols), matrixFlagDontOwnBuffer, deviceId);
+        m_quantizedData = new Matrix<char>(m_qColSize, m_numCols, (char*)m_allocator->Malloc(m_qColSize * m_numCols), deviceId, matrixFlagDontOwnBuffer);
     }
 }
 
@@ -73,7 +73,7 @@ QuantizedMatrix<ElemType>::~QuantizedMatrix()
         if (m_allocator != nullptr)
         {
             assert(!m_quantizedData->OwnBuffer());
-            m_allocator->Free(m_quantizedData->BufferPointer());
+            m_allocator->Free(m_quantizedData->Data());
         }
 
         delete m_quantizedData;
@@ -94,9 +94,9 @@ size_t QuantizedMatrix<ElemType>::GetSize() const
 }
 
 template <class ElemType>
-char* QuantizedMatrix<ElemType>::GetArray() const
+char* QuantizedMatrix<ElemType>::Buffer() const
 {
-    return m_quantizedData->BufferPointer();
+    return m_quantizedData->Data();
 }
 
 template <class ElemType>
@@ -127,11 +127,11 @@ void QuantizedMatrix<ElemType>::Print(const char* matrixName, size_t rowStart, s
     }
 
     if (matrixName != nullptr)
-        fprintf(stderr, "\n###### %s (%lu, %lu) ######\n", matrixName, GetNumRows(), GetNumCols());
+        fprintf(stderr, "\n###### %s (%lu, %lu) ######\n", matrixName, (unsigned long)GetNumRows(), (unsigned long)GetNumCols());
     else
-        fprintf(stderr, "\n###### Unnamed Matrix (%lu, %lu) ######\n", GetNumRows(), GetNumCols());
+        fprintf(stderr, "\n###### Unnamed Matrix (%lu, %lu) ######\n", (unsigned long)GetNumRows(), (unsigned long)GetNumCols());
 
-    fprintf(stderr, "\n------ Print Range (%lu:%lu, %lu:%lu) ------\n", rowStart, rowEnd, colStart, colEnd);
+    fprintf(stderr, "\n------ Print Range (%lu:%lu, %lu:%lu) ------\n", (unsigned long)rowStart, (unsigned long)rowEnd, (unsigned long)colStart, (unsigned long)colEnd);
 
     for (size_t j = colStart; j <= colEnd; j++)
     {
@@ -182,4 +182,5 @@ void QuantizedMatrix<ElemType>::Print(const char* matrixName, size_t rowStart, s
 // Explicit instantiation
 template class QuantizedMatrix<float>;
 template class QuantizedMatrix<double>;
-} } }
+
+}}}

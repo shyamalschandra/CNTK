@@ -259,7 +259,7 @@ CE=CrossEntropyWithSoftmax(labels, Plus2)
 
 \begin_layout Plain Layout
 
-ErrPredict=ErrorPrediction(labels, Plus2)
+ErrPredict=ClassificationError(labels, Plus2)
 \end_layout
 
 \begin_layout Plain Layout
@@ -616,7 +616,7 @@ CE=CrossEntropyWithSoftmax(labels, Plus2)
 
 \begin_layout Plain Layout
 
-ErrPredict=ErrorPrediction(labels, Plus2)
+ErrPredict=ClassificationError(labels, Plus2)
 \end_layout
 
 \end_inset
@@ -633,19 +633,19 @@ CrossEntropyWithSoftmax
 
 \end_inset
 
-() to compute the training criterion and the operator ErrorPrediction
+() to compute the training criterion and the operator ClassificationError
 \begin_inset Index idx
 status open
 
 \begin_layout Plain Layout
-ErrorPrediction
+ClassificationError
 \end_layout
 
 \end_inset
 
 () to compute the testing criterion.
  These operators are internally represented as computation nodes CrossEntropyWit
-hSoftmaxNode and ErrorPredictionNode with names CE and ErrPredict, respectively.
+hSoftmaxNode and ClassificationErrorNode with names CE and ErrPredict, respectively.
 \end_layout
 
 \begin_layout Subsubsection
@@ -692,11 +692,6 @@ EvalNodes=(ErrPredict)
 OutputNodes=(Plus2)
 \end_layout
 
-\begin_layout Plain Layout
-
-NodesReqMultiSeqHandling=(CE)
-\end_layout
-
 \end_inset
 
 After defining the network, it’s important to let CNTK know what the special
@@ -704,14 +699,6 @@ After defining the network, it’s important to let CNTK know what the special
  For example, CNTK needs to know which input nodes are features and labels.
  It also needs to know the default output nodes, evaluation nodes and training
  criteria nodes.
- Note here the specification of the nodes that require special handling
- (NodesReqMultiSeqHandling) when the network is evalauted or trained with
- multiple sequences, e.g., when the network itself is an RNN or the model
- is trained with the sequence-level criterion.
- Since in these cases multiple sequences will be stitched together to improve
- the speed and special handling is needed for, e.g., the criterion node, to
- reset the RNN states at the right time and to mask out the samples when
- the features/labels are missing.
  CNTK supports multiple inputs and outputs which can be represented by comma
  separated variable names surrounded by parentheses.
 \end_layout
@@ -753,7 +740,7 @@ status open
 
 \begin_layout Plain Layout
 
-ErrPredict=ErrorPrediction(labels, Plus2) # classification error
+ErrPredict=ClassificationError(labels, Plus2) # classification error
 \end_layout
 
 \begin_layout Plain Layout
@@ -1038,7 +1025,7 @@ reference "sub:NDL-Basic-Concepts"
  but is much simpler and easier to understand because of the use of macros.
  One new feature shown in this network definition is the access to macro-region
  variables.
- ErrorPrediction() needs to access an intermediate result from SMBFF before
+ ClassificationError() needs to access an intermediate result from SMBFF before
  the CrossEntropyWithSoftmax() is applied.
  Although the needed variable is local to the macro, it can be accessed
  via the 
@@ -1120,7 +1107,7 @@ CE = SMBFF(L1, LDim, HDim, labels)
 
 \begin_layout Plain Layout
 
-Err=ErrorPrediction(labels, CE.F)
+Err=ClassificationError(labels, CE.F)
 \end_layout
 
 \end_inset
@@ -1266,11 +1253,6 @@ CriterionNodes=(CE)
 EvalNodes=(ErrPredict)
 \end_layout
 
-\begin_layout Plain Layout
-
-NodesReqMultiSeqHandling=(CE)
-\end_layout
-
 \end_inset
 
 we can tag these nodes as they are defined.
@@ -1298,12 +1280,7 @@ CE = SMBFF(L3, LDim, HDim, labels, tag="criterion")
 
 \begin_layout Plain Layout
 
-Err=ErrorPrediction(labels, CE.F, tag="eval")
-\end_layout
-
-\begin_layout Plain Layout
-
-CE = SMBFF(L3, LDim, HDim, labels, tag="multiSeq")
+Err=ClassificationError(labels, CE.F, tag="evaluation")
 \end_layout
 
 \end_inset
@@ -1675,7 +1652,7 @@ LearnableParameter(row, cols,
 
 \begin_layout Plain Layout
 
-Parameter(row, cols, {needGradient=true|false, 
+Parameter(row, cols, {needsGradient=true|false, 
 \end_layout
 
 \begin_layout Plain Layout
@@ -1703,7 +1680,7 @@ cols - number of columns in the parameter, defaults to 1.
 \end_layout
 
 \begin_layout Itemize
-needGradient- [named optional] determines whether the parameter should be
+needsGradient- [named optional] determines whether the parameter should be
  updated by the training algorithm.
  Defaults is true.
 \end_layout
@@ -2233,7 +2210,7 @@ RowStack
 \end_layout
 
 \begin_layout Standard
-Concatnate rows of input matrices to form a bigger matrix.
+Concatenate rows of input matrices to form a bigger matrix.
  The resulting matrix is a sumof(rows) by m1.cols matrix.
  It supports variable-length input.
  The syntax is
@@ -2898,11 +2875,11 @@ labels - the ground truth labels.
  The first row is the ground truth output id.
  The second row is the ground truth class id.
  The third and fourth rows are the start (inclusive) and end (exclusive)
- output ids corresponding to the ground trueth class id.
+ output ids corresponding to the ground truth class id.
 \end_layout
 
 \begin_layout Itemize
-mainInputInfo - contains the main information to make the classfication
+mainInputInfo - contains the main information to make the classification
  decision.
  It's an inputDim by T matrix.
  In language model, inputDim is often the hidden layer size.
@@ -2923,12 +2900,12 @@ classProbBeforeSoftmax - applying softmax on this matrix will result in
 \end_layout
 
 \begin_layout Subsubsection
-ErrorPrediction
+ClassificationError
 \begin_inset Index idx
 status open
 
 \begin_layout Plain Layout
-ErrorPrediction
+ClassificationError
 \end_layout
 
 \end_inset
@@ -2964,7 +2941,7 @@ status open
 
 \begin_layout Plain Layout
 
-ErrorPrediction(labels, m)
+ClassificationError(labels, m)
 \end_layout
 
 \begin_layout Plain Layout
@@ -4082,7 +4059,7 @@ CE = SMBFF(L3, LDim, HDim, labels, tag="criterion")
 
 \begin_layout Plain Layout
 
-Err=ErrorPrediction(labels, CE.F, tag="eval")
+Err=ClassificationError(labels, CE.F, tag="evaluation")
 \end_layout
 
 \begin_layout Plain Layout
@@ -4244,7 +4221,7 @@ features=InputValue [784,32]
 
 \begin_layout Plain Layout
 
-L1.BFF.B=LearnableParameter [256,1] NeedGradient=true
+L1.BFF.B=LearnableParameter [256,1] NeedsGradient=true
 \end_layout
 
 \begin_layout Plain Layout
@@ -4289,7 +4266,7 @@ L1.BFF.FF.T=Times ( L1.BFF.W , normInput )
 
 \begin_layout Plain Layout
 
-L1.BFF.W=LearnableParameter [256,784] NeedGradient=true
+L1.BFF.W=LearnableParameter [256,784] NeedsGradient=true
 \end_layout
 
 \begin_layout Plain Layout
@@ -4422,8 +4399,8 @@ To integrate this new layer into the model, the inputs and outputs of the
  After the copy any node whose connected nodes were not copied will have
  those connections set to an invalid value.
  These need to be fixed in order to have a valid model.
- Before a model can be saved CNTK first checkes to see if all nodes are
- correctly connected.
+ Before a model can be saved CNTK first checks to see if all nodes are correctly
+ connected.
 \end_layout
 
 \begin_layout Standard
@@ -5814,21 +5791,6 @@ output
 \end_inset
 
 =true|false: Set the node as one of the output nodes.
-\end_layout
-
-\begin_layout Itemize
-multiSeq
-\begin_inset Index idx
-status open
-
-\begin_layout Plain Layout
-multiSeq
-\end_layout
-
-\end_inset
-
-=true|false: Set the node as one of the nodes that require special handling
- when multiple sequences are used in the training or evaluation.
 \end_layout
 
 \begin_layout Subsubsection

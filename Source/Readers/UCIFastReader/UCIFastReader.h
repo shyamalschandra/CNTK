@@ -36,16 +36,9 @@ enum LabelKind
 };
 
 template <class ElemType>
-class UCIFastReader : public IDataReader<ElemType>
+class UCIFastReader : public DataReaderBase
 {
-public:
-    using LabelType = typename IDataReader<ElemType>::LabelType;
-    using LabelIdType = typename IDataReader<ElemType>::LabelIdType;
-    using IDataReader<ElemType>::mRequestedNumParallelSequences;
-    // typedef std::string LabelType;
-    // typedef unsigned LabelIdType;
-private:
-    UCIParser<ElemType, LabelType> m_parser;
+    shared_ptr<UCIParser<ElemType, LabelType>> m_parser;
     size_t m_mbSize;                 // size of minibatch requested
     LabelIdType m_labelIdMax;        // maximum label ID we have encountered so far
     LabelIdType m_labelDim;          // maximum label ID we will ever see (used for array dimensions)
@@ -74,7 +67,7 @@ private:
     // Prefetching related fields
     bool m_prefetchEnabled;
     std::future<bool> m_pendingAsyncGetMinibatch;
-    std::map<std::wstring, std::unique_ptr<Matrix<ElemType>>> m_prefetchMatrices;
+    StreamMinibatchInputs m_prefetchMatrices;
 
     // Distributed reading related fields
     size_t m_subsetNum;
@@ -102,8 +95,8 @@ private:
     unique_ptr<CUDAPageLockedMemAllocator> m_cudaAllocator;
 
     // caching support
-    DataReader<ElemType>* m_cachingReader;
-    DataWriter<ElemType>* m_cachingWriter;
+    DataReader* m_cachingReader;
+    DataWriter* m_cachingWriter;
     ConfigParameters m_readerConfig;
     void InitCache(const ConfigParameters& config);
     void InitCache(const ScriptableObjects::IConfigRecord& config);
@@ -138,10 +131,17 @@ public:
     {
         InitFromConfig(config);
     }
+
     virtual void Destroy();
     UCIFastReader()
     {
+        fprintf(stderr, "********** DEPRECATED **********\n" 
+            "UCIFastReader is no longer actively maintained.\n"
+            "It is known to have defects, proceed with caution (better yet, switch to CNTKTextFormatReader)!\n"
+            "For more details please see https://docs.microsoft.com/en-us/cognitive-toolkit/Brainscript-CNTKTextFormat-Reader \n");
+
         m_pMBLayout = make_shared<MBLayout>();
+        m_pMBLayout->SetUniqueAxisName(L"UCIFastReader");
     }
     virtual ~UCIFastReader();
 
@@ -157,11 +157,11 @@ public:
 
     virtual void StartDistributedMinibatchLoop(size_t mbSize, size_t epoch, size_t subsetNum, size_t numSubsets, size_t requestedEpochSamples = requestDataSize) override;
 
-    virtual bool GetMinibatch(std::map<std::wstring, Matrix<ElemType>*>& matrices);
+    virtual bool TryGetMinibatch(StreamMinibatchInputs& matrices);
 
-    bool GetMinibatchImpl(std::map<std::wstring, Matrix<ElemType>*>& matrices);
+    bool GetMinibatchImpl(StreamMinibatchInputs& matrices);
 
-    size_t GetNumParallelSequences()
+    size_t GetNumParallelSequencesForFixingBPTTMode()
     {
         return m_pMBLayout->GetNumParallelSequences();
     }
@@ -173,7 +173,7 @@ public:
     virtual void SetLabelMapping(const std::wstring& sectionName, const std::map<LabelIdType, LabelType>& labelMapping);
     virtual bool GetData(const std::wstring& sectionName, size_t numRecords, void* data, size_t& dataBufferSize, size_t recordStart = 0);
 
-    virtual bool DataEnd(EndDataType endDataType);
+    virtual bool DataEnd();
     void SetSentenceSegBatch(Matrix<float>&, Matrix<ElemType>&){};
 
     void SetNumParallelSequences(const size_t sz);
@@ -181,6 +181,11 @@ public:
     void SetRandomSeed(int)
     {
         NOT_IMPLEMENTED;
+    }
+
+    size_t GetCurrentSamplePosition() override
+    {
+        return m_mbStartSample;
     }
 };
 } } }

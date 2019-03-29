@@ -1,0 +1,17 @@
+#!/bin/bash
+
+. $TEST_ROOT_DIR/run-test-common
+
+OriginalTestDir=../../../../Examples/Speech/TIMIT/EvalSimpleNetwork
+
+# Note: can directly use run-timit-test-common since it lives at the same level
+# in the directory hierarchy.
+. $TEST_DIR/$OriginalTestDir/../run-timit-test-common
+
+checkOriginalBaseline $TEST_DIR $OriginalTestDir
+
+# Train:
+cntkrun TIMIT_TrainSimpleNetwork.cntk "TIMIT_TrainSimple=[reader=[readerType=HTKDeserializers]] $CntkArguments" || exit $?
+
+# Validate:
+cntkrun TIMIT_EvalSimpleNetwork.cntk "TIMIT_EvalSimple=[reader=[readerType=HTKDeserializers]] TIMIT_EvalSimple=[reader=[readMethod=None]] TIMIT_EvalSimple=[reader=[features=[scpFile=\$ScpDir\$/TIMIT.dev.scp.fbank.fullpath.rnn]]] $CntkArguments" || exit $?

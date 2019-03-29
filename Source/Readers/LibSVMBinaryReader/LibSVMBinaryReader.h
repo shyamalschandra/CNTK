@@ -34,6 +34,15 @@ private:
     std::deque<T> d_queue;
 
 public:
+    void release()
+    {
+        while (!d_queue.empty())
+            free(d_queue.pop_front());
+    }
+    size_t size()
+    {
+        return d_queue.size();
+    }
     void push(T const& value)
     {
         {
@@ -79,7 +88,7 @@ public:
 protected:
     wstring m_matrixName;
     int m_deviceID;
-    ElemType* m_values;
+    std::shared_ptr<ElemType> m_values;
     size_t m_maxNumRows;
     size_t m_maxNumCols;
 
@@ -120,6 +129,8 @@ protected:
 template <class ElemType>
 class SparseBinaryMatrix : public BinaryMatrix<ElemType>
 {
+    typedef BinaryMatrix<ElemType> Base;
+    using Base::m_values; using Base::m_numRows; using Base::m_deviceID;
 public:
     SparseBinaryMatrix(wstring name, int deviceID, size_t numRows, size_t numCols);
     // SparseBinaryMatrix(wstring name, size_t numRows, size_t numCols);
@@ -137,8 +148,8 @@ public:
     virtual void SetMaxRows(size_t maxRows) override;
 
 protected:
-    int32_t* m_rowIndices;
-    int32_t* m_colIndices;
+    std::shared_ptr<int32_t> m_rowIndices;
+    std::shared_ptr<int32_t> m_colIndices;
     size_t m_nnz;
     size_t m_maxNNz;
 };
@@ -153,7 +164,6 @@ public:
     void StartDistributedMinibatchLoop(size_t mbSize, size_t subsetNum, size_t numSubsets);
     void ReadMinibatches(size_t* read_order, size_t numToRead);
     size_t ReadMinibatch(void* data_buffer, std::map<std::wstring, shared_ptr<BinaryMatrix<ElemType>>>& matrices);
-    // void GetMinibatch(std::map<std::wstring, Matrix<ElemType>*>& matrices);
     size_t FillMatrices(std::map<std::wstring, shared_ptr<BinaryMatrix<ElemType>>>& matrices);
     size_t GetMBSize()
     {
@@ -166,7 +176,7 @@ public:
     void Shuffle();
     shared_ptr<BinaryMatrix<ElemType>> CreateMatrix(std::wstring matName, int deviceId);
     // shared_ptr<BinaryMatrix<ElemType>> CreateMatrix(std::wstring matName);
-    virtual bool DataEnd(EndDataType endDataType);
+    virtual bool DataEnd();
 
 private:
     void ReadOffsets(size_t startMB, size_t numMBs);
@@ -225,12 +235,9 @@ private:
 };
 
 template <class ElemType>
-class LibSVMBinaryReader : public IDataReader<ElemType>
+class LibSVMBinaryReader : public DataReaderBase
 {
 public:
-    using LabelType = typename IDataReader<ElemType>::LabelType;
-    using LabelIdType = typename IDataReader<ElemType>::LabelIdType;
-
     virtual void Init(const ConfigParameters& config) override
     {
         InitFromConfig(config);
@@ -246,16 +253,17 @@ public:
     virtual void Destroy();
 
     LibSVMBinaryReader()
-        : DSSMLabels(nullptr), DSSMCols(0)
+        : m_dssmLabels(nullptr), DSSMCols(0)
     {
         m_pMBLayout = make_shared<MBLayout>();
+        m_pMBLayout->SetUniqueAxisName(L"LibSVMReader");
     };
 
     virtual ~LibSVMBinaryReader();
 
     virtual void StartMinibatchLoop(size_t mbSize, size_t epoch, size_t requestedEpochSamples = requestDataSize);
     virtual void StartDistributedMinibatchLoop(size_t mbSize, size_t epoch, size_t subsetNum, size_t numSubsets, size_t requestedEpochSamples) override;
-    virtual bool GetMinibatch(std::map<std::wstring, Matrix<ElemType>*>& matrices);
+    virtual bool TryGetMinibatch(StreamMinibatchInputs& matrices);
 
     virtual bool SupportsDistributedMBRead() const override
     {
@@ -266,9 +274,9 @@ public:
     void RenamedMatrices(const ConfigRecordType& readerConfig, std::map<std::wstring, std::wstring>& rename);
     virtual void SetLabelMapping(const std::wstring& /*sectionName*/, const std::map<LabelIdType, LabelType>& /*labelMapping*/){NOT_IMPLEMENTED};
     virtual bool GetData(const std::wstring& /*sectionName*/, size_t /*numRecords*/, void* /*data*/, size_t& /*dataBufferSize*/, size_t /*recordStart = 0*/){NOT_IMPLEMENTED};
-    virtual bool DataEnd(EndDataType endDataType);
+    virtual bool DataEnd();
 
-    size_t GetNumParallelSequences()
+    size_t GetNumParallelSequencesForFixingBPTTMode()
     {
         return m_pMBLayout->GetNumParallelSequences();
     }
@@ -277,7 +285,7 @@ public:
         pMBLayout->CopyFrom(m_pMBLayout);
     };
 
-    // virtual bool DataEnd(EndDataType endDataType);
+    // virtual bool DataEnd();
 
     size_t NumberSlicesInEachRecurrentIter()
     {
@@ -294,7 +302,7 @@ private:
     clock_t timer;
     void DoDSSMMatrix(Matrix<ElemType>& mat, size_t actualMBSize);
 
-    void CheckDataMatrices(std::map<std::wstring, Matrix<ElemType>*>& matrices);
+    void CheckDataMatrices(StreamMinibatchInputs& matrices);
     MBLayoutPtr m_pMBLayout;
     ConfigParameters m_readerConfig;
 
@@ -304,7 +312,7 @@ private:
 
     unsigned long m_randomize; // randomization range
 
-    ElemType* DSSMLabels;
+    std::shared_ptr<ElemType> m_dssmLabels;
     size_t DSSMCols;
 
     size_t m_mbSize; // size of minibatch requested

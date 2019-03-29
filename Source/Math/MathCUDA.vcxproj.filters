@@ -11,10 +11,10 @@
       <Filter>GPU</Filter>
     </CudaCompile>
     <CudaCompile Include="MatrixQuantizerGPU.cu">
-      <Filter>GPU\1bitSGD</Filter>
+      <Filter>GPU</Filter>
     </CudaCompile>
     <CudaCompile Include="MatrixQuantizer_kernel.cu">
-      <Filter>GPU\1bitSGD</Filter>
+      <Filter>GPU</Filter>
     </CudaCompile>
     <CudaCompile Include="cudalatticeops.cu">
       <Filter>GPU\SequenceTraining</Filter>
@@ -25,6 +25,15 @@
     <CudaCompile Include="GPUTensor.cu">
       <Filter>GPU\Tensors</Filter>
     </CudaCompile>
+    <CudaCompile Include="CuDnnConvolutionEngine.cu">
+      <Filter>GPU\Convolution</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CuDnnBatchNormalization.cu">
+      <Filter>GPU\BatchNormalization</Filter>
+    </CudaCompile>
+    <CudaCompile Include="GPURNGHandle.cu">
+      <Filter>GPU</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cudalattice.cpp">
@@ -33,17 +42,17 @@
     <ClCompile Include="cudalib.cpp">
       <Filter>GPU\SequenceTraining</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\DebugUtil.cpp">
-      <Filter>Misc</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Misc</Filter>
     </ClCompile>
-    <ClCompile Include="CuDnnConvolutionEngine.cpp">
-      <Filter>GPU\Convolution</Filter>
-    </ClCompile>
     <ClCompile Include="GPUDataTransferer.cpp">
       <Filter>GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="CuDnnCommon.cpp">
+      <Filter>GPU\CuDnn</Filter>
+    </ClCompile>
+    <ClCompile Include="CuDnnRNN.cpp">
+      <Filter>GPU\RNN</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -53,17 +62,14 @@
     <ClInclude Include="..\Common\Include\fileutil.h">
       <Filter>Common\Include</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\Include\DebugUtil.h">
-      <Filter>Common\Include</Filter>
-    </ClInclude>
     <ClInclude Include="ColumnQuantizer.h">
-      <Filter>GPU\1bitSGD</Filter>
+      <Filter>GPU</Filter>
     </ClInclude>
     <ClInclude Include="MatrixQuantizerGPU.h">
-      <Filter>GPU\1bitSGD</Filter>
+      <Filter>GPU</Filter>
     </ClInclude>
     <ClInclude Include="ValueQuantizer.h">
-      <Filter>GPU\1bitSGD</Filter>
+      <Filter>GPU</Filter>
     </ClInclude>
     <ClInclude Include="cudabasetypes.h">
       <Filter>GPU\SequenceTraining</Filter>
@@ -101,13 +107,34 @@
     <ClInclude Include="CommonMatrix.h">
       <Filter>from Math</Filter>
     </ClInclude>
-    <ClInclude Include="CuDnnConvolutionEngine.h">
-      <Filter>GPU\Convolution</Filter>
+    <ClInclude Include="CuDnnFactories.h">
+      <Filter>GPU\CuDnn</Filter>
     </ClInclude>
     <ClInclude Include="TensorOps.h">
       <Filter>from Math</Filter>
     </ClInclude>
     <ClInclude Include="GPUDataTransferer.h">
+      <Filter>GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="CntkBatchNormalization.cuh">
+      <Filter>GPU\BatchNormalization</Filter>
+    </ClInclude>
+    <ClInclude Include="CuDnnCommon.h">
+      <Filter>GPU\CuDnn</Filter>
+    </ClInclude>
+    <ClInclude Include="Convolution.cuh">
+      <Filter>GPU\Convolution</Filter>
+    </ClInclude>
+    <ClInclude Include="GPURNGHandle.h">
+      <Filter>GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="CuDnnRNN.h">
+      <Filter>GPU\RNN</Filter>
+    </ClInclude>
+    <ClInclude Include="fpgeneric.h">
+      <Filter>GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="half.hpp">
       <Filter>GPU</Filter>
     </ClInclude>
   </ItemGroup>
@@ -132,9 +159,6 @@
     <Filter Include="GPU">
       <UniqueIdentifier>{cc9a219d-d8ab-484a-b253-fd2a29ad7c7c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GPU\1bitSGD">
-      <UniqueIdentifier>{3415233d-9ef7-41c6-abbb-cec1b4f8d14c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GPU\SequenceTraining">
       <UniqueIdentifier>{6a3569b1-6c9e-47b3-870f-bb581349e75e}</UniqueIdentifier>
     </Filter>
@@ -149,6 +173,15 @@
     </Filter>
     <Filter Include="GPU\Convolution">
       <UniqueIdentifier>{3155488f-128f-494e-858d-459b4cc9fab7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPU\BatchNormalization">
+      <UniqueIdentifier>{639ff4b6-39b5-4a5b-8856-ee918eeea91e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPU\CuDnn">
+      <UniqueIdentifier>{05351afa-de95-40c8-830a-d70eede55dc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPU\RNN">
+      <UniqueIdentifier>{da8154d0-d1f4-44a5-b64a-5e955ead56fa}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

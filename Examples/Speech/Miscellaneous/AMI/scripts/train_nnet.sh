@@ -14,7 +14,7 @@ minibatch_size=20
 evaluate_period=100
 
 cntk_train_opts=
-cntk_config=cntk_config/CNTK2_lstmp.config
+cntk_config=cntk_config/CNTK2_lstmp.cntk
 default_macros=cntk_config/default_macros.ndl
 model_ndl=cntk_config/lstmp-3layer.ndl
 device=-1
@@ -137,7 +137,7 @@ cn_command="$cn_command $cntk_train_opts DeviceNumber=$device"
 cn_command="$cn_command command=TrainModel"
 $cmd $parallel_opts JOB=1:1 $dir/log/cntk.train.JOB.log $cn_command || exit 1;
 
-echo "$0 successfuly finished.. $dir"
+echo "$0 successfully finished.. $dir"
 
 sleep 3
 exit 0

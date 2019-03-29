@@ -25,14 +25,6 @@ DWORD LODWORD(size_t size)
     return size & 0xFFFFFFFF;
 }
 
-std::string ws2s(const std::wstring& wstr)
-{
-    int size_needed = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), int(wstr.length() + 1), 0, 0, 0, 0);
-    std::string strTo(size_needed, 0);
-    WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), int(wstr.length() + 1), &strTo[0], size_needed, 0, 0);
-    return strTo;
-}
-
 template <class ElemType>
 size_t DSSMReader<ElemType>::RandomizeSweep(size_t mbStartSample)
 {
@@ -48,6 +40,12 @@ template <class ElemType>
 bool DSSMReader<ElemType>::ReadRecord(size_t /*readSample*/)
 {
     return false; // not used
+}
+
+// utility function to round an integer up to a multiple of size
+size_t RoundUp(size_t value, size_t size)
+{
+    return ((value + size - 1) / size) * size;
 }
 
 // RecordsToRead - Determine number of records to read to populate record buffers
@@ -197,11 +195,11 @@ void DSSMReader<ElemType>::InitFromConfig(const ConfigRecordType& readerConfig)
     }
 
     std::string minibatchMode(readerConfig(L"minibatchMode", "Partial"));
-    m_partialMinibatch = !_stricmp(minibatchMode.c_str(), "Partial");
+    m_partialMinibatch = EqualCI(minibatchMode, "Partial");
 
     // Get the config parameters for query feature and doc feature
     ConfigParameters configFeaturesQuery = readerConfig(m_featuresNameQuery, "");
-    ConfigParameters configFeaturesDoc = readerConfig(m_featuresNameDoc, "");
+    ConfigParameters configFeaturesDoc   = readerConfig(m_featuresNameDoc, "");
 
     if (configFeaturesQuery.size() == 0)
         RuntimeError("features file not found, required in configuration: i.e. 'features=[file=c:\\myfile.txt;start=1;dim=123]'");
@@ -211,7 +209,7 @@ void DSSMReader<ElemType>::InitFromConfig(const ConfigRecordType& readerConfig)
     // Read in feature size information
     // This information will be used to handle OOVs
     m_featuresDimQuery = configFeaturesQuery(L"dim");
-    m_featuresDimDoc = configFeaturesDoc(L"dim");
+    m_featuresDimDoc   = configFeaturesDoc(L"dim");
 
     std::wstring fileQ = configFeaturesQuery("file");
     std::wstring fileD = configFeaturesDoc("file");
@@ -265,12 +263,6 @@ void DSSMReader<ElemType>::SetupEpoch()
 {
 }
 
-// utility function to round an integer up to a multiple of size
-size_t RoundUp(size_t value, size_t size)
-{
-    return ((value + size - 1) / size) * size;
-}
-
 //StartMinibatchLoop - Startup a minibatch loop
 // mbSize - [in] size of the minibatch (number of Samples, etc.)
 // epoch - [in] epoch number for this loop, if > 0 the requestedEpochSamples must be specified (unless epoch zero was completed this run)
@@ -318,9 +310,9 @@ void DSSMReader<ElemType>::StoreLabel(ElemType& labelStore, const LabelType& lab
 // GetMinibatch - Get the next minibatch (features and labels)
 // matrices - [in] a map with named matrix types (i.e. 'features', 'labels') mapped to the corresponding matrix,
 //             [out] each matrix resized if necessary containing data.
-// returns - true if there are more minibatches, false if no more minibatchs remain
+// returns - true if there are more minibatches, false if no more minibatches remain
 template <class ElemType>
-bool DSSMReader<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*>& matrices)
+bool DSSMReader<ElemType>::TryGetMinibatch(StreamMinibatchInputs& matrices)
 {
     if (m_readNextSample >= m_totalSamples)
     {
@@ -329,9 +321,9 @@ bool DSSMReader<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
     // In my unit test example, the input matrices contain 5: N, S, fD, fQ and labels
     // Both N and S serve as a pre-set constant values, no need to change them
     // In this node, we only need to fill in these matrices: fD, fQ, labels
-    Matrix<ElemType>& featuresQ = *matrices[m_featuresNameQuery];
-    Matrix<ElemType>& featuresD = *matrices[m_featuresNameDoc];
-    Matrix<ElemType>& labels = *matrices[m_labelsName]; // will change this part later.
+    Matrix<ElemType>& featuresQ = matrices.GetInputMatrix<ElemType>(m_featuresNameQuery);
+    Matrix<ElemType>& featuresD = matrices.GetInputMatrix<ElemType>(m_featuresNameDoc);
+    Matrix<ElemType>& labels    = matrices.GetInputMatrix<ElemType>(m_labelsName); // will change this part later.  TODO: How?
 
     size_t actualMBSize = (m_readNextSample + m_mbSize > m_totalSamples) ? m_totalSamples - m_readNextSample : m_mbSize;
 
@@ -418,7 +410,7 @@ bool DSSMReader<ElemType>::GetMinibatch(std::map<std::wstring, Matrix<ElemType>*
 // GetLabelMapping - Gets the label mapping from integer index to label type
 // returns - a map from numeric datatype to native label type
 template <class ElemType>
-const std::map<typename IDataReader<ElemType>::LabelIdType, typename IDataReader<ElemType>::LabelType>& DSSMReader<ElemType>::GetLabelMapping(const std::wstring& sectionName)
+const std::map<IDataReader::LabelIdType, IDataReader::LabelType>& DSSMReader<ElemType>::GetLabelMapping(const std::wstring& sectionName)
 {
     if (m_cachingReader)
     {
@@ -431,7 +423,7 @@ const std::map<typename IDataReader<ElemType>::LabelIdType, typename IDataReader
 // labelMapping - mapping table from label values to IDs (must be 0-n)
 // note: for tasks with labels, the mapping table must be the same between a training run and a testing run
 template <class ElemType>
-void DSSMReader<ElemType>::SetLabelMapping(const std::wstring& /*sectionName*/, const std::map<typename IDataReader<ElemType>::LabelIdType, typename LabelType>& labelMapping)
+void DSSMReader<ElemType>::SetLabelMapping(const std::wstring& /*sectionName*/, const std::map<LabelIdType, LabelType>& labelMapping)
 {
     if (m_cachingReader)
     {
@@ -446,27 +438,7 @@ void DSSMReader<ElemType>::SetLabelMapping(const std::wstring& /*sectionName*/, 
 }
 
 template <class ElemType>
-bool DSSMReader<ElemType>::DataEnd(EndDataType endDataType)
-{
-    bool ret = false;
-    switch (endDataType)
-    {
-    case endDataNull:
-        assert(false);
-        break;
-    case endDataEpoch:
-        // ret = (m_mbStartSample / m_epochSize < m_epoch);
-        ret = (m_readNextSample >= m_totalSamples);
-        break;
-    case endDataSet:
-        ret = (m_readNextSample >= m_totalSamples);
-        break;
-    case endDataSentence: // for fast reader each minibatch is considered a "sentence", so always true
-        ret = true;
-        break;
-    }
-    return ret;
-}
+bool DSSMReader<ElemType>::DataEnd() { return true; }
 
 template <class ElemType>
 DSSM_BinaryInput<ElemType>::DSSM_BinaryInput()
@@ -522,13 +494,13 @@ void DSSM_BinaryInput<ElemType>::Init(wstring fileName, size_t dim)
 
     int64_t header_size = numRows * sizeof(int64_t) + offsets_padding;
 
-    void* offsets_orig = MapViewOfFile(m_filemap,     // handle to map object
+    void* offsets_orig2 = MapViewOfFile(m_filemap,     // handle to map object
                                        FILE_MAP_READ, // get correct permissions
                                        HIDWORD(base_offset),
                                        LODWORD(base_offset),
                                        header_size);
 
-    offsets_buffer = (char*) offsets_orig + offsets_padding;
+    offsets_buffer = (char*) offsets_orig2 + offsets_padding;
 
     if (offsets != NULL)
     {
@@ -542,12 +514,12 @@ void DSSM_BinaryInput<ElemType>::Init(wstring fileName, size_t dim)
     int64_t data_padding = header_offset % sysGran;
     header_offset -= data_padding;
 
-    void* data_orig = MapViewOfFile(m_filemap,     // handle to map object
+    void* data_orig2 = MapViewOfFile(m_filemap,     // handle to map object
                                     FILE_MAP_READ, // get correct permissions
                                     HIDWORD(header_offset),
                                     LODWORD(header_offset),
                                     0);
-    data_buffer = (char*) data_orig + data_padding;
+    data_buffer = (char*) data_orig2 + data_padding;
 }
 template <class ElemType>
 bool DSSM_BinaryInput<ElemType>::SetupEpoch(size_t minibatchSize)

@@ -519,7 +519,7 @@ public:
     }
 
 private:
-    // guess how many colunmns of this matrix will fit into the cache
+    // guess how many columns of this matrix will fit into the cache
     // This is a helper function for matrix matprod and variants.
     // Result also gets aligned to 4 because matprod benefits from it.
     size_t cacheablecols() const
@@ -561,8 +561,8 @@ public:
         // copy column-wise
         for (size_t j = j0; j < j1; j++)
         {
-            const float *pcol = &patch(i0 - i0, j - j0);
-            float *qcol = &us(i0, j);
+            float       *qcol =    &us(i0,      j);      // unshifted coordinates
+            const float *pcol = &patch(i0 - i0, j - j0); // (i0,j) shifted by (i0,j0)
             const size_t colbytes = (i1 - i0) * sizeof(*pcol);
             memcpy(qcol, pcol, colbytes);
         }
@@ -1177,13 +1177,13 @@ public:
     // Does this really make sense?? Should be rather done during computation.
     void prefetch() const
     {
-        const msra::math::float4 *p = (msra::math::float4 *) this->p;
+        const msra::math::float4 *p2 = (msra::math::float4 *) this->p;
         size_t numfloat4s = cols() * colstride / 4;
-        const msra::math::float4 *q = p + numfloat4s;
+        const msra::math::float4 *q = p2 + numfloat4s;
         const size_t cacherowbytes = 64; // or what?
-        const size_t cacherowfloat4s = cacherowbytes / sizeof(*p);
-        for (; p < q; p += cacherowfloat4s)
-            msra::math::float4::prefetch(p);
+        const size_t cacherowfloat4s = cacherowbytes / sizeof(*p2);
+        for (; p2 < q; p2 += cacherowfloat4s)
+            msra::math::float4::prefetch(p2);
     }
 
     // diagnostics helper to check if matrix has a NaN
@@ -1343,7 +1343,7 @@ class ssematrix : public ssematrixbase
     // helpers for SSE-compatible memory allocation
     static __declspec_noreturn void failed(size_t nbytes)
     {
-        BadExceptionError("allocation of SSE vector failed (%d bytes)", nbytes);
+        RuntimeError("allocation of SSE vector failed (%d bytes)", (int)nbytes);
     }
 #ifdef _WIN32
     template <typename T>
@@ -1635,7 +1635,7 @@ void printmatf(const char *name, const M &m, FILE *f = stderr)
     fprintf(f, "\n###### %s (%d, %d) ######\n", name, m.rows(), m.cols());
     foreach_row (i, m)
     {
-        fprintf(f, "row: %d", i);
+        fprintf(f, "row: %lld", i);
         foreach_column (j, m)
         {
             if (j % 15 == 0)

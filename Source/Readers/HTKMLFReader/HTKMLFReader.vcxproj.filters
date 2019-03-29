@@ -1,22 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="DataWriter.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="HTKMLFReader.cpp" />
     <ClCompile Include="HTKMLFWriter.cpp" />
     <ClCompile Include="latticearchive.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="..\..\Common\DebugUtil.cpp">
-      <Filter>Duplicates to remove</Filter>
-    </ClCompile>
-    <ClCompile Include="DataReader.cpp" />
-    <ClCompile Include="..\..\Common\TimerUtility.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\fileutil.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
+    <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="DataWriterLocal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="biggrowablevectors.h" />
@@ -31,12 +22,6 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="utterancesourcemulti.h" />
-    <ClInclude Include="basetypes.h">
-      <Filter>Duplicates to remove</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Common\Include\DebugUtil.h">
-      <Filter>Duplicates to remove</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Common\Include\DataReader.h">
       <Filter>Common\Include</Filter>
     </ClInclude>

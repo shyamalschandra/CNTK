@@ -5,7 +5,12 @@
 #include "stdafx.h"
 #include "File.h"
 #include <memory>
+#ifdef _WIN32
 #include <io.h>
+#else // Linux
+#define _dup2 dup2
+#define _fileno fileno
+#endif
 
 #include "../../../Source/Math/MatrixQuantizerImpl.h"
 #include "../../../Source/Math/CUDAPageLockedMemAllocator.h"
@@ -156,7 +161,8 @@ static void ReferenceCPUQuantizer(
         {
             // >1 bit:
             // We linearly quantize between 'stddevs' standard deviations.
-            ElemType stddevs = 5.0f;
+            mean = 0; // mean is assumed 0
+            ElemType stddevs = 4.0f;
             ElemType varacc = 0.0f;
             for (int i = 0; i < numRows; i++)
             {
@@ -181,8 +187,11 @@ static void ReferenceCPUQuantizer(
         }
         else
         {
-            qFactor = rangeSize / (quantiMax - quantiMin);
-            uFactor = (quantiMax - quantiMin) / rangeSize;
+            QWordVal usedRangeSize = rangeSize;
+            if (numBits > 1)
+                usedRangeSize--;
+            qFactor = usedRangeSize / (quantiMax - quantiMin);
+            uFactor = (quantiMax - quantiMin) / usedRangeSize;
         }
 
         for (int i = 0; i < numRows; i++)
@@ -264,7 +273,7 @@ static void TestRunQuantization(
 
     for (int iterNum = 0; iterNum < numIterations; ++iterNum)
     {
-        inMatrix = Matrix<ElemType>::RandomUniform(numRows, numCols, rangeLow, rangeHigh, seed + iterNum, deviceId);
+        inMatrix = Matrix<ElemType>::RandomUniform(numRows, numCols, deviceId, rangeLow, rangeHigh, seed + iterNum);
 
         std::unique_ptr<ElemType[]> gpuInMatrix(inMatrix.CopyToArray());
         std::unique_ptr<ElemType[]> gpuPrevResidualMatrix(residueMatrix.CopyToArray());

@@ -51,7 +51,7 @@ void LMSequenceWriter<ElemType>::InitFromConfig(const ConfigRecordType& writerCo
         // read unk sybol
         mUnk[outputNames[i]] = writerConfig(L"unk", "<unk>");
 
-        SequenceReader<ElemType>::ReadClassInfo(fname, class_size,
+        SequenceReader<ElemType>::ReadClassInfo(fname, m_classSize,
                                                 word4idx[outputNames[i]],
                                                 idx4word[outputNames[i]],
                                                 idx4class[outputNames[i]],
@@ -67,8 +67,8 @@ void LMSequenceWriter<ElemType>::InitFromConfig(const ConfigRecordType& writerCo
 
 template <class ElemType>
 void LMSequenceWriter<ElemType>::ReadLabelInfo(const wstring& vocfile,
-                                               map<string, int>& word4idx,
-                                               map<int, string>& idx4word)
+                                               map<string, int>& word4idx2,
+                                               map<int, string>& idx4word2)
 {
     char strFileName[MAX_STRING];
     char stmp[MAX_STRING];
@@ -88,9 +88,9 @@ void LMSequenceWriter<ElemType>::ReadLabelInfo(const wstring& vocfile,
     b = 0;
     while (!feof(vin))
     {
-        fscanf_s(vin, "%s\n", stmp, _countof(stmp));
-        word4idx[stmp] = b;
-        idx4word[b++] = stmp;
+        fscanf_s(vin, "%s\n", stmp, (unsigned int)_countof(stmp));
+        word4idx2[stmp] = b;
+        idx4word2[b++] = stmp;
     }
     fclose(vin);
 }
@@ -137,7 +137,7 @@ void LMSequenceWriter<ElemType>::Save(std::wstring& outputFile, const Matrix<Ele
     {
         FILE* ofs;
         msra::files::make_intermediate_dirs(outputFile);
-        string str(outputFile.begin(), outputFile.end());
+        string str(Microsoft::MSR::CNTK::ToLegacyString(Microsoft::MSR::CNTK::ToUTF8(outputFile)));
         ofs = fopen(str.c_str(), "wt");
         if (ofs == nullptr)
             RuntimeError("Cannot open %s for writing", str.c_str());

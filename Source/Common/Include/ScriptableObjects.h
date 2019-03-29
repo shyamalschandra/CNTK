@@ -8,6 +8,7 @@
 #include <memory>     // for shared_ptr<>
 #include <functional> // for function<>
 #include <map>
+#include <set>
 
 namespace Microsoft { namespace MSR { namespace ScriptableObjects {
 
@@ -24,11 +25,12 @@ class ScriptingException : public runtime_error
 {
 public:
     template <typename M>
-    ScriptingException(const M &msg)
-        : runtime_error(msg)
+    ScriptingException(const M &msg) :
+        runtime_error(msg)
     {
     }
-    virtual void PrintError() const = 0;
+    virtual std::wstring GetError(const std::wstring& /*linePrefix*/) const = 0;
+    virtual void PrintError(const std::wstring& /*linePrefix*/) const = 0;
 };
 
 // -----------------------------------------------------------------------
@@ -173,24 +175,35 @@ struct HasToString
 };
 
 // -----------------------------------------------------------------------
-// WithTag -- trait to give an object a tag std::string
+// WithTags -- trait to give an object a set of tag strings
 // -----------------------------------------------------------------------
 
-class WithTag
+class WithTags : std::set<std::wstring>
 {
-    std::wstring m_tag;
-
 public:
-    WithTag()
+    WithTags()
     {
     }
-    void SetTag(const std::wstring &tag)
+    bool SetTag(const std::wstring &tag)
     {
-        m_tag = tag;
+        auto res = insert(tag);
+        return res.second; // true if was not there before
     }
-    const std::wstring &GetTag() const
+    bool ClearTag(const std::wstring &tag)
     {
-        return m_tag;
+        auto iter = find(tag);
+        if (iter == end())
+            return false;
+        erase(iter);
+        return true; // indicates that we used to have this tag
+    }
+    bool HasTag(const std::wstring &tag) const
+    {
+        return find(tag) != end();
+    }
+    const std::set<std::wstring>& GetTags() const
+    {
+        return *this;
     }
 };
 
@@ -370,7 +383,7 @@ public:
     // --- access functions
 
     template <class C>
-    bool Is() const
+    bool Is() const // note: also works with null pointers (will return false)
     {
         EnsureIsResolved();
         const auto p = dynamic_cast<C *>(get());
@@ -385,7 +398,7 @@ public:
         // const C * wanted = (C *) nullptr; const auto * got = get(); wanted; got;   // allows to see C in the debugger
         const auto p = dynamic_cast<C *>(get());
         if (p == nullptr) // TODO: can we make this look the same as TypeExpected in BrainScriptEvaluator.cpp? We'd need the type name
-            Fail(L"config member has wrong type (" + msra::strfun::utf16(typeid(*get()).name()) + L"), expected a " + TypeId<C>());
+            Fail(L"config member has wrong type (" + Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(typeid(*get()).name()) + L"), expected a " + TypeId<C>());
         return *p;
     }
     template <class C>
@@ -394,7 +407,7 @@ public:
         EnsureIsResolved();
         const auto p = dynamic_pointer_cast<C>(*this);
         if (!p) // TODO: can we make this look the same as TypeExpected in BrainScriptEvaluator.cpp? We'd need the type name
-            Fail(L"config member has wrong type (" + msra::strfun::utf16(typeid(*get()).name()) + L"), expected a " + TypeId<C>());
+            Fail(L"config member has wrong type (" + Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(typeid(*get()).name()) + L"), expected a " + TypeId<C>());
         return p;
     }
 
@@ -414,7 +427,7 @@ public:
 
     const ConfigValuePtr &ResolveValue() const // (this is const but mutates the value if it resolves)
     {
-        // call this when a a member might be as-of-yet unresolved, to evaluate it on-demand
+        // call this when a member might be as-of-yet unresolved, to evaluate it on-demand
         // get() is a pointer to a Thunk in that case, that is, a function object that yields the value
         const auto thunkp = GetThunk(); // is it a Thunk?
         if (thunkp)                     // value is a Thunk: we need to resolve
@@ -472,7 +485,7 @@ struct IConfigRecord // any class that exposes config can derive from this
     }
     std::string operator()(const std::wstring &id, const char *defaultValue) const
     {
-        return msra::strfun::utf8(operator()(id, (std::wstring) msra::strfun::utf16(defaultValue)));
+        return Microsoft::MSR::CNTK::ToLegacyString(Microsoft::MSR::CNTK::ToUTF8(operator()(id, Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(defaultValue))));
     } // special case for narrow strings
     std::wstring operator()(const std::wstring &id, const wchar_t *defaultValue) const
     {
@@ -607,9 +620,9 @@ public:
     {
     }
     // ConfigArray(ConfigValuePtr && val) : firstIndex(0), values(std::vector<ConfigValuePtr>{ move(val) }) { }
-    pair<int, int> GetIndexRange() const
+    pair<int, int> GetIndexBeginEnd() const
     {
-        return make_pair(firstIndex, firstIndex + (int) values.size() - 1);
+        return make_pair(firstIndex, firstIndex + (int)values.size());
     }
     // for use as a plain array: get size and verify that index range starts with 0
     template <typename FAILFN>
@@ -643,20 +656,41 @@ public:
     // get element when knowing that the bounds are correct, e.g. looping over the item range returned by GetItemRange()
     const ConfigValuePtr &At(int index) const
     {
-        return At(index, [](const std::wstring &)
-                  {
-                      LogicError("ConfigArray::At(): Index unexpectedly out of bounds.");
-                  });
+        return At(index, [](const std::wstring &) { LogicError("ConfigArray::At(): Index unexpectedly out of bounds."); });
     }
     // get an entire array into a std::vector. Note that this will force all values to be evaluated.
     template <typename C, typename FAILFN>
-    std::vector<C> AsVector(const FAILFN &Fail) const
+    std::vector<C> AsVector(const FAILFN &Fail, bool flatten = false) const
     {
         std::vector<C> res;
         res.reserve(GetSize(Fail));
-        for (const auto &val : values)
-            res.push_back(val.ResolveValue()); // resolve upon access
+        for (const auto& valp : values)
+        {
+            valp.ResolveValue(); // resolve upon access
+            if (!flatten || !valp.Is<ConfigArray>())
+            {
+                const C &type = valp;
+                res.push_back(type);
+            }
+            else // special case: flatten nested vectors (only if 'flatten')
+            {
+                std::vector<C> subVector = valp.AsRef<ConfigArray>().AsVector<C>(Fail, flatten);
+                res.insert(res.end(), subVector.begin(), subVector.end());
+            }
+        }
         return res;
+    }
+
+    // helper function: get a vector from config that may be a scalar, a ConfigArray, or nested ConfigArrays meant to be flattened
+    template <typename E>
+    static vector<E> FlattenedVectorFrom(const ConfigValuePtr& valp)
+    {
+        if (valp.Is<vector<E>>())
+            return valp.AsRef<vector<E>>(); // UNTESTED
+        else if (valp.Is<ConfigArray>())
+            return valp.AsRef<ConfigArray>().AsVector<E>([&](const wstring& msg) { valp.Fail(msg); }, /*flatten=*/true);
+        else
+            return std::vector<E>(1, (const E&)valp); // single element
     }
 };
 typedef shared_ptr<ConfigArray> ConfigArrayPtr;
@@ -682,17 +716,12 @@ public:
         : paramNames(move(paramNames)), namedParams(move(namedParams)), f(f)
     {
     }
-    size_t GetNumParams() const
-    {
-        return paramNames.size();
-    }
-    const std::vector<std::wstring> &GetParamNames() const
-    {
-        return paramNames;
-    } // used for expression naming
+    size_t GetNumParams() const { return paramNames.size(); }
+    const std::vector<std::wstring>& GetParamNames() const { return paramNames; } // used for expression naming and function composition
+    const NamedParams& GetNamedParams() const { return namedParams; } // used for function composition
     // what this function does is call f() held in this object with the given arguments except optional arguments are verified and fall back to their defaults if not given
     // The arguments are rvalue references, which allows us to pass Thunks, which is important to allow stuff with circular references like CNTK's DelayedNode.
-    ConfigValuePtr Apply(std::vector<ConfigValuePtr> &&args, NamedParams &&namedArgs, const std::wstring &exprName)
+    ConfigValuePtr Apply(std::vector<ConfigValuePtr> &&args, NamedParams &&namedArgs, const std::wstring &exprName) const
     {
         NamedParams actualNamedArgs;
         // actualNamedArgs is a filtered version of namedArgs that contains all optional args listed in namedParams,
@@ -704,11 +733,11 @@ public:
             const auto valuei = namedArgs.find(id); // was such parameter passed?
             if (valuei == namedArgs.end())          // named parameter not passed
             {                                       // if not given then fall back to default
-                auto f = [&namedParam]()            // we pass a lambda that resolves it upon first use, in our original location
+                auto f2 = [&namedParam]()            // we pass a lambda that resolves it upon first use, in our original location
                 {
                     return namedParam.second.ResolveValue();
                 };
-                actualNamedArgs[id] = move(ConfigValuePtr::MakeThunk(f, namedParam.second.GetFailFn(), exprName));
+                actualNamedArgs[id] = move(ConfigValuePtr::MakeThunk(f2, namedParam.second.GetFailFn(), exprName));
             }
             else                                            // named parameter was passed
                 actualNamedArgs[id] = move(valuei->second); // move it, possibly remaining unresolved
@@ -722,6 +751,59 @@ public:
     // TODO: define an overload that takes const & for external users (which will then take a copy and pass it on to Apply &&)
 };
 typedef shared_ptr<ConfigLambda> ConfigLambdaPtr;
+
+// -----------------------------------------------------------------------
+// CustomConfigRecord -- helper for implementors of IConfigRecord
+// Custom classes that implement IConfigRecord can derive from this to make
+// it easier to manage the simulated config record.
+// -----------------------------------------------------------------------
+
+struct CustomConfigRecord : public IConfigRecord // any class that exposes config can derive from this
+{
+    const ConfigValuePtr& /*IConfigRecord::*/ operator[](const std::wstring& id) const override // e.g. confRec[L"message"]
+    {
+        const auto* valuep = Find(id);
+        if (!valuep)
+            RuntimeError("Unknown configuration-record member '%ls'", id.c_str());
+        return *valuep;
+    }
+
+    const ConfigValuePtr* /*IConfigRecord::*/ Find(const std::wstring& id) const // returns nullptr if not found
+    {
+        const auto& mapIter = members.find(id);
+        if (mapIter != members.end())
+            return &mapIter->second;
+        LazyCreateConfigMember(id);
+        const auto& mapIter2 = members.find(id);
+        if (mapIter2 != members.end())
+            return &mapIter2->second;
+        else
+            return nullptr;
+    }
+
+    void InsertConfigMember(const std::wstring& id, ConfigValuePtr&& valuep) const/*because it is called from Find() which is const*/
+    {
+        const auto res = members.insert(make_pair(id, move(valuep)));
+        assert(&res.first->second == &members.find(id)->second);
+        assert(res.second);        // this says whether it has been inserted. It better be.
+    }
+
+    // call this whenever anything changes about this node
+    // Once we use a ComputationNode as a config record, we are in immutable BS world.
+    // So we should not really need to ever call this.
+    // However, we *must* call it at least in DetachInputs() in order to break cyclic dependencies.
+    void ClearConfigMemberCache()
+    {
+        members.clear();
+    }
+
+    // user of this class must implement LazyCreateConfigMember() and GetMemberIds()
+    virtual void LazyCreateConfigMember(const std::wstring &id) const = 0;
+
+protected:
+    // cached return values from IConfigRecord implementation
+    mutable std::map<std::wstring, ScriptableObjects::ConfigValuePtr> members; // [id] -> cached ConfigValuePtr
+};
 
 // -----------------------------------------------------------------------
 // ConfigurableRuntimeType -- interface to scriptable runtime types
@@ -795,7 +877,9 @@ public:
             Register(typeId, std::move(rtInfo));
         }
     };
+
     // to register a class that exists in dual precisions (Something<ElemType>>, use this one instead
+    // ConfigurableRuntimeTypeRegister::AddFloatDouble<ClassName<float>,ClassName<double>> registerClassName(L"ClassName")l
     template <class Cfloat, class Cdouble>
     struct AddFloatDouble
     {
@@ -840,15 +924,9 @@ inline std::vector<T> IConfigRecord::operator()(const std::wstring &id, const st
         return std::vector<T>(1, (const T &) *valp); // scalar value
     const ConfigArray &arr = *valp;                  // actual array
 #if 1                                                // TODO: test whether this works correctly w.r.t. typecasting
-    return arr.AsVector<T>([&](const std::wstring &msg)
-                           {
-                               valp->Fail(msg);
-                           });
+    return arr.AsVector<T>([&](const std::wstring &msg) { valp->Fail(msg); });
 #else
-    const auto size = arr.GetSize([&](const std::wstring &msg)
-                                  {
-                                      valp->Fail(msg);
-                                  });
+    const auto size = arr.GetSize([&](const std::wstring &msg) { valp->Fail(msg); });
     std::vector<T> res(size);
     for (int i = 0; i < size; i++)
         res[i] = (const T &) arr.At(i);
@@ -866,7 +944,7 @@ inline bool IConfigRecord::Match(const std::wstring &id, const std::wstring &com
 {
     auto *valp = Find(id);
     std::wstring val = valp ? *valp : std::wstring();
-    return !_wcsicmp(compareValue.c_str(), val.c_str());
+    return EqualCI(compareValue, val);
 }
 inline const std::string IConfigRecord::ConfigName() const
 {
@@ -896,4 +974,5 @@ template <class V>
 {
     return static_cast<const std::vector<typename V::value_type> &>(vec);
 } // use this specifically for XXXargvector
-} } } // end namespaces
+
+}}} // end namespaces

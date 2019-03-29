@@ -1,0 +1,15 @@
+#!/bin/bash
+
+. $TEST_DIR/../run-test-common
+
+OriginalTestDir=../CuDNN
+
+checkOriginalBaseline $TEST_DIR $OriginalTestDir
+
+cntkrun 02_BatchNormConv.cntk batchNormalizationEngine=cntk
+ExitCode=$?
+
+# Delete the test data if copied
+[[ "$Copied" -eq "1" ]] && rm -rf "$DataDir"
+
+exit $ExitCode

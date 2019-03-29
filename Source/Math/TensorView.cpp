@@ -36,17 +36,21 @@ using namespace std;
 // construction
 // -------------------------------------------------------------------
 
-// cast a matrix as a TensorView
+// main constructor (all constructors except the default one route through this)
 template <class ElemType>
-TensorView<ElemType>::TensorView(const Matrix<ElemType>& sob)
-    : m_sob(sob.AsReference()), m_shape(TensorShape(array<size_t, 2>{sob.GetNumRows(), sob.GetNumCols()}))
+TensorView<ElemType>::TensorView(const MatrixBasePtr& sob, const TensorShape& shape)
+    : m_sob(dynamic_pointer_cast<Matrix<ElemType>>(sob)), m_shape(shape)
 {
-}
-// reshape a TensorView
-template <class ElemType>
-TensorView<ElemType>::TensorView(const TensorView<ElemType>& other, const TensorShape& shape)
-    : m_sob(other.m_sob.AsReference()), m_shape(shape)
-{
+    if (!m_sob)
+        LogicError("TensorView: Attempted to create a TensorView<ElemType> on a storage object of a different ElemType.");
+#ifdef _DEBUG
+    // check bounds of TensorShape against underlying storage object
+    // This is useful to detect errors like passing a matrix from the wrong input.
+    const auto r = shape.GetLocationRange();
+    const auto n = m_sob->GetNumElements();
+    if (r.first < 0 || (size_t)r.second > n)
+        LogicError("TensorView: Shape bounds [%d,%d) exceed bounds of underlying storage object [0,%d).", (int) r.first, (int) r.second, (int) n);
+#endif
 }
 
 // -------------------------------------------------------------------
@@ -226,7 +230,7 @@ static bool CheckDifferentObject(const TensorView<ElemType>& a, const TensorView
 }
 
 template <class ElemType>
-void TensorView<ElemType>::DoUnaryOpOf(ElemType beta, const TensorView& a, ElemType alpha, ElementWiseOperator op)
+void TensorView<ElemType>::DoUnaryOpOf(ElemType beta, const TensorView& a, ElemType alpha, ElementWiseOperator op, ElementWiseOperator reductionOp)
 {
     // static int cc = 0; if (cc++ == 0)
     //    fprintf(stderr, "Tensor Op: Op %d: %s -> %s\n", (int)op, string(a.GetShape()).c_str(), string(GetShape()).c_str());
@@ -242,11 +246,11 @@ void TensorView<ElemType>::DoUnaryOpOf(ElemType beta, const TensorView& a, ElemT
         CheckDifferentObject(a, *this);
 
     // now perform the operation
-    GetSOB().TensorOp(beta, a.GetSOB(), alpha, op, offsets, regularOpDims, regularStrides, reducingOpDims, reducingStrides);
+    GetSOB().TensorOp(beta, a.GetSOB(), alpha, op, reductionOp, offsets, regularOpDims, regularStrides, reducingOpDims, reducingStrides);
 }
 
 template <class ElemType>
-void TensorView<ElemType>::DoBinaryOpOf(ElemType beta, const TensorView& a, const TensorView& b, ElemType alpha, ElementWiseOperator op)
+void TensorView<ElemType>::DoBinaryOpOf(ElemType beta, const TensorView& a, const TensorView& b, ElemType alpha, ElementWiseOperator op, ElementWiseOperator reductionOp)
 {
     // static int cc = 0; if (cc++ == 0)
     //    fprintf(stderr, "Tensor Op: Op %d: %s op %s -> %s\n", (int)op, string(a.GetShape()).c_str(), string(b.GetShape()).c_str(), string(GetShape()).c_str());
@@ -260,11 +264,11 @@ void TensorView<ElemType>::DoBinaryOpOf(ElemType beta, const TensorView& a, cons
     if (reducingOpDims.size() > 0)
         CheckDifferentObject(a, *this) && CheckDifferentObject(b, *this);
 
-    GetSOB().TensorOp(beta, a.GetSOB(), b.GetSOB(), alpha, op, offsets, regularOpDims, regularStrides, reducingOpDims, reducingStrides);
+    GetSOB().TensorOp(beta, a.GetSOB(), b.GetSOB(), alpha, op, reductionOp, offsets, regularOpDims, regularStrides, reducingOpDims, reducingStrides);
 }
 
 template <class ElemType>
-void TensorView<ElemType>::DoTernaryOpOf(ElemType beta, const TensorView& a, const TensorView& b, const TensorView& c, ElemType alpha, ElementWiseOperator op)
+void TensorView<ElemType>::DoTernaryOpOf(ElemType beta, const TensorView& a, const TensorView& b, const TensorView& c, ElemType alpha, ElementWiseOperator op, ElementWiseOperator reductionOp)
 {
     // static int cc = 0; if (cc++ == 0)
     //    fprintf(stderr, "Tensor Op: Op %d: %s, %s, %s -> %s\n", (int)op, string(a.GetShape()).c_str(), string(b.GetShape()).c_str(), string(c.GetShape()).c_str(), string(GetShape()).c_str());
@@ -278,81 +282,145 @@ void TensorView<ElemType>::DoTernaryOpOf(ElemType beta, const TensorView& a, con
     if (reducingOpDims.size() > 0)
         CheckDifferentObject(a, *this) && CheckDifferentObject(b, *this) && CheckDifferentObject(c, *this);
 
-    GetSOB().TensorOp(beta, a.GetSOB(), b.GetSOB(), c.GetSOB(), alpha, op, offsets, regularOpDims, regularStrides, reducingOpDims, reducingStrides);
+    GetSOB().TensorOp(beta, a.GetSOB(), b.GetSOB(), c.GetSOB(), alpha, op, reductionOp, offsets, regularOpDims, regularStrides, reducingOpDims, reducingStrides);
 }
 
-// simple test function for testing stuff
-// Call as: Microsoft::MSR::CNTK::TensorView<float>::Test();
 template <class ElemType>
-/*static*/ void TensorView<ElemType>::Test()
+void TensorView<ElemType>::DoArgReductionOpOf(const TensorView& a, ElementWiseOperator reductionOp)
 {
-    const DEVICEID_TYPE deviceId = 0; // -1
-    Matrix<ElemType> m1(deviceId);
-    Matrix<ElemType> m2(deviceId);
-    Matrix<ElemType> m3(deviceId);
+    // prepare all tensor descriptor information as needed for execution
+    array<size_t, 2> offsets;
+    array<SmallVector<ptrdiff_t>, 2> regularStrides, reducingStrides;
+    SmallVector<size_t> regularOpDims, reducingOpDims;
+    PrepareTensorOperands<ElemType, 2>(array<TensorShape, 2>{a.GetShape(), GetShape()}, offsets, regularOpDims, regularStrides, reducingOpDims, reducingStrides);
+
+    // output cannot be input when reducing
+    if (reducingOpDims.size() > 0)
+        CheckDifferentObject(a, *this);
+
+    // now perform the operation
+    GetSOB().TensorArgOp(a.GetSOB(), reductionOp, offsets, regularOpDims, regularStrides, reducingOpDims, reducingStrides);
+}
+
+// -------------------------------------------------------------------
+// matrix product -- GEMM for flattened tensors
+// -------------------------------------------------------------------
+
+// print the dimensions of a matrix-product operation, for pretty error reporting
+static string MatrixProductFormat(const TensorShape& shapeA, bool transA, const TensorShape& shapeB, bool transB, const TensorShape& shapeC, bool transC)
+{
+    string result = "[" + string(shapeA) + "]"; if (transA) result.append("'");
+    result += " * ";
+    result +=       "[" + string(shapeB) + "]"; if (transB) result.append("'");
+    result += " -> ";
+    result +=       "[" + string(shapeC) + "]"; if (transC) result.append("'");
+    return result;
+}
+
+// flatten a tensor into a 2D tensor, where splitPoint is the first index to go into the second dimension
+// The tensor must be flattenable this way, i.e. each of the two index ranges must be dense.
+static void FlattenToMatrix(TensorShape& shape, bool trans, size_t splitPoint)
+{
+    if (trans)
+        splitPoint = shape.GetRank() - splitPoint;
+
+    shape.FlattenTo2DInPlace(splitPoint, "DoMatrixProductOf");
+}
+
+// convert tensor into a Matrix object
+template <class ElemType>
+shared_ptr<Matrix<ElemType>> TensorView<ElemType>::AsMatrix() const
+{
+    assert(m_shape.GetRank() == 2);
+    if (m_shape.GetStrides()[0] != 1 && m_shape[0] != 1)
+        InvalidArgument("AsMatrix: Flattened [%s] matrix is not dense (it has a stride).", string(m_shape).c_str());
+
+    // create a Matrix view into the TensorView (which in turn is a view over a Matrix...)
+    // The way to do this is to use a ColumnSlice.
+    // express the TensorView's storage in m_sob's coordinates
+    let firstColumn = m_shape.GetOffset()      / m_sob->GetNumRows();
+    let numColumns  = m_shape.GetNumElements() / m_sob->GetNumRows();
+    if (firstColumn * m_sob->GetNumRows() != m_shape.GetOffset() || numColumns * m_sob->GetNumRows() != m_shape.GetNumElements())
+        InvalidArgument("AsMatrix: Flattened [%s] matrix has an offset or width that is not a multiple of the storage object's row dimension.", string(m_shape).c_str());
+
+    // now reinterpret this slice according to the new tensor shape
+    // Example:
+    //  - each sob column contains a set of vectors stored as a 2D tensor [I x J], and [S x T] samples
+    //  - we want to apply a [K x I] matrix to all vectors in each set
+    //  - so we reinterpret the [(I * J) x (S * T)] storage object as a [I x (J * S * T)] matrix
+    //    and apply the matrix product to this (by calling GEMM)
+    //  - which in turn yields a [K x (J * S x*T)] matrix
+    //    which gets reinterpreted back as a [K x J x S x T] tensor
+    // In the special case of sparse matrices, this split cannot be done. E.g. in the above example, we could only multiply with a [K x I x J] tensor.
+    let needsSlicing = firstColumn != 0 || numColumns != m_sob->GetNumCols();
+    let needsReshaping = m_shape[0] != m_sob->GetNumRows() || m_shape[1] != numColumns;
+
+    // Note: If an output matrix is a view and needs to move to a different device, we will fail later, since the current structure cannot support that.
+    // As a consequence, some configurations will simply not work currently.
+    // We minimize the chance of this by using the original storage object whenever possible.
+    if (!needsSlicing && !needsReshaping)     // no need to mess with the storage object: pass it on as it is. Full support for moving devices.
+        return m_sob;
+    else if (needsSlicing && !needsReshaping) // slicing is supported for sparse as well
+        return make_shared<Matrix<ElemType>>(m_sob->ColumnSlice(firstColumn, numColumns));
+    else if (m_sob->GetMatrixType() != MatrixType::DENSE) // needsReshaping: not allowed for sparse matrices
+        RuntimeError("AsMatrix: Sparse tensors are not supported unless they are 1D or 2D matrices.");
+    else                                                  // dense can slice and reshape neutrally, but will also fail if output matrix needs to move devices
+        return make_shared<Matrix<ElemType>>(m_sob->ColumnSlice(firstColumn, numColumns).Reshaped(m_shape[0], m_shape[1]));
+}
+
+template <class ElemType>
+void TensorView<ElemType>::DoMatrixProductOf(ElemType beta, bool transC, const TensorView& a, bool transA, const TensorView& b, bool transB, ElemType alpha, shared_ptr<QuantizedMultiplier<ElemType>> pQuantizedMultiplier)
+{
+    // determine integration dimension offset
+    auto shapeA = a.m_shape;
+    auto shapeB = b.m_shape;
+    auto shapeC =   m_shape;
+    if (shapeA.GetRank() + shapeB.GetRank() < shapeC.GetRank())
+        InvalidArgument("DoMatrixProductOf: Ranks %s don't match, output must have a non-reduced output dimension.", MatrixProductFormat(shapeA, transA, shapeB, transB, shapeC, transC).c_str());
+    let removedDims = shapeA.GetRank() + shapeB.GetRank() - shapeC.GetRank();
+    let numReducedDims = removedDims / 2;
+    if (numReducedDims * 2 != removedDims)
+        InvalidArgument("DoMatrixProductOf: Ranks %s mismatch.", MatrixProductFormat(shapeA, transA, shapeB, transB, shapeC, transC).c_str());
+    let firstReducedDim = shapeA.GetRank() - numReducedDims;
+    // flatten. This updates shapeA etc.
+    FlattenToMatrix(shapeA, transA, firstReducedDim);
+    FlattenToMatrix(shapeB, transB, numReducedDims);
+    FlattenToMatrix(shapeC, transC, firstReducedDim);
+    // check dimensions
+    // shapeX[transX] and shapeX[1-transX] are row and column dim, respectively, or swapped if transposed
+    if (shapeA[transA]   != shapeC[transC]   || // output dim
+        shapeB[1-transB] != shapeC[1-transC] || // input dim
+        shapeA[1-transA] != shapeB[transB])     // reduction dim
     {
-        m1.SetValue(5, 3, {1, 2, 3,
-                           14, 15, 6,
-                           4, 5, 16,
-                           41, 5, 1,
-                           1.8, 4.5, 7});
-        m2.SetValue(5, 1, {42,
-                           13,
-                           1968,
-                           3.1415f,
-                           7});
-
-        m3.Resize(m1);
-
-        // regular zip  (just add m1 to itself)
-        TensorView(m3).DoSumOf(0, TensorView(m1), TensorView(m1), 1);
-        m3.Print();
-
-        // unary op
-        TensorView(m3).DoSqrtOf(0, TensorView(m1), 1);
-        m3.Print();
-
-        // broadcasting of an input
-        TensorView(m3).DoSumOf(0, TensorView(m1), TensorView(m2), 1);
-        m3.Print();
-
-        TensorView(m3).DoMaxOf(0, TensorView(m1), TensorView(m2), 1);
-        m3.Print();
-
-        TensorView(m3).DoGTOf(0, TensorView(m1), TensorView(m2), 1);
-        m3.Print();
-
-        // reduction over columns
-        m3.Resize(5, 1);
-        TensorView(m3).DoSumOf(0, TensorView(m1), TensorView(m2), 1);
-        m3.Print();
-
-        // reduction over rows
-        m3.Resize(1, 3);
-        TensorView(m3).DoSumOf(0, TensorView(m1), TensorView(m2), 1);
-        m3.Print();
-
-        TensorView(m3).DoLogSumOf(0, TensorView(m1), TensorView(m2), 1);
-        m3.Print();
+        InvalidArgument("DoMatrixProductOf: Flattened tensor dimensions %s mismatch.", MatrixProductFormat(shapeA, transA, shapeB, transB, shapeC, transC).c_str());
     }
-    {
-        m1.Resize(1, 42);
-        m2.Resize(13, 1);
-        m3.Resize(13, 21);
-        TensorShape s1(1, 2, 21);
-        TensorShape s2(13, 1);
-        TensorShape s3(13, 1, 21);
-        let t1 = TensorView<ElemType>(m1, s1);
-        t1;
-        let t2 = TensorView<ElemType>(m2, s2);
-        t2;
-        auto t3 = TensorView<ElemType>(m3, s3);
-        t3;
-        t3.DoSumOf(0, t1, t2, 1);
-        m3.Print();
-    }
+    // create Matrix objects out of this
+    let  A = a.Reshaped(shapeA).AsMatrix();
+    let  B = b.Reshaped(shapeB).AsMatrix();
+    auto C =   Reshaped(shapeC).AsMatrix();
+    // and go
+    if (!transC)
+        Matrix<ElemType>::MultiplyAndWeightedAdd(alpha, *A, transA, *B, transB, beta, *C, pQuantizedMultiplier);
+    else // C' = A * B  <==>  C = (A * B)' = B' * A'
+        Matrix<ElemType>::MultiplyAndWeightedAdd(alpha, *B, !transB, *A, !transA, beta, *C, pQuantizedMultiplier);
 }
 
 template class TensorView<float>;
 template class TensorView<double>;
-} } }
+template class TensorView<half>;
+
+template Microsoft::MSR::CNTK::TensorView<char>::TensorView(const MatrixBasePtr& sob, const TensorShape& shape);
+template Microsoft::MSR::CNTK::TensorView<char>::TensorView(const TensorView<char>& other, const TensorShape& shape);
+template Microsoft::MSR::CNTK::TensorView<char>::TensorView(const TensorView<char>& other);
+template Microsoft::MSR::CNTK::TensorView<char> Microsoft::MSR::CNTK::TensorView<char>::Reshaped(const TensorShape& shape) const;
+template shared_ptr<Matrix<char>> Microsoft::MSR::CNTK::TensorView<char>::AsMatrix() const;
+template const TensorShape& Microsoft::MSR::CNTK::TensorView<char>::GetShape() const;
+
+template Microsoft::MSR::CNTK::TensorView<short>::TensorView(const MatrixBasePtr& sob, const TensorShape& shape);
+template Microsoft::MSR::CNTK::TensorView<short>::TensorView(const TensorView<short>& other, const TensorShape& shape);
+template Microsoft::MSR::CNTK::TensorView<short>::TensorView(const TensorView<short>& other);
+template Microsoft::MSR::CNTK::TensorView<short> Microsoft::MSR::CNTK::TensorView<short>::Reshaped(const TensorShape& shape) const;
+template shared_ptr<Matrix<short>> Microsoft::MSR::CNTK::TensorView<short>::AsMatrix() const;
+template const TensorShape& Microsoft::MSR::CNTK::TensorView<short>::GetShape() const;
+
+}}}

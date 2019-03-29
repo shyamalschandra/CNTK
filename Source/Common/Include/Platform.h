@@ -11,6 +11,12 @@
 #define __UNIX__
 #endif
 
+#if defined(_MSC_VER) && (_MSC_VER <= 1800 /*VS2013*/)
+#define THREAD_LOCAL __declspec(thread)
+#else
+#define THREAD_LOCAL thread_local
+#endif
+
 // ===========================================================================
 // compiler differences
 // ===========================================================================
@@ -25,6 +31,14 @@
 #include "xkeycheck.h" // this header checks whether one attempted to redefine keywords incl. 'noexcept', so must include before redefining it
 #undef noexcept
 #define noexcept throw() // noexcept not defined in VS2013, but needed for gcc to pick the correct overload for constructor/assignment from an rvalue ref
+#endif
+
+#if defined(_MSC_VER) && (_MSC_VER <= 1800 /*VS2013*/)
+#define __func__ __FUNCTION__
+#endif
+
+#if defined(_MSC_VER) && (_MSC_VER <= 1800 /*VS2013*/)
+#define snprintf _snprintf
 #endif
 
 // ===========================================================================
@@ -111,7 +125,7 @@ inline int _fseeki64(FILE *file, int64_t offset, int origin)
     return fseeko(file, offset, origin);
 }
 
-inline int _ftelli64(FILE *file)
+inline int64_t _ftelli64(FILE *file)
 {
     return ftello(file);
 }

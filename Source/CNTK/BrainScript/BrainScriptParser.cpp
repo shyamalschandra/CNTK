@@ -3,6 +3,7 @@
 #define _CRT_SECURE_NO_WARNINGS // "secure" CRT not available on all platforms  --add this at the top of all CPP files that give "function or variable may be unsafe" warnings
 
 #include "BrainScriptParser.h"
+#include "File.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cctype>
@@ -12,6 +13,7 @@
 #include <set>
 #include <stdexcept>
 #include <algorithm>
+#include <iomanip>
 
 #ifndef let
 #define let const auto
@@ -32,12 +34,10 @@ SourceFile::SourceFile(wstring location, wstring text)
     : path(location), lines(split(text, L"\r\n"))
 {
 } // from string, e.g. command line
-SourceFile::SourceFile(wstring path, const vector<wstring>& includePaths)
+SourceFile::SourceFile(wstring path)
     : path(path) // from file
 {
-    // ... scan paths
-    includePaths;
-    File(path, fileOptionsRead).GetLines(lines);
+    File(path, fileOptionsRead | fileOptionsText).GetLines(lines);
 }
 
 bool TextLocation::IsValid() const
@@ -91,8 +91,17 @@ struct Issue
 // Since often multiple contexts are on the same source line, we only print each source line once in a consecutive row of contexts.
 /*static*/ void TextLocation::PrintIssue(const vector<TextLocation>& locations, const wchar_t* errorKind, const wchar_t* kind, const wchar_t* what)
 {
+    wstring error = CreateIssueMessage(locations, errorKind, kind, what);
+    fprintf(stderr, "%ls", error.c_str());
+    fflush(stderr);
+}
+
+/*static*/ wstring TextLocation::CreateIssueMessage(const vector<TextLocation>& locations, const wchar_t* errorKind, const wchar_t* kind, const wchar_t* what)
+{
     vector<Issue> issues; // tracing the error backwards
     size_t symbolIndex = 0;
+    wstring message;
+
     for (size_t n = 0; n < locations.size(); n++)
     {
         let& location = locations[n];
@@ -123,22 +132,26 @@ struct Issue
         issues.back().AddMarkup(symbol, location.charPos);
     }
     // print it backwards
-    if (!locations.empty()) // (be resilient to some throwers not having a TextrLocation; to be avoided)
+    if (!locations.empty()) // (be resilient to some throwers not having a TextLocation; to be avoided)
     {
         let& firstLoc = issues.front().location;
-        fprintf(stderr, "\n%ls while %ls line %d char %d of %ls\n", errorKind, kind, (int) firstLoc.lineNo + 1 /*report 1-based*/, (int) firstLoc.charPos + 1, firstLoc.GetSourceFile().path.c_str());
-        fprintf(stderr, "see location marked ^ and parent contexts marked 0..9, a..z, A..Z:\n\n");
+        message += wstrprintf(L"[CALL STACK]\n");
         for (auto i = issues.rbegin(); i != issues.rend(); i++)
         {
             let& issue = *i;
             auto& where = issue.location;
             const auto& lines = where.GetSourceFile().lines;
             const auto line = (where.lineNo == lines.size()) ? L"(end)" : lines[where.lineNo].c_str();
-            fprintf(stderr, "  %ls\n  %ls\n", line, issue.markup.c_str());
+            message += wstrprintf(L"  %ls\n  %ls\n", line, issue.markup.c_str());
         }
+        message += wstrprintf(L"%ls while %ls: %ls(%d)", errorKind, kind, firstLoc.GetSourceFile().path.c_str(), (int)firstLoc.lineNo + 1 /*report 1-based*/);
     }
-    fprintf(stderr, "%ls: %ls\n", errorKind, what);
-    fflush(stderr);
+    else
+    {
+        message += wstrprintf(L"%ls while %ls", errorKind, kind);
+    }
+    message += wstrprintf(L": %ls\n", what);
+    return message;
 }
 /*static*/ vector<SourceFile> TextLocation::sourceFileMap;
 
@@ -185,7 +198,7 @@ public:
 
     __declspec_noreturn static void Fail(wstring msg, TextLocation where)
     {
-        Microsoft::MSR::CNTK::DebugUtil::PrintCallStack();
+        //Microsoft::MSR::CNTK::DebugUtil::PrintCallStack();
         throw CodeSourceException(msg, where);
     }
 
@@ -232,7 +245,7 @@ public:
             return currentLine[cursor.charPos];
     }
 
-    // we chan also return the address of the current character, e.g. for passing it to a C stdlib funcion such as wcstod()
+    // we chan also return the address of the current character, e.g. for passing it to a C stdlib function such as wcstod()
     const wchar_t* GotCharPtr() const
     {
         return currentLine + cursor.charPos;
@@ -286,10 +299,10 @@ public:
         };
         punctuations = set<wstring>{
             L"=", L";", L",", L"\n",
-            L"[", L"]", L"(", L")",
-            L"+", L"-", L"*", L"/", L"**", L".*", L"%", L"||", L"&&", L"^",
+            L"[", L"]", L"(", L")", L"{", L"}", L"[|", L"|]",
+            L"+", L"-", L"*", L"/", L"**", L".*", L"%", L"||", L"&&", L"<<", L">>",
             L"!",
-            L"==", L"!=", L"<", L"<=", L">", L">=",
+            L"<", L"==", L">", L">=", L"!=", L"<=",
             L":", L"=>",
             L"..", L".",
             L"//", L"#", L"/*"};
@@ -376,8 +389,33 @@ public:
 private:
     __declspec_noreturn static void Fail(wstring msg, Token where)
     {
-        Microsoft::MSR::CNTK::DebugUtil::PrintCallStack();
+        //Microsoft::MSR::CNTK::DebugUtil::PrintCallStack();
         throw LexerException(msg, where.beginLocation);
+    }
+
+    // find a file either at given location or traverse include paths
+    // TODO: also allow ... syntax, where ... refers to the directory of the enclosing file
+    static wstring FindSourceFile(const wstring& path, const vector<wstring>& includePaths)
+    {
+        if (File::Exists(path))
+            return path;
+        // non-existent path: scan include paths
+        // TODO: This is a little weird. Rather, this should be done by the call site.
+        let fileName = File::FileNameOf(path);
+        for (let& dir : includePaths)
+        {
+            // TODO: We should use the separator that matches the include path.
+            let newPath = dir + L"/" + fileName;
+            if (File::Exists(newPath))
+                return newPath;
+        }
+        // not in include path: try EXE directory
+        let dir = File::DirectoryPathOf(File::GetExecutablePath());
+        let newPath = dir + L"/" + fileName;
+        if (File::Exists(newPath))
+            return newPath;
+        // not found: return unmodified, let caller fail
+        return path;
     }
 
     Token currentToken;
@@ -405,6 +443,7 @@ private:
         {
             if (IsInInclude())
             {
+                includePaths.erase(includePaths.begin()); // pop dir of current include file
                 PopSourceFile();
                 t = NextToken();        // tail call--the current 't' gets dropped/ignored
                 t.isLineInitial = true; // eof is a line end
@@ -443,8 +482,9 @@ private:
                 let nameTok = NextToken(); // must be followed by a string literal
                 if (nameTok.kind != stringliteral)
                     Fail(L"'include' must be followed by a quoted string", nameTok);
-                let path = nameTok.symbol;                      // TODO: some massaging of the path
-                PushSourceFile(SourceFile(path, includePaths)); // current cursor is right after the pathname; that's where we will pick up later
+                let path = FindSourceFile(nameTok.symbol, includePaths);
+                PushSourceFile(SourceFile(path)); // current cursor is right after the pathname; that's where we will pick up later
+                includePaths.insert(includePaths.begin(), File::DirectoryPathOf(path));
                 return NextToken();
             }
         }
@@ -530,37 +570,43 @@ public:
 // ---------------------------------------------------------------------------
 
 // diagnostics helper: print the content
-void Expression::Dump(int indent) const
+void Expression::DumpToStream(wstringstream & treeStream, int indent)
 {
-    fprintf(stderr, "%*s", indent, "");
+    treeStream << std::setfill(L' ') << std::setw(indent) << L" ";
+    treeStream << std::setw(0);
+
     if (op == L"s")
-        fprintf(stderr, "'%ls' ", s.c_str());
+        treeStream << "'" << s.c_str() << "'";
     else if (op == L"d")
-        fprintf(stderr, "%.f ", d);
+        treeStream << std::fixed << std::setprecision(0) << d;
     else if (op == L"b")
-        fprintf(stderr, "%s ", b ? "true" : "false");
+        treeStream << b ? "true" : "false";
     else if (op == L"id")
-        fprintf(stderr, "%ls ", id.c_str());
+        treeStream << id.c_str();
     else if (op == L"new" || op == L"array" || op == L".")
-        fprintf(stderr, "%ls %ls ", op.c_str(), id.c_str());
+        treeStream << op.c_str() << " " << id.c_str();
     else
-        fprintf(stderr, "%ls ", op.c_str());
+        treeStream << op.c_str();
+
     if (!args.empty())
     {
-        fprintf(stderr, "\n");
+        treeStream << std::endl;
         for (const auto& arg : args)
-            arg->Dump(indent + 2);
+        {
+            arg->DumpToStream(treeStream, indent + 1);
+        }
     }
     if (!namedArgs.empty())
     {
-        fprintf(stderr, "\n");
+        treeStream << std::endl;
         for (const auto& arg : namedArgs)
         {
-            fprintf(stderr, "%*s%ls =\n", indent + 2, "", arg.first.c_str());
-            arg.second.second->Dump(indent + 4);
+            treeStream << std::setfill(L' ') << std::setw(indent + 1) << L"";
+            treeStream << arg.first.c_str() << L" =" << std::endl;
+            arg.second.second->DumpToStream(treeStream, indent + 2);
         }
     }
-    fprintf(stderr, "\n");
+    treeStream << std::endl;
 }
 
 class Parser : public Lexer
@@ -581,7 +627,7 @@ class Parser : public Lexer
 
     __declspec_noreturn static void Fail(const wstring& msg, Token where)
     {
-        Microsoft::MSR::CNTK::DebugUtil::PrintCallStack();
+        //Microsoft::MSR::CNTK::DebugUtil::PrintCallStack();
         throw ParseException(msg, where.beginLocation);
     }
 
@@ -620,30 +666,22 @@ class Parser : public Lexer
         return id;
     }
 
-    map<wstring, int> infixPrecedence; // precedence level of infix operators
+    map<wstring, int> infixPrecedence;    // precedence level of infix operators
+    static const int unaryPrecedence = 90;  // for unary "-" and "!". 90 is below x., x[, x(, and x{, but above all others
+    // TODO: Would be more direct to fold this into the table below as well.
 public:
     Parser(SourceFile&& sourceFile, vector<wstring>&& includePaths)
         : Lexer(move(includePaths))
     {
         infixPrecedence = map<wstring, int>{
-            {L".", 100}, {L"[", 100}, {L"(", 100}, // also sort-of infix operands...
-            {L"*", 10},
-            {L"/", 10},
-            {L".*", 10},
-            {L"**", 10},
-            {L"%", 10},
-            {L"+", 9},
-            {L"-", 9},
-            {L"with", 9},
-            {L"==", 8},
-            {L"!=", 8},
-            {L"<", 8},
-            {L"<=", 8},
-            {L">", 8},
-            {L">=", 8},
+            {L".", 99}, {L"[", 99}, {L"(",   99}, {L"{",   99}, // (with LHS) these are also sort-of infix operands...
+            {L"*", 10}, {L"/", 10}, {L".*",  10}, {L"**", 10}, {L"%", 10},
+            {L"+",  9}, {L"-",  9}, {L"with", 9}, {L"==",  8},
+            {L"!=", 8}, {L"<",  8}, {L"<=",   8}, {L">",   8}, {L">=", 8},
             {L"&&", 7},
             {L"||", 6},
-            {L":", 5},
+            {L">>", 5}, {L"<<", 5}, // TODO: do it as other languages
+            {L":",  4},
             {L"=>", 0},
         };
         SetSourceFile(move(sourceFile));
@@ -684,7 +722,7 @@ public:
         {
             operand = make_shared<Expression>(tok.beginLocation, tok.symbol + L"("); // encoded as +( -( !(
             ConsumeToken();
-            operand->args.push_back(ParseExpression(100, stopAtNewline));
+            operand->args.push_back(ParseExpression(unaryPrecedence, stopAtNewline));
         }
         else if (tok.symbol == L"new") // === new class instance
         {
@@ -707,13 +745,34 @@ public:
             operand = ParseExpression(0, false /*go across newlines*/); // just return the content of the parens (they do not become part of the expression tree)
             ConsumePunctuation(L")");
         }
-        else if (tok.symbol == L"[") // === dictionary constructor
+        else if (tok.symbol == L"{" || tok.symbol == L"["/*soon to be deprecated*/) // === record constructor
         {
+            let* closeSymbol = tok.symbol == L"{" ? L"}" : L"]";
             operand = make_shared<Expression>(tok.beginLocation, L"[]");
             ConsumeToken();
             operand->namedArgs = ParseRecordMembers();
-            ConsumePunctuation(L"]");
+            ConsumePunctuation(closeSymbol);
         }
+#if 1   // the F# syntax is a stop-gap and meant for experimentation, and we will not recommend to use it
+        // Rather, we must find a way to parse both Python-like array literals and BS dictionaries jointly,
+        // and eventually deprecate [] for records.
+        else if (tok.symbol == L"[|") // === array literal using F# syntax [| a; b; c |] (same as a:b:c, but also allows for 0- and 1-element arrays)
+        {
+            operand = make_shared<Expression>(tok.beginLocation, L":");
+            ConsumeToken();
+            if (GotToken().symbol != L"|]") // {} defines an empty array
+            {
+                for (;;)
+                {
+                    operand->args.push_back(ParseExpression(0, false)); // item. Precedence 0 means go until comma or closing parenthesis.
+                    if (GotToken().symbol != L";")
+                        break;
+                    ConsumeToken();
+                }
+            }
+            ConsumePunctuation(L"|]");
+        }
+#endif
         else if (tok.symbol == L"array") // === array constructor
         {
             operand = OperandFromTokenSymbol(tok);
@@ -764,18 +823,18 @@ public:
                 if (left->op != L"id") // currently only allow for a single argument
                     Expected(L"identifier");
                 ConsumeToken();
-                let macroArgs = make_shared<Expression>(left->location, L"()", left); // wrap identifier in a '()' macro-args expression
+                let macroArgs = make_shared<Expression>(left->location, L"()", left); // wrap identifier in a "()" macro-args expression
                 // TODO: test parsing of i => j => i*j
                 let body = ParseExpression(opPrecedence, stopAtNewline); // pass same precedence; this makes '=>' right-associative  e.g.i=>j=>i*j
                 operation->args[0] = macroArgs;                          // [0]: parameter list
                 operation->args.push_back(body);                         // [1]: right operand
             }
-            else if (op == L"(") // === macro application
+            else if (op == L"(" || op == L"{") // === macro application
             {
-                // op = "("   means 'apply'
+                // op = "(" and "{"   mean 'apply', where {} refers to experimental constructor syntax
                 // args[0] = lambda expression (lambda: op="=>", args[0] = param list, args[1] = expression with unbound vars)
-                // args[1] = arguments    (arguments: op="(), args=vector of expressions, one per arg; and namedArgs)
-                operation->args.push_back(ParseMacroArgs(false)); // [1]: all arguments
+                // args[1] = arguments    (arguments: op="()", args=vector of expressions, one per arg; and namedArgs)
+                operation->args.push_back(ParseMacroArgs(false, op)); // [1]: all arguments
             }
             else if (op == L"[") // === array index
             {
@@ -813,11 +872,12 @@ public:
     //         In case of macro definition, all arguments must be of type "id". Pass 'defining' to check for that.
     //  namedArgs = dictionary of optional args
     //         In case of macro definition, dictionary values are default values that are used if the argument is not given
-    ExpressionPtr ParseMacroArgs(bool defining)
+    ExpressionPtr ParseMacroArgs(bool defining, wstring openSymbol)
     {
-        ConsumePunctuation(L"(");
+        ConsumePunctuation(openSymbol.c_str());
         auto macroArgs = make_shared<Expression>(GotToken().beginLocation, L"()");
-        if (GotToken().symbol != L")") // x() defines an empty argument list
+        let* closeSymbol = openSymbol == L"(" ? L")" : L"}";
+        if (GotToken().symbol != closeSymbol) // x() defines an empty argument list
         {
             for (;;)
             {
@@ -840,7 +900,7 @@ public:
                 ConsumeToken();
             }
         }
-        ConsumePunctuation(L")");
+        ConsumePunctuation(closeSymbol);
         return macroArgs;
     }
     map<wstring, pair<TextLocation, ExpressionPtr>> ParseRecordMembers()
@@ -849,7 +909,7 @@ public:
         //  member identifier -> expression
         // Macro declarations are translated into lambdas, e.g.
         //  F(A,B) = expr(A,B)
-        // gets represented in the dictionary as
+        // (and likewise F{A,B}) gets represented in the dictionary as
         //  F = (A,B) => expr(A,B)
         // where a lambda expression has this structure:
         //  op="=>"
@@ -881,7 +941,8 @@ public:
                 ConsumePunctuation(L"]");
             }
             // optional macro args
-            let parameters = (GotToken().symbol == L"(") ? ParseMacroArgs(true /*defining*/) : ExpressionPtr(); // optionally, macro arguments
+            let& openParen = GotToken().symbol;
+            let parameters = (openParen == L"(" || openParen == L"{") ? ParseMacroArgs(true /*defining*/, openParen) : ExpressionPtr(); // optionally, macro arguments
             ConsumePunctuation(L"=");
             auto rhs = ParseExpression(0, true /*can end at newline*/); // and the right-hand side
             // if macro then rewrite it as an assignment of a lambda expression
@@ -891,7 +952,8 @@ public:
             if (arrayIndexExpr)
             {
                 // create a lambda expression over the index variable
-                let macroArgs = make_shared<Expression>(arrayIndexExpr->location, L"()", arrayIndexExpr);      // wrap identifier in a '()' macro-args expression
+                // BUGBUG: For {} constructor functions--we cannot declare constructor lambdas for now.
+                let macroArgs = make_shared<Expression>(arrayIndexExpr->location, L"()", arrayIndexExpr);      // wrap identifier in a "()" macro-args expression
                 let initLambdaExpr = make_shared<Expression>(arrayIndexExpr->location, L"=>", macroArgs, rhs); // [0] is id, [1] is body
                 rhs = make_shared<Expression>(location, L"array");
                 rhs->args.push_back(fromExpr);       // [0] first index
@@ -914,7 +976,7 @@ public:
         if (GotToken().kind != eof)
             Fail(L"junk at end of source", GetCursor());
     }
-    // top-level parse function parses dictonary members without enclosing [ ... ] and returns it as a dictionary
+    // top-level parse function parses dictionary members without enclosing [ ... ] and returns it as a dictionary
     ExpressionPtr ParseRecordMembersToDict()
     {
         let topMembers = ParseRecordMembers();
@@ -923,12 +985,6 @@ public:
         topDict->namedArgs = topMembers;
         return topDict;
     }
-    // simple test function for use during development
-    static void Test()
-    {
-        let parserTest = L"a=1\na1_=13;b=2 // cmt\ndo = (print\n:train:eval) ; x = array[1..13] (i=>1+i*print.message==13*42) ; print = new PrintAction [ message = 'Hello World' ]";
-        ParseConfigDictFromString(parserTest, vector<wstring>())->Dump();
-    }
 };
 
 // globally exported functions to execute the parser
@@ -936,15 +992,16 @@ static ExpressionPtr Parse(SourceFile&& sourceFile, vector<wstring>&& includePat
 {
     return Parser(move(sourceFile), move(includePaths)).ParseRecordMembersToDict();
 }
-ExpressionPtr ParseConfigDictFromString(wstring text, vector<wstring>&& includePaths)
+ExpressionPtr ParseConfigDictFromString(wstring text, wstring location, vector<wstring>&& includePaths)
 {
-    return Parse(SourceFile(L"(command line)", text), move(includePaths));
+    return Parse(SourceFile(location, text), move(includePaths));
 }
-ExpressionPtr ParseConfigDictFromFile(wstring path, vector<wstring>&& includePaths)
-{
-    auto sourceFile = SourceFile(path, includePaths);
-    return Parse(move(sourceFile), move(includePaths));
-}
+//ExpressionPtr ParseConfigDictFromFile(wstring path, vector<wstring> includePaths)
+//{
+//    auto sourceFile = SourceFile(path); // note: no resolution against include paths done here
+//    includePaths.insert(includePaths.begin(), File::DirectoryPathOf(path)); // must include our own path for nested include statements
+//    return Parse(move(sourceFile), move(includePaths));
+//}
 ExpressionPtr ParseConfigExpression(const wstring& sourceText, vector<wstring>&& includePaths)
 {
     auto parser = Parser(SourceFile(L"(command line)", sourceText), move(includePaths));
@@ -952,4 +1009,5 @@ ExpressionPtr ParseConfigExpression(const wstring& sourceText, vector<wstring>&&
     parser.VerifyAtEnd();
     return expr;
 }
-} } } // namespaces
+
+}}}

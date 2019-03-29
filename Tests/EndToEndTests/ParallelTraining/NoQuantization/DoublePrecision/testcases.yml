@@ -1,10 +1,8 @@
 dataDir: ../../Data
 tags:
-     # running on every BVT job in 'P' (Parallel) leg in Debug-GPU and Release-CPU configurations:
-     # Also skipping Release-CPU on linux to save time (for now due to unknown reason it runs much longer comparing to windows)
-     - bvt-p  ((build_sku == 'gpu') or (build_sku == '1bitsgd')) and ((flavor=='debug') ^ (device=='cpu')) and not (os=='linux' and device=='cpu')
-     # running unconditionally on every Nightly job in 'P' leg
-     - nightly-p ((build_sku == 'gpu') or (build_sku == '1bitsgd'))
+     - bvt-p ((build_sku == 'gpu') or (build_sku == 'gpu')) and ((flavor == 'release') if (os == 'windows') else ((flavor == 'debug') ^ (device == 'cpu')))
+     - nightly-p ((build_sku == 'gpu') or (build_sku == 'gpu'))
+     - weekly-p ((build_sku == 'gpu') or (build_sku == 'gpu'))
 
 testCases:
   Must train epochs in exactly same order and parameters for each MPI Rank:
@@ -18,23 +16,23 @@ testCases:
     patterns:
       - ^MPI Rank {{integer}}
       - Finished Epoch[{{integer}} of {{integer}}]
-      - TrainLossPerSample = {{float,tolerance=0%}}
-      - EvalErrPerSample = {{float,tolerance=0%}}
-      - AvgLearningRatePerSample = {{float,tolerance=0.001%}}
+      - CrossEntropyWithSoftmax = {{float,tolerance=0.1%}}
+      - EvalClassificationError = {{float,tolerance=0.1%}}
+      - learningRatePerSample = {{float,tolerance=0.001%}}
 
   Per-minibatch training results must match for each MPI Rank:
     patterns:
       - ^MPI Rank {{integer}}
       - Epoch[{{integer}} of {{integer}}]-Minibatch[{{integer}}-{{integer}}
-      - SamplesSeen = {{integer}}
-      - TrainLossPerSample = {{float,tolerance=0%}}
-      - EvalErr[0]PerSample = {{float,tolerance=0%}}
+      - " * {{integer}}; "
+      - CrossEntropyWithSoftmax = {{float,tolerance=0.1%}}
+      - EvalClassificationError = {{float,tolerance=0.1%}}
 
   DataParallelSGD training parameters must match for each MPI Rank:
     patterns:
       - ^MPI Rank {{integer}}
       - Starting minibatch loop
       - DataParallelSGD training
-      - MyRank = {{integer}}
-      - NumNodes = 4
-      - NumGradientBits = 64
+      - myRank = {{integer}}
+      - numNodes = 4
+      - numGradientBits = 64

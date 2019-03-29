@@ -8,14 +8,30 @@
 
 #include "Basics.h"
 #include "Config.h"
-#include "ScriptableObjects.h"
-#include "DataReader.h"
+#include "CommonMatrix.h"
+#include "ComputationNetwork.h"
+
 
 // ===========================================================================
 // implementations of all the commands of CNTK
 // ===========================================================================
 
+#ifndef let
+#define let const auto
+#endif
+
+using namespace Microsoft::MSR;
 using namespace Microsoft::MSR::CNTK; // TODO: we should not have this in a header
+
+function<ComputationNetworkPtr(DEVICEID_TYPE)> GetCreateNetworkFn(const ScriptableObjects::IConfigRecord& config);
+
+template <class ConfigRecordType, typename ElemType>
+bool TryGetNetworkFactory(const ConfigRecordType& config, function<ComputationNetworkPtr(DEVICEID_TYPE)>& createNetworkFn);
+template <class ConfigRecordType, typename ElemType>
+function<ComputationNetworkPtr(DEVICEID_TYPE)> GetNetworkFactory(const ConfigRecordType& config);
+
+template <class ConfigRecordType, typename ElemType>
+ComputationNetworkPtr GetModelFromConfig(const ConfigRecordType& config, const std::wstring& outputNodeNameConfig, std::vector<std::wstring>& outputNodeNamesVector);
 
 // training (TrainActions.cpp)
 template <class ConfigRecordType, typename ElemType>
@@ -23,7 +39,11 @@ void DoTrain(const ConfigRecordType& config);
 template <typename ElemType>
 void DoAdapt(const ConfigParameters& config);
 template <typename ElemType>
+void DoDumpNodes(const ConfigParameters& config);
+template <typename ElemType>
 void DoEdit(const ConfigParameters& config);
+template <typename ElemType>
+void DoBatchNormalizationStat(const ConfigParameters& config);
 
 // evaluation (EvalActions.cpp)
 template <typename ElemType>
@@ -33,7 +53,7 @@ void DoCrossValidate(const ConfigParameters& config);
 template <typename ElemType>
 void DoWriteOutput(const ConfigParameters& config);
 
-// misc (OtherActions.cp)
+// misc (OtherActions.cpp)
 template <typename ElemType>
 void DoCreateLabelMap(const ConfigParameters& config);
 template <typename ElemType>
@@ -43,6 +63,8 @@ void DoWriteWordAndClassInfo(const ConfigParameters& config);
 template <typename ElemType>
 void DoTopologyPlot(const ConfigParameters& config);
 
-// special purpose (EsotericActions.cp)
+// special purpose (SpecialPurposeActions.cpp)
 template <typename ElemType>
 void DoConvertFromDbn(const ConfigParameters& config);
+template<typename ElemType>
+void DoExportToDbn(const ConfigParameters& config);

@@ -232,11 +232,11 @@ public:
             {
                 const char* senonename = toks[s + 2];
                 key = senonename; // (reuse existing memory)
-                auto iter = statemap.find(key);
-                if (iter == statemap.end())
+                auto iter2 = statemap.find(key);
+                if (iter2 == statemap.end())
                     RuntimeError("simplesenonehmm: unrecognized senone name in line: %s", lines[i]);
-                hmm.senoneids[s] = (unsigned short) iter->second;
-                if (hmm.getsenoneid(s) != iter->second)
+                hmm.senoneids[s] = (unsigned short) iter2->second;
+                if (hmm.getsenoneid(s) != iter2->second)
                     RuntimeError("simplesenonehmm: not enough bits to store senone index in line: %s", lines[i]);
                 // inverse lookup
                 if (senoneid2transPindex[hmm.senoneids[s]] == -2) // no value yet
@@ -291,11 +291,11 @@ public:
     {
         return senoneid2stateindex[senoneid];
     }
-    const size_t getnumsenone() const
+    size_t getnumsenone() const
     {
         return senoneid2stateindex.size();
     }
-    const bool statebelongstohmm(const size_t senoneid, const hmm& hmm) const // reutrn true if one of the states of this hmm == senoneid
+    bool statebelongstohmm(const size_t senoneid, const hmm& hmm) const // reutrn true if one of the states of this hmm == senoneid
     {
         size_t numstates = hmm.getnumstates();
         for (size_t i = 0; i < numstates; i++)
@@ -304,5 +304,5 @@ public:
         return false;
     }
 };
-};
-};
+
+}}

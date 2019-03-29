@@ -14,8 +14,17 @@
 #endif
 #define _SCL_SECURE_NO_WARNINGS // current API of matrix does not allow safe invokations. TODO: change api to proper one.
 
+#ifdef _WIN32
 #include "targetver.h"
+#endif
+
 #include <array>
+
+#ifndef _WIN32
+#define BOOST_TEST_DYN_LINK
+#endif
 #include <boost/test/unit_test.hpp>
+
 #include "constants.h"
 #include "fixtures.h"
+#define HALF_IN_BOOST_TEST

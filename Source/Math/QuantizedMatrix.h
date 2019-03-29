@@ -47,8 +47,11 @@ public:
     }
 };
 
+class MATH_API QuantizedMatrixBase
+{};
+
 template <class ElemType>
-class MATH_API QuantizedMatrix
+class MATH_API QuantizedMatrix : public QuantizedMatrixBase
 {
     typedef typename ValueQuantizer<ElemType>::QWord QWord;
     typedef typename ValueQuantizer<ElemType>::QWordVal QWordVal;
@@ -81,11 +84,11 @@ public:
     }
 
     size_t GetSize() const;
-    char* GetArray() const;
+    char* Buffer() const;
 
     QuantizedColumn<ElemType>* GetQuantizedColumn(size_t colIdx)
     {
-        return (QuantizedColumn<ElemType>*) (&((this->GetArray())[m_qColSize * colIdx]));
+        return (QuantizedColumn<ElemType>*) (&((this->Buffer())[m_qColSize * colIdx]));
     }
 
     Matrix<char>* GetQuantizedData() const
@@ -119,4 +122,5 @@ private:
     template <typename T>
     friend class MatrixQuantizer;
 };
-} } }
+
+}}}

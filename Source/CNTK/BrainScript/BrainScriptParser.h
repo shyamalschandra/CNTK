@@ -20,10 +20,10 @@ using namespace std;
 
 struct SourceFile // content of one source file  (only in this header because TextLocation's private member uses it)
 {
-    /*const*/ wstring path;                                        // where it came from
-    /*const*/ vector<wstring> lines;                               // source code lines
-    SourceFile(wstring location, wstring text);                    // from string, e.g. command line
-    SourceFile(wstring path, const vector<wstring>& includePaths); // from file
+    /*const*/ wstring path;                     // where it came from
+    /*const*/ vector<wstring> lines;            // source code lines
+    SourceFile(wstring location, wstring text); // from string, e.g. command line
+    SourceFile(wstring path);                   // from file
 };
 
 struct TextLocation // position in the text. Lightweight value struct that we can copy around, even into dictionaries etc., for error messages
@@ -37,6 +37,7 @@ struct TextLocation // position in the text. Lightweight value struct that we ca
 
     // helpers for pretty-printing errors: Show source-code line with ...^ under it to mark up the point of error
     static void PrintIssue(const vector<TextLocation>& locations, const wchar_t* errorKind, const wchar_t* kind, const wchar_t* what);
+    static std::wstring CreateIssueMessage(const vector<TextLocation>& locations, const wchar_t* errorKind, const wchar_t* kind, const wchar_t* what);
     static void Trace(TextLocation, const wchar_t* traceKind, const wchar_t* op, const wchar_t* exprPath);
 
     // construction
@@ -65,7 +66,7 @@ class ConfigException : public Microsoft::MSR::ScriptableObjects::ScriptingExcep
 public:
     // Note: All our Error objects use wide strings, which we round-trip through runtime_error as utf8.
     ConfigException(const wstring& msg, TextLocation where)
-        : Microsoft::MSR::ScriptableObjects::ScriptingException(msra::strfun::utf8(msg))
+        : Microsoft::MSR::ScriptableObjects::ScriptingException(Microsoft::MSR::CNTK::ToLegacyString(Microsoft::MSR::CNTK::ToUTF8(msg)))
     {
         locations.push_back(where);
     }
@@ -77,10 +78,14 @@ public:
     }                                        // where the error happened
     virtual const wchar_t* kind() const = 0; // e.g. "warning" or "error"
 
-    // pretty-print this as an error message
-    void /*ScriptingException::*/ PrintError() const
+    wstring GetError(const std::wstring& linePrefix) const override
     {
-        TextLocation::PrintIssue(locations, L"error", kind(), msra::strfun::utf16(what()).c_str());
+        return TextLocation::CreateIssueMessage(locations, linePrefix.c_str(), kind(), Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(what()).c_str());
+    }
+    // pretty-print this as an error message
+    void /*ScriptingException::*/ PrintError(const std::wstring& linePrefix) const override
+    {
+        TextLocation::PrintIssue(locations, linePrefix.c_str(), kind(), Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(what()).c_str());
     }
     void AddLocation(TextLocation where)
     {
@@ -129,12 +134,14 @@ struct Expression
         args.push_back(arg2);
     }
     // diagnostics helper: print the content
-    void Dump(int indent = 0) const;
+    void DumpToStream(wstringstream & treeStream, int indent = 0);
 };
 typedef Expression::ExpressionPtr ExpressionPtr; // circumvent some circular definition problem
 
 // access the parser through one of these functions
-ExpressionPtr ParseConfigDictFromString(wstring text, vector<wstring>&& includePaths);          // parses a list of dictionary members, returns a dictionary expression
-ExpressionPtr ParseConfigDictFromFile(wstring path, vector<wstring>&& includePaths);            // likewise, but from a file path
+ExpressionPtr ParseConfigDictFromString(wstring text, wstring location, vector<wstring>&& includePaths);          // parses a list of dictionary members, returns a dictionary expression
+// TODO: These rvalue references are no longer adding value, change to const<>&
+//ExpressionPtr ParseConfigDictFromFile(wstring path, vector<wstring> includePaths);              // likewise, but from a file path
 ExpressionPtr ParseConfigExpression(const wstring& sourceText, vector<wstring>&& includePaths); // parses a single expression from sourceText, which is meant to contain an include statement, hence includePaths
-} } } // namespaces
+
+}}}

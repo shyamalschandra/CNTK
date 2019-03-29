@@ -1,8 +1,13 @@
 #!/bin/bash
-
+# ----------------------------------------------------------
+# Copyright (c) Microsoft Corporation.  All rights reserved.
+# Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
+# ----------------------------------------------------------
 # Helper script containing common code used by run-test scripts of E2E tests
 
 BinaryPath=$TEST_CNTK_BINARY
+
+export V2_LIB_TESTING=1
 
 if [ "$TEST_DEVICE" == "cpu" ]; then
   CNTKDeviceId=-1
@@ -18,11 +23,28 @@ LogFileName=
 ConfigDir=$TEST_DIR
 RunDir=$TEST_RUN_DIR
 DataDir=$TEST_DATA_DIR
+OutputDir=$TEST_RUN_DIR
 
 MPIMode=0
 MPIArgs=
 
 DeleteExistingModels=1
+DeleteModelsAfterTest=1
+
+# Print info needed by MetricsDriver.py to extract tests metrics
+printHardwareInfo()
+{
+  cpuName=$(cat /proc/cpuinfo 2> /dev/null | grep -m 1 'model name' | cut -d : -f 2- | tr -s " " | cut -c 2-)
+  totalMemory=$(cat /proc/meminfo 2> /dev/null | grep 'MemTotal' | cut -d : -f 2- | tr -s " " | cut -c 2-)
+  nproc=$(nproc)
+
+  # Note that MetricsDriver.py depends on this format
+  echo "CPU info:"
+  echo "    CPU Model Name: $cpuName"
+  echo "    Hardware threads: $nproc"
+  echo "    Total Memory: $totalMemory"
+  echo "-------------------------------------------------------------------"
+}
 
 # Helper function to print and run a command
 run()
@@ -66,16 +88,17 @@ cntkrun()
     ConfigDir=$(cygpath -aw $ConfigDir)
     RunDir=$(cygpath -aw $RunDir)
     DataDir=$(cygpath -aw $DataDir)
+    OutputDir=$(cygpath -aw $OutputDir)
   fi
 
-  CNTKArgs="configFile=$ConfigDir/$configFileName currentDirectory=$DataDir RunDir=$RunDir DataDir=$DataDir ConfigDir=$ConfigDir DeviceId=$CNTKDeviceId $additionalCNTKArgs"
+  CNTKArgs="configFile=$ConfigDir/$configFileName currentDirectory=$DataDir RunDir=$RunDir DataDir=$DataDir ConfigDir=$ConfigDir OutputDir=$OutputDir DeviceId=$CNTKDeviceId timestamping=true $additionalCNTKArgs"
   if [ "$LogFileName" != "" ]; then
     CNTKArgs="$CNTKArgs stderr=$RunDir/$LogFileName"
   fi
 
-  modelsDir=$TEST_RUN_DIR/models
+  modelsDir=$TEST_RUN_DIR/Models
   if [[ $DeleteExistingModels == 1 ]]; then
-    [ -d $modelsDir ] && rm -rf $modelsDir
+    [ -d $modelsDir ] && rm -rf "$modelsDir"
   fi
   mkdir -p $modelsDir || exit $?
 
@@ -84,8 +107,12 @@ cntkrun()
   else
     run "$MPI_BINARY" $MPIArgs $BinaryPath $CNTKArgs
   fi
+  local ExitCode=$?
+  if [[ $DeleteModelsAfterTest == 1 ]]; then
+    [ -d $modelsDir ] && rm -rf "$modelsDir"
+  fi
 
-  return $?
+  return $ExitCode
 }
 
 # Given number of instances, return number of hardware threads we can use per
@@ -112,3 +139,21 @@ cntkmpirun()
   cntkrun "$2" "$3"
   return $?
 }
+
+#Function to check/copy original baselines
+# checkOriginalBaseline <original baseline relative dir> <target dir>
+checkOriginalBaseline()
+{
+  TargetPath=$1
+  OriginRelativePath=$2
+  
+  (cd $TargetPath/$OriginRelativePath && md5sum baseline*) | (cd $TargetPath && md5sum --status -c -)
+  if [ $? != 0 ]; then
+    echo Error: Baselines must match original test. Copy from $OriginalTestDir.
+    exit 1
+    #cp $TargetPath/$OriginRelativePath/baseline* $TargetPath
+  fi
+}
+
+# place printHardwareInfo here, so that all tests print it
+printHardwareInfo

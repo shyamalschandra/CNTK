@@ -9,17 +9,15 @@ template <class ElemType>
 class IDistGradAggregator
 {
 public:
-    IDistGradAggregator(MPIWrapper* mpi)
+    IDistGradAggregator(const MPIWrapperPtr& mpi)
         : m_mpi(mpi)
-    {
-    }
+    {}
 
     virtual ~IDistGradAggregator()
-    {
-    }
+    {}
 
     // Returns a boolean indicating if any samples were processed
-    virtual bool AggregateGradients(const std::vector<Matrix<ElemType>*>& gradients, DistGradHeader* headerCPU, int epochNumber) = 0;
+    virtual bool AggregateGradients(const std::vector<Matrix<ElemType>*>& gradients, DistGradHeader* headerCPU, bool resetState) = 0;
 
     size_t NumProc()
     {
@@ -37,7 +35,7 @@ public:
     }
 
 protected:
-    MPIWrapper* m_mpi;
+    MPIWrapperPtr m_mpi;
 };
 
 #define UsingIDistGradAggregatorMembers           \

@@ -1,0 +1,838 @@
+CPU info:
+    CPU Model Name: Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz
+    Hardware threads: 12
+    Total Memory: 57700428 kB
+-------------------------------------------------------------------
+=== Running mpiexec -n 2 /home/ubuntu/workspace/build/gpu/release/bin/cntk configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu DeviceId=-1 timestamping=true numCPUThreads=6 stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+CNTK 2.3.1+ (HEAD 294890, Jan  8 2018 16:47:50) at 2018/01/09 01:22:15
+
+/home/ubuntu/workspace/build/gpu/release/bin/cntk  configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk  currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout  OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DeviceId=-1  timestamping=true  numCPUThreads=6  stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+CNTK 2.3.1+ (HEAD 294890, Jan  8 2018 16:47:50) at 2018/01/09 01:22:15
+
+/home/ubuntu/workspace/build/gpu/release/bin/cntk  configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk  currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout  OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DeviceId=-1  timestamping=true  numCPUThreads=6  stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+Changed current directory to /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data
+Changed current directory to /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data
+--------------------------------------------------------------------------
+[[7250,1],1]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
+
+Module: OpenFabrics (openib)
+  Host: 17c29a606870
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+ping [requestnodes (before change)]: 2 nodes pinging each other
+ping [requestnodes (before change)]: 2 nodes pinging each other
+ping [requestnodes (after change)]: 2 nodes pinging each other
+ping [requestnodes (after change)]: 2 nodes pinging each other
+requestnodes [MPIWrapperMpi]: using 2 out of 2 MPI nodes on a single host (2 requested); we (1) are in (participating)
+ping [mpihelper]: 2 nodes pinging each other
+requestnodes [MPIWrapperMpi]: using 2 out of 2 MPI nodes on a single host (2 requested); we (0) are in (participating)
+ping [mpihelper]: 2 nodes pinging each other
+01/09/2018 01:22:15: Redirecting stderr to file /tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr_speechTrain.logrank0
+01/09/2018 01:22:15: Redirecting stderr to file /tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr_speechTrain.logrank1
+[17c29a606870:00102] 1 more process has sent help message help-mpi-btl-base.txt / btl:no-nics
+[17c29a606870:00102] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+MPI Rank 0: CNTK 2.3.1+ (HEAD 294890, Jan  8 2018 16:47:50) at 2018/01/09 01:22:15
+MPI Rank 0: 
+MPI Rank 0: /home/ubuntu/workspace/build/gpu/release/bin/cntk  configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk  currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout  OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DeviceId=-1  timestamping=true  numCPUThreads=6  stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+MPI Rank 0: 01/09/2018 01:22:15: -------------------------------------------------------------------
+MPI Rank 0: 01/09/2018 01:22:15: Build info: 
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:15: 		Built time: Jan  8 2018 16:42:01
+MPI Rank 0: 01/09/2018 01:22:15: 		Last modified date: Mon Jan  8 16:40:18 2018
+MPI Rank 0: 01/09/2018 01:22:15: 		Build type: release
+MPI Rank 0: 01/09/2018 01:22:15: 		Build target: GPU
+MPI Rank 0: 01/09/2018 01:22:15: 		With ASGD: yes
+MPI Rank 0: 01/09/2018 01:22:15: 		Math lib: mkl
+MPI Rank 0: 01/09/2018 01:22:15: 		CUDA version: 9.0.0
+MPI Rank 0: 01/09/2018 01:22:15: 		CUDNN version: 7.0.4
+MPI Rank 0: 01/09/2018 01:22:15: 		Build Branch: HEAD
+MPI Rank 0: 01/09/2018 01:22:15: 		Build SHA1: 294890cb1f83fc31a56bd2cc1fc1fec34894b71c
+MPI Rank 0: 01/09/2018 01:22:15: 		MPI distribution: Open MPI
+MPI Rank 0: 01/09/2018 01:22:15: 		MPI version: 1.10.7
+MPI Rank 0: 01/09/2018 01:22:15: -------------------------------------------------------------------
+MPI Rank 0: 01/09/2018 01:22:15: -------------------------------------------------------------------
+MPI Rank 0: 01/09/2018 01:22:15: GPU info:
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:15: 		Device[0]: cores = 3072; computeCapability = 5.2; type = "Tesla M60"; total memory = 8123 MB; free memory = 8112 MB
+MPI Rank 0: 01/09/2018 01:22:15: -------------------------------------------------------------------
+MPI Rank 0: 01/09/2018 01:22:15: Using 6 CPU threads.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:15: ##############################################################################
+MPI Rank 0: 01/09/2018 01:22:15: #                                                                            #
+MPI Rank 0: 01/09/2018 01:22:15: # speechTrain command (train action)                                         #
+MPI Rank 0: 01/09/2018 01:22:15: #                                                                            #
+MPI Rank 0: 01/09/2018 01:22:15: ##############################################################################
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:15: 
+MPI Rank 0: Creating virgin network.
+MPI Rank 0: 
+MPI Rank 0: Post-processing network...
+MPI Rank 0: 
+MPI Rank 0: 6 roots:
+MPI Rank 0: 	ce = CrossEntropyWithSoftmax()
+MPI Rank 0: 	err = ClassificationError()
+MPI Rank 0: 	featNorm.invStdDev = InvStdDev()
+MPI Rank 0: 	featNorm.mean = Mean()
+MPI Rank 0: 	logPrior._ = Mean()
+MPI Rank 0: 	scaledLogLikelihood = Minus()
+MPI Rank 0: 
+MPI Rank 0: Validating network. 37 nodes to process in pass 1.
+MPI Rank 0: 
+MPI Rank 0: Validating --> labels = InputValue() :  -> [132 x *]
+MPI Rank 0: Validating --> outLayer.W = LearnableParameter() :  -> [132 x 512]
+MPI Rank 0: Validating --> link = LearnableParameter() :  -> [1 x 1]
+MPI Rank 0: Validating --> finalHiddenToPlus.scalarScalingFactor = Dropout (link) : [1 x 1] -> [1 x 1]
+MPI Rank 0: Validating --> layers[3].Eh._._.W = LearnableParameter() :  -> [512 x 512]
+MPI Rank 0: Validating --> layers[2].Eh._._.W = LearnableParameter() :  -> [512 x 512]
+MPI Rank 0: Validating --> layers[1].Eh._._.W = LearnableParameter() :  -> [512 x 363]
+MPI Rank 0: Validating --> features = InputValue() :  -> [363 x *]
+MPI Rank 0: Validating --> featNorm.mean = Mean (features) : [363 x *] -> [363]
+MPI Rank 0: Validating --> featNorm.ElementTimesArgs[0] = Minus (features, featNorm.mean) : [363 x *], [363] -> [363 x *]
+MPI Rank 0: Validating --> featNorm.invStdDev = InvStdDev (features) : [363 x *] -> [363]
+MPI Rank 0: Validating --> featNorm = ElementTimes (featNorm.ElementTimesArgs[0], featNorm.invStdDev) : [363 x *], [363] -> [363 x *]
+MPI Rank 0: Validating --> layers[1].Eh._._.z.PlusArgs[0] = Times (layers[1].Eh._._.W, featNorm) : [512 x 363], [363 x *] -> [512 x *]
+MPI Rank 0: Validating --> layers[1].Eh._._.B = LearnableParameter() :  -> [512 x 1]
+MPI Rank 0: Validating --> layers[1].Eh._._.z = Plus (layers[1].Eh._._.z.PlusArgs[0], layers[1].Eh._._.B) : [512 x *], [512 x 1] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[1].Eh._ = Sigmoid (layers[1].Eh._._.z) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[1].Eh = Dropout (layers[1].Eh._) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[2].Eh._._.z.PlusArgs[0] = Times (layers[2].Eh._._.W, layers[1].Eh) : [512 x 512], [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[2].Eh._._.B = LearnableParameter() :  -> [512 x 1]
+MPI Rank 0: Validating --> layers[2].Eh._._.z = Plus (layers[2].Eh._._.z.PlusArgs[0], layers[2].Eh._._.B) : [512 x 1 x *], [512 x 1] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[2].Eh._ = Sigmoid (layers[2].Eh._._.z) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[2].Eh = Dropout (layers[2].Eh._) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[3].Eh._._.z.PlusArgs[0] = Times (layers[3].Eh._._.W, layers[2].Eh) : [512 x 512], [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[3].Eh._._.B = LearnableParameter() :  -> [512 x 1]
+MPI Rank 0: Validating --> layers[3].Eh._._.z = Plus (layers[3].Eh._._.z.PlusArgs[0], layers[3].Eh._._.B) : [512 x 1 x *], [512 x 1] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[3].Eh._ = Sigmoid (layers[3].Eh._._.z) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> layers[3].Eh = Dropout (layers[3].Eh._) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> finalHiddenToPlus = ElementTimes (finalHiddenToPlus.scalarScalingFactor, layers[3].Eh) : [1 x 1], [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> outLayer.in = Plus (finalHiddenToPlus, layers[2].Eh) : [512 x 1 x *], [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 0: Validating --> outLayer.z.PlusArgs[0] = Times (outLayer.W, outLayer.in) : [132 x 512], [512 x 1 x *] -> [132 x 1 x *]
+MPI Rank 0: Validating --> outLayer.B = LearnableParameter() :  -> [132 x 1]
+MPI Rank 0: Validating --> outZ = Plus (outLayer.z.PlusArgs[0], outLayer.B) : [132 x 1 x *], [132 x 1] -> [132 x 1 x *]
+MPI Rank 0: Validating --> ce = CrossEntropyWithSoftmax (labels, outZ) : [132 x *], [132 x 1 x *] -> [1]
+MPI Rank 0: Validating --> err = ClassificationError (labels, outZ) : [132 x *], [132 x 1 x *] -> [1]
+MPI Rank 0: Validating --> logPrior._ = Mean (labels) : [132 x *] -> [132]
+MPI Rank 0: Validating --> logPrior = Log (logPrior._) : [132] -> [132]
+MPI Rank 0: Validating --> scaledLogLikelihood = Minus (outZ, logPrior) : [132 x 1 x *], [132] -> [132 x 1 x *]
+MPI Rank 0: 
+MPI Rank 0: Validating network. 26 nodes to process in pass 2.
+MPI Rank 0: 
+MPI Rank 0: 
+MPI Rank 0: Validating network, final pass.
+MPI Rank 0: 
+MPI Rank 0: 
+MPI Rank 0: 
+MPI Rank 0: 
+MPI Rank 0: Post-processing network complete.
+MPI Rank 0: 
+MPI Rank 0: reading script file glob_0000.scp ... 948 entries
+MPI Rank 0: total 132 state names in state list /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data/state.list
+MPI Rank 0: htkmlfreader: reading MLF file /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data/glob_0000.mlf ... total 948 entries
+MPI Rank 0: ...............................................................................................feature set 0: 252734 frames in 948 out of 948 utterances
+MPI Rank 0: label set 0: 129 classes
+MPI Rank 0: minibatchutterancesource: 948 utterances grouped into 3 chunks, av. chunk size: 316.0 utterances, 84244.7 frames
+MPI Rank 0: 01/09/2018 01:22:15: 
+MPI Rank 0: Model has 37 nodes. Using CPU.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:15: Training criterion:   ce = CrossEntropyWithSoftmax
+MPI Rank 0: 01/09/2018 01:22:15: Evaluation criterion: err = ClassificationError
+MPI Rank 0: 
+MPI Rank 0: 
+MPI Rank 0: Allocating matrices for forward and/or backward propagation.
+MPI Rank 0: 
+MPI Rank 0: Gradient Memory Aliasing: 8 are aliased.
+MPI Rank 0: 	outLayer.z.PlusArgs[0] (gradient) reuses outZ (gradient)
+MPI Rank 0: 	layers[2].Eh._._.z.PlusArgs[0] (gradient) reuses layers[2].Eh._._.z (gradient)
+MPI Rank 0: 	layers[3].Eh._._.z.PlusArgs[0] (gradient) reuses layers[3].Eh._._.z (gradient)
+MPI Rank 0: 	finalHiddenToPlus (gradient) reuses outLayer.in (gradient)
+MPI Rank 0: 
+MPI Rank 0: Memory Sharing: Out of 62 matrices, 37 are shared as 9, and 25 are not shared.
+MPI Rank 0: 
+MPI Rank 0: Here are the ones that share memory:
+MPI Rank 0: 	{ finalHiddenToPlus : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[1].Eh._ : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[1].Eh._._.B : [512 x 1] (gradient)
+MPI Rank 0: 	  layers[2].Eh._ : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[3].Eh._ : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  outLayer.in : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  outZ : [132 x 1 x *] }
+MPI Rank 0: 	{ layers[1].Eh._._.z : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[3].Eh._ : [512 x 1 x *]
+MPI Rank 0: 	  layers[3].Eh._._.z.PlusArgs[0] : [512 x 1 x *] }
+MPI Rank 0: 	{ featNorm.ElementTimesArgs[0] : [363 x *]
+MPI Rank 0: 	  layers[1].Eh._ : [512 x 1 x *]
+MPI Rank 0: 	  layers[1].Eh._._.z.PlusArgs[0] : [512 x *] }
+MPI Rank 0: 	{ layers[2].Eh : [512 x 1 x *]
+MPI Rank 0: 	  layers[2].Eh._._.B : [512 x 1] (gradient)
+MPI Rank 0: 	  layers[2].Eh._._.z : [512 x 1 x *] }
+MPI Rank 0: 	{ layers[2].Eh._._.W : [512 x 512] (gradient)
+MPI Rank 0: 	  layers[3].Eh : [512 x 1 x *]
+MPI Rank 0: 	  layers[3].Eh._._.z : [512 x 1 x *] }
+MPI Rank 0: 	{ layers[1].Eh : [512 x 1 x *]
+MPI Rank 0: 	  layers[1].Eh._._.z : [512 x 1 x *] }
+MPI Rank 0: 	{ layers[1].Eh._._.W : [512 x 363] (gradient)
+MPI Rank 0: 	  layers[2].Eh._._.z : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[2].Eh._._.z.PlusArgs[0] : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[3].Eh : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[3].Eh._._.z : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[3].Eh._._.z.PlusArgs[0] : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  outLayer.in : [512 x 1 x *] }
+MPI Rank 0: 	{ layers[1].Eh._._.z.PlusArgs[0] : [512 x *] (gradient)
+MPI Rank 0: 	  layers[2].Eh._ : [512 x 1 x *]
+MPI Rank 0: 	  layers[2].Eh._._.z.PlusArgs[0] : [512 x 1 x *] }
+MPI Rank 0: 	{ finalHiddenToPlus : [512 x 1 x *]
+MPI Rank 0: 	  layers[1].Eh : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  layers[2].Eh : [512 x 1 x *] (gradient)
+MPI Rank 0: 	  outLayer.z.PlusArgs[0] : [132 x 1 x *]
+MPI Rank 0: 	  outLayer.z.PlusArgs[0] : [132 x 1 x *] (gradient)
+MPI Rank 0: 	  outZ : [132 x 1 x *] (gradient) }
+MPI Rank 0: 
+MPI Rank 0: Here are the ones that don't share memory:
+MPI Rank 0: 	{scaledLogLikelihood : [132 x 1 x *]}
+MPI Rank 0: 	{layers[3].Eh._._.W : [512 x 512]}
+MPI Rank 0: 	{logPrior._ : [132]}
+MPI Rank 0: 	{labels : [132 x *]}
+MPI Rank 0: 	{outLayer.W : [132 x 512]}
+MPI Rank 0: 	{outLayer.B : [132 x 1]}
+MPI Rank 0: 	{ce : [1] (gradient)}
+MPI Rank 0: 	{finalHiddenToPlus.scalarScalingFactor : [1 x 1]}
+MPI Rank 0: 	{ce : [1]}
+MPI Rank 0: 	{layers[3].Eh._._.B : [512 x 1] (gradient)}
+MPI Rank 0: 	{outLayer.W : [132 x 512] (gradient)}
+MPI Rank 0: 	{link : [1 x 1]}
+MPI Rank 0: 	{outLayer.B : [132 x 1] (gradient)}
+MPI Rank 0: 	{featNorm : [363 x *]}
+MPI Rank 0: 	{layers[3].Eh._._.B : [512 x 1]}
+MPI Rank 0: 	{layers[3].Eh._._.W : [512 x 512] (gradient)}
+MPI Rank 0: 	{layers[2].Eh._._.B : [512 x 1]}
+MPI Rank 0: 	{layers[2].Eh._._.W : [512 x 512]}
+MPI Rank 0: 	{featNorm.invStdDev : [363]}
+MPI Rank 0: 	{featNorm.mean : [363]}
+MPI Rank 0: 	{features : [363 x *]}
+MPI Rank 0: 	{layers[1].Eh._._.W : [512 x 363]}
+MPI Rank 0: 	{layers[1].Eh._._.B : [512 x 1]}
+MPI Rank 0: 	{err : [1]}
+MPI Rank 0: 	{logPrior : [132]}
+MPI Rank 0: 
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:15: Training 779396 parameters in 8 out of 8 parameter tensors and 25 nodes with gradient:
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:15: 	Node 'layers[1].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 0: 01/09/2018 01:22:15: 	Node 'layers[1].Eh._._.W' (LearnableParameter operation) : [512 x 363]
+MPI Rank 0: 01/09/2018 01:22:15: 	Node 'layers[2].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 0: 01/09/2018 01:22:15: 	Node 'layers[2].Eh._._.W' (LearnableParameter operation) : [512 x 512]
+MPI Rank 0: 01/09/2018 01:22:15: 	Node 'layers[3].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 0: 01/09/2018 01:22:15: 	Node 'layers[3].Eh._._.W' (LearnableParameter operation) : [512 x 512]
+MPI Rank 0: 01/09/2018 01:22:15: 	Node 'outLayer.B' (LearnableParameter operation) : [132 x 1]
+MPI Rank 0: 01/09/2018 01:22:15: 	Node 'outLayer.W' (LearnableParameter operation) : [132 x 512]
+MPI Rank 0: 
+MPI Rank 0: Initializing dataParallelSGD with FP32 aggregation.
+MPI Rank 0: NcclComm: disabled, at least one rank using CPU device
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:16: Precomputing --> 3 PreCompute nodes found.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:16: 	featNorm.mean = Mean()
+MPI Rank 0: 01/09/2018 01:22:16: 	featNorm.invStdDev = InvStdDev()
+MPI Rank 0: 01/09/2018 01:22:16: 	logPrior._ = Mean()
+MPI Rank 0: minibatchiterator: epoch 0: frames [0..252734] (first utterance at frame 0), data subset 0 of 1, with 1 datapasses
+MPI Rank 0: requiredata: determined feature kind as 33-dimensional 'USER' with frame shift 10.0 ms
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:21: Precomputing --> Completed.
+MPI Rank 0: 
+MPI Rank 0: Setting dropout rate to 0.1.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:21: Starting Epoch 1: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 0: minibatchiterator: epoch 0: frames [0..20480] (first utterance at frame 0), data subset 0 of 1, with 1 datapasses
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:21: Starting minibatch loop.
+MPI Rank 0: 01/09/2018 01:22:22:  Epoch[ 1 of 5]-Minibatch[   1-  10, 12.50%]: ce = 7.09803238 * 2560; err = 0.93710938 * 2560; time = 1.3634s; samplesPerSecond = 1877.7
+MPI Rank 0: 01/09/2018 01:22:24:  Epoch[ 1 of 5]-Minibatch[  11-  20, 25.00%]: ce = 8.23823471 * 2560; err = 0.93593750 * 2560; time = 1.2596s; samplesPerSecond = 2032.3
+MPI Rank 0: 01/09/2018 01:22:24:  Epoch[ 1 of 5]-Minibatch[  21-  30, 37.50%]: ce = 5.51260223 * 2560; err = 0.92656250 * 2560; time = 0.9267s; samplesPerSecond = 2762.5
+MPI Rank 0: 01/09/2018 01:22:26:  Epoch[ 1 of 5]-Minibatch[  31-  40, 50.00%]: ce = 4.41263580 * 2560; err = 0.89882812 * 2560; time = 1.1413s; samplesPerSecond = 2243.1
+MPI Rank 0: 01/09/2018 01:22:27:  Epoch[ 1 of 5]-Minibatch[  41-  50, 62.50%]: ce = 3.98718262 * 2560; err = 0.89296875 * 2560; time = 0.9435s; samplesPerSecond = 2713.4
+MPI Rank 0: 01/09/2018 01:22:28:  Epoch[ 1 of 5]-Minibatch[  51-  60, 75.00%]: ce = 3.92807617 * 2560; err = 0.89218750 * 2560; time = 1.1298s; samplesPerSecond = 2265.8
+MPI Rank 0: 01/09/2018 01:22:29:  Epoch[ 1 of 5]-Minibatch[  61-  70, 87.50%]: ce = 4.03670044 * 2560; err = 0.88203125 * 2560; time = 0.9272s; samplesPerSecond = 2761.0
+MPI Rank 0: 01/09/2018 01:22:30:  Epoch[ 1 of 5]-Minibatch[  71-  80, 100.00%]: ce = 3.96593018 * 2560; err = 0.87695312 * 2560; time = 0.9182s; samplesPerSecond = 2788.1
+MPI Rank 0: 01/09/2018 01:22:30: Finished Epoch[ 1 of 5]: [Training] ce = 5.14742432 * 20480; err = 0.90532227 * 20480; totalSamplesSeen = 20480; learningRatePerSample = 0.001953125; epochTime=8.61283s
+MPI Rank 0: 01/09/2018 01:22:30: SGD: Saving checkpoint model '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn.1'
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:30: Starting Epoch 2: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 0: minibatchiterator: epoch 1: frames [20480..40960] (first utterance at frame 20480), data subset 0 of 2, with 1 datapasses
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:30: Starting minibatch loop, DataParallelSGD training (myRank = 0, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 0: 01/09/2018 01:22:31:  Epoch[ 2 of 5]-Minibatch[   1-  10, 12.50%]: ce = 3.92552627 * 2560; err = 0.86718750 * 2560; time = 1.6520s; samplesPerSecond = 1549.7
+MPI Rank 0: 01/09/2018 01:22:33:  Epoch[ 2 of 5]-Minibatch[  11-  20, 25.00%]: ce = 3.85534867 * 2560; err = 0.87812500 * 2560; time = 1.6945s; samplesPerSecond = 1510.8
+MPI Rank 0: 01/09/2018 01:22:35:  Epoch[ 2 of 5]-Minibatch[  21-  30, 37.50%]: ce = 3.82867713 * 2560; err = 0.88085938 * 2560; time = 1.6572s; samplesPerSecond = 1544.8
+MPI Rank 0: 01/09/2018 01:22:37:  Epoch[ 2 of 5]-Minibatch[  31-  40, 50.00%]: ce = 3.73499271 * 2560; err = 0.83906250 * 2560; time = 2.1452s; samplesPerSecond = 1193.4
+MPI Rank 0: 01/09/2018 01:22:39:  Epoch[ 2 of 5]-Minibatch[  41-  50, 62.50%]: ce = 3.64005697 * 2560; err = 0.83437500 * 2560; time = 1.9829s; samplesPerSecond = 1291.0
+MPI Rank 0: 01/09/2018 01:22:41:  Epoch[ 2 of 5]-Minibatch[  51-  60, 75.00%]: ce = 3.48904814 * 2560; err = 0.80312500 * 2560; time = 1.7820s; samplesPerSecond = 1436.6
+MPI Rank 0: 01/09/2018 01:22:42:  Epoch[ 2 of 5]-Minibatch[  61-  70, 87.50%]: ce = 3.39377885 * 2560; err = 0.79531250 * 2560; time = 1.8103s; samplesPerSecond = 1414.1
+MPI Rank 0: 01/09/2018 01:22:44:  Epoch[ 2 of 5]-Minibatch[  71-  80, 100.00%]: ce = 3.38436491 * 2560; err = 0.80859375 * 2560; time = 1.5772s; samplesPerSecond = 1623.2
+MPI Rank 0: 01/09/2018 01:22:44: Finished Epoch[ 2 of 5]: [Training] ce = 3.65647421 * 20480; err = 0.83833008 * 20480; totalSamplesSeen = 40960; learningRatePerSample = 0.001953125; epochTime=14.3985s
+MPI Rank 0: 01/09/2018 01:22:44: SGD: Saving checkpoint model '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn.2'
+MPI Rank 0: Setting dropout rate to 0.15.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:44: Starting Epoch 3: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 0: minibatchiterator: epoch 2: frames [40960..61440] (first utterance at frame 40960), data subset 0 of 2, with 1 datapasses
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:44: Starting minibatch loop, DataParallelSGD training (myRank = 0, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 0: 01/09/2018 01:22:46:  Epoch[ 3 of 5]-Minibatch[   1-  10, 12.50%]: ce = 3.28826752 * 2560; err = 0.78359375 * 2560; time = 1.9910s; samplesPerSecond = 1285.8
+MPI Rank 0: 01/09/2018 01:22:48:  Epoch[ 3 of 5]-Minibatch[  11-  20, 25.00%]: ce = 3.21086277 * 2560; err = 0.78125000 * 2560; time = 1.7108s; samplesPerSecond = 1496.4
+MPI Rank 0: 01/09/2018 01:22:50:  Epoch[ 3 of 5]-Minibatch[  21-  30, 37.50%]: ce = 3.19726100 * 2560; err = 0.76367188 * 2560; time = 1.7300s; samplesPerSecond = 1479.7
+MPI Rank 0: 01/09/2018 01:22:52:  Epoch[ 3 of 5]-Minibatch[  31-  40, 50.00%]: ce = 3.22552291 * 2560; err = 0.77890625 * 2560; time = 1.8044s; samplesPerSecond = 1418.8
+MPI Rank 0: 01/09/2018 01:22:53:  Epoch[ 3 of 5]-Minibatch[  41-  50, 62.50%]: ce = 3.11887438 * 2560; err = 0.75898438 * 2560; time = 1.4504s; samplesPerSecond = 1765.0
+MPI Rank 0: 01/09/2018 01:22:55:  Epoch[ 3 of 5]-Minibatch[  51-  60, 75.00%]: ce = 3.12276197 * 2560; err = 0.75312500 * 2560; time = 1.7043s; samplesPerSecond = 1502.1
+MPI Rank 0: 01/09/2018 01:22:56:  Epoch[ 3 of 5]-Minibatch[  61-  70, 87.50%]: ce = 3.02701902 * 2560; err = 0.74218750 * 2560; time = 1.6260s; samplesPerSecond = 1574.4
+MPI Rank 0: 01/09/2018 01:22:58:  Epoch[ 3 of 5]-Minibatch[  71-  80, 100.00%]: ce = 3.00723931 * 2560; err = 0.74414062 * 2560; time = 1.8070s; samplesPerSecond = 1416.7
+MPI Rank 0: 01/09/2018 01:22:58: Finished Epoch[ 3 of 5]: [Training] ce = 3.14972611 * 20480; err = 0.76323242 * 20480; totalSamplesSeen = 61440; learningRatePerSample = 0.001953125; epochTime=14.031s
+MPI Rank 0: 01/09/2018 01:22:58: SGD: Saving checkpoint model '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn.3'
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:58: Starting Epoch 4: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 0: minibatchiterator: epoch 3: frames [61440..81920] (first utterance at frame 61440), data subset 0 of 2, with 1 datapasses
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:22:58: Starting minibatch loop, DataParallelSGD training (myRank = 0, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 0: 01/09/2018 01:23:00:  Epoch[ 4 of 5]-Minibatch[   1-  10, 12.50%]: ce = 2.92042874 * 2560; err = 0.72656250 * 2560; time = 1.5137s; samplesPerSecond = 1691.2
+MPI Rank 0: 01/09/2018 01:23:02:  Epoch[ 4 of 5]-Minibatch[  11-  20, 25.00%]: ce = 2.84300730 * 2560; err = 0.69726562 * 2560; time = 1.7010s; samplesPerSecond = 1505.0
+MPI Rank 0: 01/09/2018 01:23:03:  Epoch[ 4 of 5]-Minibatch[  21-  30, 37.50%]: ce = 2.82612489 * 2560; err = 0.70000000 * 2560; time = 1.8218s; samplesPerSecond = 1405.2
+MPI Rank 0: 01/09/2018 01:23:05:  Epoch[ 4 of 5]-Minibatch[  31-  40, 50.00%]: ce = 2.84309925 * 2560; err = 0.70664063 * 2560; time = 1.8219s; samplesPerSecond = 1405.1
+MPI Rank 0: 01/09/2018 01:23:07:  Epoch[ 4 of 5]-Minibatch[  41-  50, 62.50%]: ce = 2.68966990 * 2560; err = 0.68789062 * 2560; time = 1.5662s; samplesPerSecond = 1634.5
+MPI Rank 0: 01/09/2018 01:23:08:  Epoch[ 4 of 5]-Minibatch[  51-  60, 75.00%]: ce = 2.70690113 * 2560; err = 0.67968750 * 2560; time = 1.3449s; samplesPerSecond = 1903.4
+MPI Rank 0: 01/09/2018 01:23:10:  Epoch[ 4 of 5]-Minibatch[  61-  70, 87.50%]: ce = 2.70273262 * 2560; err = 0.69531250 * 2560; time = 1.8599s; samplesPerSecond = 1376.4
+MPI Rank 0: 01/09/2018 01:23:12:  Epoch[ 4 of 5]-Minibatch[  71-  80, 100.00%]: ce = 2.67516232 * 2560; err = 0.68281250 * 2560; time = 1.6652s; samplesPerSecond = 1537.3
+MPI Rank 0: 01/09/2018 01:23:12: Finished Epoch[ 4 of 5]: [Training] ce = 2.77589077 * 20480; err = 0.69702148 * 20480; totalSamplesSeen = 81920; learningRatePerSample = 0.001953125; epochTime=13.39s
+MPI Rank 0: 01/09/2018 01:23:12: SGD: Saving checkpoint model '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn.4'
+MPI Rank 0: Setting dropout rate to 0.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:12: Starting Epoch 5: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 0: minibatchiterator: epoch 4: frames [81920..102400] (first utterance at frame 81920), data subset 0 of 2, with 1 datapasses
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:12: Starting minibatch loop, DataParallelSGD training (myRank = 0, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 0: 01/09/2018 01:23:13:  Epoch[ 5 of 5]-Minibatch[   1-  10, 12.50%]: ce = 2.53175135 * 2560; err = 0.63320312 * 2560; time = 1.4542s; samplesPerSecond = 1760.4
+MPI Rank 0: 01/09/2018 01:23:15:  Epoch[ 5 of 5]-Minibatch[  11-  20, 25.00%]: ce = 2.52829936 * 2560; err = 0.65351563 * 2560; time = 2.0557s; samplesPerSecond = 1245.3
+MPI Rank 0: 01/09/2018 01:23:17:  Epoch[ 5 of 5]-Minibatch[  21-  30, 37.50%]: ce = 2.41131774 * 2560; err = 0.63281250 * 2560; time = 1.5232s; samplesPerSecond = 1680.7
+MPI Rank 0: 01/09/2018 01:23:19:  Epoch[ 5 of 5]-Minibatch[  31-  40, 50.00%]: ce = 2.44102817 * 2560; err = 0.63085938 * 2560; time = 1.5862s; samplesPerSecond = 1613.9
+MPI Rank 0: 01/09/2018 01:23:20:  Epoch[ 5 of 5]-Minibatch[  41-  50, 62.50%]: ce = 2.37801606 * 2560; err = 0.61015625 * 2560; time = 1.2288s; samplesPerSecond = 2083.3
+MPI Rank 0: 01/09/2018 01:23:21:  Epoch[ 5 of 5]-Minibatch[  51-  60, 75.00%]: ce = 2.27915046 * 2560; err = 0.59218750 * 2560; time = 1.6259s; samplesPerSecond = 1574.5
+MPI Rank 0: 01/09/2018 01:23:23:  Epoch[ 5 of 5]-Minibatch[  61-  70, 87.50%]: ce = 2.33015380 * 2560; err = 0.60000000 * 2560; time = 1.8745s; samplesPerSecond = 1365.7
+MPI Rank 0: 01/09/2018 01:23:25:  Epoch[ 5 of 5]-Minibatch[  71-  80, 100.00%]: ce = 2.26812986 * 2560; err = 0.59765625 * 2560; time = 1.9395s; samplesPerSecond = 1319.9
+MPI Rank 0: 01/09/2018 01:23:25: Finished Epoch[ 5 of 5]: [Training] ce = 2.39598085 * 20480; err = 0.61879883 * 20480; totalSamplesSeen = 102400; learningRatePerSample = 0.001953125; epochTime=13.3453s
+MPI Rank 0: 01/09/2018 01:23:25: SGD: Saving checkpoint model '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn'
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:25: Action "train" complete.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:25: __COMPLETED__
+MPI Rank 1: CNTK 2.3.1+ (HEAD 294890, Jan  8 2018 16:47:50) at 2018/01/09 01:22:15
+MPI Rank 1: 
+MPI Rank 1: /home/ubuntu/workspace/build/gpu/release/bin/cntk  configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk  currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout  OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DeviceId=-1  timestamping=true  numCPUThreads=6  stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+MPI Rank 1: 01/09/2018 01:22:15: -------------------------------------------------------------------
+MPI Rank 1: 01/09/2018 01:22:15: Build info: 
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:15: 		Built time: Jan  8 2018 16:42:01
+MPI Rank 1: 01/09/2018 01:22:15: 		Last modified date: Mon Jan  8 16:40:18 2018
+MPI Rank 1: 01/09/2018 01:22:15: 		Build type: release
+MPI Rank 1: 01/09/2018 01:22:15: 		Build target: GPU
+MPI Rank 1: 01/09/2018 01:22:15: 		With ASGD: yes
+MPI Rank 1: 01/09/2018 01:22:15: 		Math lib: mkl
+MPI Rank 1: 01/09/2018 01:22:15: 		CUDA version: 9.0.0
+MPI Rank 1: 01/09/2018 01:22:15: 		CUDNN version: 7.0.4
+MPI Rank 1: 01/09/2018 01:22:15: 		Build Branch: HEAD
+MPI Rank 1: 01/09/2018 01:22:15: 		Build SHA1: 294890cb1f83fc31a56bd2cc1fc1fec34894b71c
+MPI Rank 1: 01/09/2018 01:22:15: 		MPI distribution: Open MPI
+MPI Rank 1: 01/09/2018 01:22:15: 		MPI version: 1.10.7
+MPI Rank 1: 01/09/2018 01:22:15: -------------------------------------------------------------------
+MPI Rank 1: 01/09/2018 01:22:15: -------------------------------------------------------------------
+MPI Rank 1: 01/09/2018 01:22:15: GPU info:
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:15: 		Device[0]: cores = 3072; computeCapability = 5.2; type = "Tesla M60"; total memory = 8123 MB; free memory = 8029 MB
+MPI Rank 1: 01/09/2018 01:22:15: -------------------------------------------------------------------
+MPI Rank 1: 01/09/2018 01:22:15: Using 6 CPU threads.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:15: ##############################################################################
+MPI Rank 1: 01/09/2018 01:22:15: #                                                                            #
+MPI Rank 1: 01/09/2018 01:22:15: # speechTrain command (train action)                                         #
+MPI Rank 1: 01/09/2018 01:22:15: #                                                                            #
+MPI Rank 1: 01/09/2018 01:22:15: ##############################################################################
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:15: 
+MPI Rank 1: Creating virgin network.
+MPI Rank 1: 
+MPI Rank 1: Post-processing network...
+MPI Rank 1: 
+MPI Rank 1: 6 roots:
+MPI Rank 1: 	ce = CrossEntropyWithSoftmax()
+MPI Rank 1: 	err = ClassificationError()
+MPI Rank 1: 	featNorm.invStdDev = InvStdDev()
+MPI Rank 1: 	featNorm.mean = Mean()
+MPI Rank 1: 	logPrior._ = Mean()
+MPI Rank 1: 	scaledLogLikelihood = Minus()
+MPI Rank 1: 
+MPI Rank 1: Validating network. 37 nodes to process in pass 1.
+MPI Rank 1: 
+MPI Rank 1: Validating --> labels = InputValue() :  -> [132 x *]
+MPI Rank 1: Validating --> outLayer.W = LearnableParameter() :  -> [132 x 512]
+MPI Rank 1: Validating --> link = LearnableParameter() :  -> [1 x 1]
+MPI Rank 1: Validating --> finalHiddenToPlus.scalarScalingFactor = Dropout (link) : [1 x 1] -> [1 x 1]
+MPI Rank 1: Validating --> layers[3].Eh._._.W = LearnableParameter() :  -> [512 x 512]
+MPI Rank 1: Validating --> layers[2].Eh._._.W = LearnableParameter() :  -> [512 x 512]
+MPI Rank 1: Validating --> layers[1].Eh._._.W = LearnableParameter() :  -> [512 x 363]
+MPI Rank 1: Validating --> features = InputValue() :  -> [363 x *]
+MPI Rank 1: Validating --> featNorm.mean = Mean (features) : [363 x *] -> [363]
+MPI Rank 1: Validating --> featNorm.ElementTimesArgs[0] = Minus (features, featNorm.mean) : [363 x *], [363] -> [363 x *]
+MPI Rank 1: Validating --> featNorm.invStdDev = InvStdDev (features) : [363 x *] -> [363]
+MPI Rank 1: Validating --> featNorm = ElementTimes (featNorm.ElementTimesArgs[0], featNorm.invStdDev) : [363 x *], [363] -> [363 x *]
+MPI Rank 1: Validating --> layers[1].Eh._._.z.PlusArgs[0] = Times (layers[1].Eh._._.W, featNorm) : [512 x 363], [363 x *] -> [512 x *]
+MPI Rank 1: Validating --> layers[1].Eh._._.B = LearnableParameter() :  -> [512 x 1]
+MPI Rank 1: Validating --> layers[1].Eh._._.z = Plus (layers[1].Eh._._.z.PlusArgs[0], layers[1].Eh._._.B) : [512 x *], [512 x 1] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[1].Eh._ = Sigmoid (layers[1].Eh._._.z) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[1].Eh = Dropout (layers[1].Eh._) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[2].Eh._._.z.PlusArgs[0] = Times (layers[2].Eh._._.W, layers[1].Eh) : [512 x 512], [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[2].Eh._._.B = LearnableParameter() :  -> [512 x 1]
+MPI Rank 1: Validating --> layers[2].Eh._._.z = Plus (layers[2].Eh._._.z.PlusArgs[0], layers[2].Eh._._.B) : [512 x 1 x *], [512 x 1] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[2].Eh._ = Sigmoid (layers[2].Eh._._.z) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[2].Eh = Dropout (layers[2].Eh._) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[3].Eh._._.z.PlusArgs[0] = Times (layers[3].Eh._._.W, layers[2].Eh) : [512 x 512], [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[3].Eh._._.B = LearnableParameter() :  -> [512 x 1]
+MPI Rank 1: Validating --> layers[3].Eh._._.z = Plus (layers[3].Eh._._.z.PlusArgs[0], layers[3].Eh._._.B) : [512 x 1 x *], [512 x 1] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[3].Eh._ = Sigmoid (layers[3].Eh._._.z) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> layers[3].Eh = Dropout (layers[3].Eh._) : [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> finalHiddenToPlus = ElementTimes (finalHiddenToPlus.scalarScalingFactor, layers[3].Eh) : [1 x 1], [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> outLayer.in = Plus (finalHiddenToPlus, layers[2].Eh) : [512 x 1 x *], [512 x 1 x *] -> [512 x 1 x *]
+MPI Rank 1: Validating --> outLayer.z.PlusArgs[0] = Times (outLayer.W, outLayer.in) : [132 x 512], [512 x 1 x *] -> [132 x 1 x *]
+MPI Rank 1: Validating --> outLayer.B = LearnableParameter() :  -> [132 x 1]
+MPI Rank 1: Validating --> outZ = Plus (outLayer.z.PlusArgs[0], outLayer.B) : [132 x 1 x *], [132 x 1] -> [132 x 1 x *]
+MPI Rank 1: Validating --> ce = CrossEntropyWithSoftmax (labels, outZ) : [132 x *], [132 x 1 x *] -> [1]
+MPI Rank 1: Validating --> err = ClassificationError (labels, outZ) : [132 x *], [132 x 1 x *] -> [1]
+MPI Rank 1: Validating --> logPrior._ = Mean (labels) : [132 x *] -> [132]
+MPI Rank 1: Validating --> logPrior = Log (logPrior._) : [132] -> [132]
+MPI Rank 1: Validating --> scaledLogLikelihood = Minus (outZ, logPrior) : [132 x 1 x *], [132] -> [132 x 1 x *]
+MPI Rank 1: 
+MPI Rank 1: Validating network. 26 nodes to process in pass 2.
+MPI Rank 1: 
+MPI Rank 1: 
+MPI Rank 1: Validating network, final pass.
+MPI Rank 1: 
+MPI Rank 1: 
+MPI Rank 1: 
+MPI Rank 1: 
+MPI Rank 1: Post-processing network complete.
+MPI Rank 1: 
+MPI Rank 1: reading script file glob_0000.scp ... 948 entries
+MPI Rank 1: total 132 state names in state list /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data/state.list
+MPI Rank 1: htkmlfreader: reading MLF file /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data/glob_0000.mlf ... total 948 entries
+MPI Rank 1: ...............................................................................................feature set 0: 252734 frames in 948 out of 948 utterances
+MPI Rank 1: label set 0: 129 classes
+MPI Rank 1: minibatchutterancesource: 948 utterances grouped into 3 chunks, av. chunk size: 316.0 utterances, 84244.7 frames
+MPI Rank 1: 01/09/2018 01:22:16: 
+MPI Rank 1: Model has 37 nodes. Using CPU.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:16: Training criterion:   ce = CrossEntropyWithSoftmax
+MPI Rank 1: 01/09/2018 01:22:16: Evaluation criterion: err = ClassificationError
+MPI Rank 1: 
+MPI Rank 1: 
+MPI Rank 1: Allocating matrices for forward and/or backward propagation.
+MPI Rank 1: 
+MPI Rank 1: Gradient Memory Aliasing: 8 are aliased.
+MPI Rank 1: 	outLayer.z.PlusArgs[0] (gradient) reuses outZ (gradient)
+MPI Rank 1: 	layers[2].Eh._._.z.PlusArgs[0] (gradient) reuses layers[2].Eh._._.z (gradient)
+MPI Rank 1: 	layers[3].Eh._._.z.PlusArgs[0] (gradient) reuses layers[3].Eh._._.z (gradient)
+MPI Rank 1: 	finalHiddenToPlus (gradient) reuses outLayer.in (gradient)
+MPI Rank 1: 
+MPI Rank 1: Memory Sharing: Out of 62 matrices, 37 are shared as 9, and 25 are not shared.
+MPI Rank 1: 
+MPI Rank 1: Here are the ones that share memory:
+MPI Rank 1: 	{ layers[1].Eh : [512 x 1 x *]
+MPI Rank 1: 	  layers[1].Eh._._.z : [512 x 1 x *] }
+MPI Rank 1: 	{ layers[1].Eh._._.W : [512 x 363] (gradient)
+MPI Rank 1: 	  layers[2].Eh._._.z : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[2].Eh._._.z.PlusArgs[0] : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[3].Eh : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[3].Eh._._.z : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[3].Eh._._.z.PlusArgs[0] : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  outLayer.in : [512 x 1 x *] }
+MPI Rank 1: 	{ finalHiddenToPlus : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[1].Eh._ : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[1].Eh._._.B : [512 x 1] (gradient)
+MPI Rank 1: 	  layers[2].Eh._ : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[3].Eh._ : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  outLayer.in : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  outZ : [132 x 1 x *] }
+MPI Rank 1: 	{ layers[1].Eh._._.z.PlusArgs[0] : [512 x *] (gradient)
+MPI Rank 1: 	  layers[2].Eh._ : [512 x 1 x *]
+MPI Rank 1: 	  layers[2].Eh._._.z.PlusArgs[0] : [512 x 1 x *] }
+MPI Rank 1: 	{ layers[2].Eh._._.W : [512 x 512] (gradient)
+MPI Rank 1: 	  layers[3].Eh : [512 x 1 x *]
+MPI Rank 1: 	  layers[3].Eh._._.z : [512 x 1 x *] }
+MPI Rank 1: 	{ layers[2].Eh : [512 x 1 x *]
+MPI Rank 1: 	  layers[2].Eh._._.B : [512 x 1] (gradient)
+MPI Rank 1: 	  layers[2].Eh._._.z : [512 x 1 x *] }
+MPI Rank 1: 	{ layers[1].Eh._._.z : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[3].Eh._ : [512 x 1 x *]
+MPI Rank 1: 	  layers[3].Eh._._.z.PlusArgs[0] : [512 x 1 x *] }
+MPI Rank 1: 	{ finalHiddenToPlus : [512 x 1 x *]
+MPI Rank 1: 	  layers[1].Eh : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  layers[2].Eh : [512 x 1 x *] (gradient)
+MPI Rank 1: 	  outLayer.z.PlusArgs[0] : [132 x 1 x *]
+MPI Rank 1: 	  outLayer.z.PlusArgs[0] : [132 x 1 x *] (gradient)
+MPI Rank 1: 	  outZ : [132 x 1 x *] (gradient) }
+MPI Rank 1: 	{ featNorm.ElementTimesArgs[0] : [363 x *]
+MPI Rank 1: 	  layers[1].Eh._ : [512 x 1 x *]
+MPI Rank 1: 	  layers[1].Eh._._.z.PlusArgs[0] : [512 x *] }
+MPI Rank 1: 
+MPI Rank 1: Here are the ones that don't share memory:
+MPI Rank 1: 	{scaledLogLikelihood : [132 x 1 x *]}
+MPI Rank 1: 	{layers[2].Eh._._.W : [512 x 512]}
+MPI Rank 1: 	{finalHiddenToPlus.scalarScalingFactor : [1 x 1]}
+MPI Rank 1: 	{labels : [132 x *]}
+MPI Rank 1: 	{outLayer.W : [132 x 512]}
+MPI Rank 1: 	{ce : [1]}
+MPI Rank 1: 	{layers[3].Eh._._.B : [512 x 1] (gradient)}
+MPI Rank 1: 	{err : [1]}
+MPI Rank 1: 	{logPrior._ : [132]}
+MPI Rank 1: 	{outLayer.B : [132 x 1] (gradient)}
+MPI Rank 1: 	{outLayer.B : [132 x 1]}
+MPI Rank 1: 	{layers[3].Eh._._.W : [512 x 512] (gradient)}
+MPI Rank 1: 	{link : [1 x 1]}
+MPI Rank 1: 	{logPrior : [132]}
+MPI Rank 1: 	{layers[3].Eh._._.B : [512 x 1]}
+MPI Rank 1: 	{layers[3].Eh._._.W : [512 x 512]}
+MPI Rank 1: 	{ce : [1] (gradient)}
+MPI Rank 1: 	{outLayer.W : [132 x 512] (gradient)}
+MPI Rank 1: 	{featNorm : [363 x *]}
+MPI Rank 1: 	{layers[2].Eh._._.B : [512 x 1]}
+MPI Rank 1: 	{layers[1].Eh._._.B : [512 x 1]}
+MPI Rank 1: 	{featNorm.mean : [363]}
+MPI Rank 1: 	{features : [363 x *]}
+MPI Rank 1: 	{featNorm.invStdDev : [363]}
+MPI Rank 1: 	{layers[1].Eh._._.W : [512 x 363]}
+MPI Rank 1: 
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:16: Training 779396 parameters in 8 out of 8 parameter tensors and 25 nodes with gradient:
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:16: 	Node 'layers[1].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 1: 01/09/2018 01:22:16: 	Node 'layers[1].Eh._._.W' (LearnableParameter operation) : [512 x 363]
+MPI Rank 1: 01/09/2018 01:22:16: 	Node 'layers[2].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 1: 01/09/2018 01:22:16: 	Node 'layers[2].Eh._._.W' (LearnableParameter operation) : [512 x 512]
+MPI Rank 1: 01/09/2018 01:22:16: 	Node 'layers[3].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 1: 01/09/2018 01:22:16: 	Node 'layers[3].Eh._._.W' (LearnableParameter operation) : [512 x 512]
+MPI Rank 1: 01/09/2018 01:22:16: 	Node 'outLayer.B' (LearnableParameter operation) : [132 x 1]
+MPI Rank 1: 01/09/2018 01:22:16: 	Node 'outLayer.W' (LearnableParameter operation) : [132 x 512]
+MPI Rank 1: 
+MPI Rank 1: Initializing dataParallelSGD with FP32 aggregation.
+MPI Rank 1: NcclComm: disabled, at least one rank using CPU device
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:16: Precomputing --> 3 PreCompute nodes found.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:16: 	featNorm.mean = Mean()
+MPI Rank 1: 01/09/2018 01:22:16: 	featNorm.invStdDev = InvStdDev()
+MPI Rank 1: 01/09/2018 01:22:16: 	logPrior._ = Mean()
+MPI Rank 1: minibatchiterator: epoch 0: frames [0..252734] (first utterance at frame 0), data subset 0 of 1, with 1 datapasses
+MPI Rank 1: requiredata: determined feature kind as 33-dimensional 'USER' with frame shift 10.0 ms
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:21: Precomputing --> Completed.
+MPI Rank 1: 
+MPI Rank 1: Setting dropout rate to 0.1.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:21: Starting Epoch 1: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 1: minibatchiterator: epoch 0: frames [0..20480] (first utterance at frame 0), data subset 0 of 1, with 1 datapasses
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:21: Starting minibatch loop.
+MPI Rank 1: 01/09/2018 01:22:22:  Epoch[ 1 of 5]-Minibatch[   1-  10, 12.50%]: ce = 7.09803238 * 2560; err = 0.93710938 * 2560; time = 1.2802s; samplesPerSecond = 1999.7
+MPI Rank 1: 01/09/2018 01:22:23:  Epoch[ 1 of 5]-Minibatch[  11-  20, 25.00%]: ce = 8.23823471 * 2560; err = 0.93593750 * 2560; time = 1.0078s; samplesPerSecond = 2540.2
+MPI Rank 1: 01/09/2018 01:22:24:  Epoch[ 1 of 5]-Minibatch[  21-  30, 37.50%]: ce = 5.51260223 * 2560; err = 0.92656250 * 2560; time = 1.1345s; samplesPerSecond = 2256.4
+MPI Rank 1: 01/09/2018 01:22:25:  Epoch[ 1 of 5]-Minibatch[  31-  40, 50.00%]: ce = 4.41263580 * 2560; err = 0.89882812 * 2560; time = 0.9656s; samplesPerSecond = 2651.1
+MPI Rank 1: 01/09/2018 01:22:26:  Epoch[ 1 of 5]-Minibatch[  41-  50, 62.50%]: ce = 3.98718262 * 2560; err = 0.89296875 * 2560; time = 1.1592s; samplesPerSecond = 2208.5
+MPI Rank 1: 01/09/2018 01:22:27:  Epoch[ 1 of 5]-Minibatch[  51-  60, 75.00%]: ce = 3.92807617 * 2560; err = 0.89218750 * 2560; time = 0.9935s; samplesPerSecond = 2576.8
+MPI Rank 1: 01/09/2018 01:22:29:  Epoch[ 1 of 5]-Minibatch[  61-  70, 87.50%]: ce = 4.03670044 * 2560; err = 0.88203125 * 2560; time = 1.1796s; samplesPerSecond = 2170.2
+MPI Rank 1: 01/09/2018 01:22:30:  Epoch[ 1 of 5]-Minibatch[  71-  80, 100.00%]: ce = 3.96593018 * 2560; err = 0.87695312 * 2560; time = 0.9303s; samplesPerSecond = 2751.9
+MPI Rank 1: 01/09/2018 01:22:30: Finished Epoch[ 1 of 5]: [Training] ce = 5.14742432 * 20480; err = 0.90532227 * 20480; totalSamplesSeen = 20480; learningRatePerSample = 0.001953125; epochTime=8.65329s
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:30: Starting Epoch 2: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 1: minibatchiterator: epoch 1: frames [20480..40960] (first utterance at frame 20480), data subset 1 of 2, with 1 datapasses
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:30: Starting minibatch loop, DataParallelSGD training (myRank = 1, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 1: 01/09/2018 01:22:31:  Epoch[ 2 of 5]-Minibatch[   1-  10, 12.50%]: ce = 3.92552627 * 2560; err = 0.86718750 * 2560; time = 1.6482s; samplesPerSecond = 1553.2
+MPI Rank 1: 01/09/2018 01:22:33:  Epoch[ 2 of 5]-Minibatch[  11-  20, 25.00%]: ce = 3.85534867 * 2560; err = 0.87812500 * 2560; time = 1.6670s; samplesPerSecond = 1535.7
+MPI Rank 1: 01/09/2018 01:22:35:  Epoch[ 2 of 5]-Minibatch[  21-  30, 37.50%]: ce = 3.82867713 * 2560; err = 0.88085938 * 2560; time = 1.7085s; samplesPerSecond = 1498.4
+MPI Rank 1: 01/09/2018 01:22:37:  Epoch[ 2 of 5]-Minibatch[  31-  40, 50.00%]: ce = 3.73499271 * 2560; err = 0.83906250 * 2560; time = 2.0875s; samplesPerSecond = 1226.4
+MPI Rank 1: 01/09/2018 01:22:39:  Epoch[ 2 of 5]-Minibatch[  41-  50, 62.50%]: ce = 3.64005697 * 2560; err = 0.83437500 * 2560; time = 1.9607s; samplesPerSecond = 1305.6
+MPI Rank 1: 01/09/2018 01:22:40:  Epoch[ 2 of 5]-Minibatch[  51-  60, 75.00%]: ce = 3.48904814 * 2560; err = 0.80312500 * 2560; time = 1.6529s; samplesPerSecond = 1548.8
+MPI Rank 1: 01/09/2018 01:22:42:  Epoch[ 2 of 5]-Minibatch[  61-  70, 87.50%]: ce = 3.39377885 * 2560; err = 0.79531250 * 2560; time = 1.9623s; samplesPerSecond = 1304.6
+MPI Rank 1: 01/09/2018 01:22:44:  Epoch[ 2 of 5]-Minibatch[  71-  80, 100.00%]: ce = 3.38436491 * 2560; err = 0.80859375 * 2560; time = 1.5909s; samplesPerSecond = 1609.2
+MPI Rank 1: 01/09/2018 01:22:44: Finished Epoch[ 2 of 5]: [Training] ce = 3.65647421 * 20480; err = 0.83833008 * 20480; totalSamplesSeen = 40960; learningRatePerSample = 0.001953125; epochTime=14.3683s
+MPI Rank 1: Setting dropout rate to 0.15.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:44: Starting Epoch 3: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 1: minibatchiterator: epoch 2: frames [40960..61440] (first utterance at frame 40960), data subset 1 of 2, with 1 datapasses
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:44: Starting minibatch loop, DataParallelSGD training (myRank = 1, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 1: 01/09/2018 01:22:46:  Epoch[ 3 of 5]-Minibatch[   1-  10, 12.50%]: ce = 3.28826752 * 2560; err = 0.78359375 * 2560; time = 2.0006s; samplesPerSecond = 1279.6
+MPI Rank 1: 01/09/2018 01:22:48:  Epoch[ 3 of 5]-Minibatch[  11-  20, 25.00%]: ce = 3.21086277 * 2560; err = 0.78125000 * 2560; time = 1.7020s; samplesPerSecond = 1504.1
+MPI Rank 1: 01/09/2018 01:22:50:  Epoch[ 3 of 5]-Minibatch[  21-  30, 37.50%]: ce = 3.19726100 * 2560; err = 0.76367188 * 2560; time = 1.6978s; samplesPerSecond = 1507.8
+MPI Rank 1: 01/09/2018 01:22:51:  Epoch[ 3 of 5]-Minibatch[  31-  40, 50.00%]: ce = 3.22552291 * 2560; err = 0.77890625 * 2560; time = 1.6438s; samplesPerSecond = 1557.4
+MPI Rank 1: 01/09/2018 01:22:53:  Epoch[ 3 of 5]-Minibatch[  41-  50, 62.50%]: ce = 3.11887438 * 2560; err = 0.75898438 * 2560; time = 1.6205s; samplesPerSecond = 1579.8
+MPI Rank 1: 01/09/2018 01:22:55:  Epoch[ 3 of 5]-Minibatch[  51-  60, 75.00%]: ce = 3.12276197 * 2560; err = 0.75312500 * 2560; time = 1.7199s; samplesPerSecond = 1488.4
+MPI Rank 1: 01/09/2018 01:22:56:  Epoch[ 3 of 5]-Minibatch[  61-  70, 87.50%]: ce = 3.02701902 * 2560; err = 0.74218750 * 2560; time = 1.5957s; samplesPerSecond = 1604.3
+MPI Rank 1: 01/09/2018 01:22:58:  Epoch[ 3 of 5]-Minibatch[  71-  80, 100.00%]: ce = 3.00723931 * 2560; err = 0.74414062 * 2560; time = 2.0174s; samplesPerSecond = 1269.0
+MPI Rank 1: 01/09/2018 01:22:58: Finished Epoch[ 3 of 5]: [Training] ce = 3.14972611 * 20480; err = 0.76323242 * 20480; totalSamplesSeen = 61440; learningRatePerSample = 0.001953125; epochTime=14.0405s
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:58: Starting Epoch 4: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 1: minibatchiterator: epoch 3: frames [61440..81920] (first utterance at frame 61440), data subset 1 of 2, with 1 datapasses
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:22:58: Starting minibatch loop, DataParallelSGD training (myRank = 1, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 1: 01/09/2018 01:23:00:  Epoch[ 4 of 5]-Minibatch[   1-  10, 12.50%]: ce = 2.92042874 * 2560; err = 0.72656250 * 2560; time = 1.5124s; samplesPerSecond = 1692.7
+MPI Rank 1: 01/09/2018 01:23:02:  Epoch[ 4 of 5]-Minibatch[  11-  20, 25.00%]: ce = 2.84300730 * 2560; err = 0.69726562 * 2560; time = 1.7032s; samplesPerSecond = 1503.1
+MPI Rank 1: 01/09/2018 01:23:03:  Epoch[ 4 of 5]-Minibatch[  21-  30, 37.50%]: ce = 2.82612489 * 2560; err = 0.70000000 * 2560; time = 1.7978s; samplesPerSecond = 1423.9
+MPI Rank 1: 01/09/2018 01:23:05:  Epoch[ 4 of 5]-Minibatch[  31-  40, 50.00%]: ce = 2.84309925 * 2560; err = 0.70664063 * 2560; time = 1.8592s; samplesPerSecond = 1377.0
+MPI Rank 1: 01/09/2018 01:23:07:  Epoch[ 4 of 5]-Minibatch[  41-  50, 62.50%]: ce = 2.68966990 * 2560; err = 0.68789062 * 2560; time = 1.7187s; samplesPerSecond = 1489.5
+MPI Rank 1: 01/09/2018 01:23:08:  Epoch[ 4 of 5]-Minibatch[  51-  60, 75.00%]: ce = 2.70690113 * 2560; err = 0.67968750 * 2560; time = 1.1851s; samplesPerSecond = 2160.1
+MPI Rank 1: 01/09/2018 01:23:10:  Epoch[ 4 of 5]-Minibatch[  61-  70, 87.50%]: ce = 2.70273262 * 2560; err = 0.69531250 * 2560; time = 1.8729s; samplesPerSecond = 1366.9
+MPI Rank 1: 01/09/2018 01:23:12:  Epoch[ 4 of 5]-Minibatch[  71-  80, 100.00%]: ce = 2.67516232 * 2560; err = 0.68281250 * 2560; time = 1.6814s; samplesPerSecond = 1522.6
+MPI Rank 1: 01/09/2018 01:23:12: Finished Epoch[ 4 of 5]: [Training] ce = 2.77589077 * 20480; err = 0.69702148 * 20480; totalSamplesSeen = 81920; learningRatePerSample = 0.001953125; epochTime=13.388s
+MPI Rank 1: Setting dropout rate to 0.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:12: Starting Epoch 5: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 1: minibatchiterator: epoch 4: frames [81920..102400] (first utterance at frame 81920), data subset 1 of 2, with 1 datapasses
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:12: Starting minibatch loop, DataParallelSGD training (myRank = 1, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 1: 01/09/2018 01:23:13:  Epoch[ 5 of 5]-Minibatch[   1-  10, 12.50%]: ce = 2.53175135 * 2560; err = 0.63320312 * 2560; time = 1.5798s; samplesPerSecond = 1620.4
+MPI Rank 1: 01/09/2018 01:23:15:  Epoch[ 5 of 5]-Minibatch[  11-  20, 25.00%]: ce = 2.52829936 * 2560; err = 0.65351563 * 2560; time = 1.7787s; samplesPerSecond = 1439.3
+MPI Rank 1: 01/09/2018 01:23:17:  Epoch[ 5 of 5]-Minibatch[  21-  30, 37.50%]: ce = 2.41131774 * 2560; err = 0.63281250 * 2560; time = 1.6494s; samplesPerSecond = 1552.1
+MPI Rank 1: 01/09/2018 01:23:18:  Epoch[ 5 of 5]-Minibatch[  31-  40, 50.00%]: ce = 2.44102817 * 2560; err = 0.63085938 * 2560; time = 1.5781s; samplesPerSecond = 1622.3
+MPI Rank 1: 01/09/2018 01:23:20:  Epoch[ 5 of 5]-Minibatch[  41-  50, 62.50%]: ce = 2.37801606 * 2560; err = 0.61015625 * 2560; time = 1.0830s; samplesPerSecond = 2363.7
+MPI Rank 1: 01/09/2018 01:23:21:  Epoch[ 5 of 5]-Minibatch[  51-  60, 75.00%]: ce = 2.27915046 * 2560; err = 0.59218750 * 2560; time = 1.8150s; samplesPerSecond = 1410.5
+MPI Rank 1: 01/09/2018 01:23:23:  Epoch[ 5 of 5]-Minibatch[  61-  70, 87.50%]: ce = 2.33015380 * 2560; err = 0.60000000 * 2560; time = 1.8559s; samplesPerSecond = 1379.4
+MPI Rank 1: 01/09/2018 01:23:25:  Epoch[ 5 of 5]-Minibatch[  71-  80, 100.00%]: ce = 2.26812986 * 2560; err = 0.59765625 * 2560; time = 1.9706s; samplesPerSecond = 1299.1
+MPI Rank 1: 01/09/2018 01:23:25: Finished Epoch[ 5 of 5]: [Training] ce = 2.39598085 * 20480; err = 0.61879883 * 20480; totalSamplesSeen = 102400; learningRatePerSample = 0.001953125; epochTime=13.3435s
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:25: Action "train" complete.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:25: __COMPLETED__
+=== Deleting last 2 epochs and restart
+==== Re-running from checkpoint
+=== Running mpiexec -n 2 /home/ubuntu/workspace/build/gpu/release/bin/cntk configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu DeviceId=-1 timestamping=true numCPUThreads=6 stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+CNTK 2.3.1+ (HEAD 294890, Jan  8 2018 16:47:50) at 2018/01/09 01:23:26
+
+/home/ubuntu/workspace/build/gpu/release/bin/cntk  configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk  currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout  OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DeviceId=-1  timestamping=true  numCPUThreads=6  stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+CNTK 2.3.1+ (HEAD 294890, Jan  8 2018 16:47:50) at 2018/01/09 01:23:26
+
+/home/ubuntu/workspace/build/gpu/release/bin/cntk  configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk  currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout  OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DeviceId=-1  timestamping=true  numCPUThreads=6  stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+Changed current directory to /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data
+Changed current directory to /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data
+--------------------------------------------------------------------------
+[[7349,1],1]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
+
+Module: OpenFabrics (openib)
+  Host: 17c29a606870
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+ping [requestnodes (before change)]: 2 nodes pinging each other
+ping [requestnodes (before change)]: 2 nodes pinging each other
+ping [requestnodes (after change)]: 2 nodes pinging each other
+ping [requestnodes (after change)]: 2 nodes pinging each other
+requestnodes [MPIWrapperMpi]: using 2 out of 2 MPI nodes on a single host (2 requested); we (0) are in (participating)
+ping [mpihelper]: 2 nodes pinging each other
+requestnodes [MPIWrapperMpi]: using 2 out of 2 MPI nodes on a single host (2 requested); we (1) are in (participating)
+ping [mpihelper]: 2 nodes pinging each other
+01/09/2018 01:23:26: Redirecting stderr to file /tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr_speechTrain.logrank0
+01/09/2018 01:23:26: Redirecting stderr to file /tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr_speechTrain.logrank1
+[17c29a606870:00129] 1 more process has sent help message help-mpi-btl-base.txt / btl:no-nics
+[17c29a606870:00129] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+MPI Rank 0: CNTK 2.3.1+ (HEAD 294890, Jan  8 2018 16:47:50) at 2018/01/09 01:23:26
+MPI Rank 0: 
+MPI Rank 0: /home/ubuntu/workspace/build/gpu/release/bin/cntk  configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk  currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout  OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DeviceId=-1  timestamping=true  numCPUThreads=6  stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+MPI Rank 0: 01/09/2018 01:23:26: -------------------------------------------------------------------
+MPI Rank 0: 01/09/2018 01:23:26: Build info: 
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:26: 		Built time: Jan  8 2018 16:42:01
+MPI Rank 0: 01/09/2018 01:23:26: 		Last modified date: Mon Jan  8 16:40:18 2018
+MPI Rank 0: 01/09/2018 01:23:26: 		Build type: release
+MPI Rank 0: 01/09/2018 01:23:26: 		Build target: GPU
+MPI Rank 0: 01/09/2018 01:23:26: 		With ASGD: yes
+MPI Rank 0: 01/09/2018 01:23:26: 		Math lib: mkl
+MPI Rank 0: 01/09/2018 01:23:26: 		CUDA version: 9.0.0
+MPI Rank 0: 01/09/2018 01:23:26: 		CUDNN version: 7.0.4
+MPI Rank 0: 01/09/2018 01:23:26: 		Build Branch: HEAD
+MPI Rank 0: 01/09/2018 01:23:26: 		Build SHA1: 294890cb1f83fc31a56bd2cc1fc1fec34894b71c
+MPI Rank 0: 01/09/2018 01:23:26: 		MPI distribution: Open MPI
+MPI Rank 0: 01/09/2018 01:23:26: 		MPI version: 1.10.7
+MPI Rank 0: 01/09/2018 01:23:26: -------------------------------------------------------------------
+MPI Rank 0: 01/09/2018 01:23:26: -------------------------------------------------------------------
+MPI Rank 0: 01/09/2018 01:23:26: GPU info:
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:26: 		Device[0]: cores = 3072; computeCapability = 5.2; type = "Tesla M60"; total memory = 8123 MB; free memory = 8112 MB
+MPI Rank 0: 01/09/2018 01:23:26: -------------------------------------------------------------------
+MPI Rank 0: 01/09/2018 01:23:26: Using 6 CPU threads.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:26: ##############################################################################
+MPI Rank 0: 01/09/2018 01:23:26: #                                                                            #
+MPI Rank 0: 01/09/2018 01:23:26: # speechTrain command (train action)                                         #
+MPI Rank 0: 01/09/2018 01:23:26: #                                                                            #
+MPI Rank 0: 01/09/2018 01:23:26: ##############################################################################
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:26: 
+MPI Rank 0: Starting from checkpoint. Loading network from '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn.3'.
+MPI Rank 0: reading script file glob_0000.scp ... 948 entries
+MPI Rank 0: total 132 state names in state list /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data/state.list
+MPI Rank 0: htkmlfreader: reading MLF file /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data/glob_0000.mlf ... total 948 entries
+MPI Rank 0: ...............................................................................................feature set 0: 252734 frames in 948 out of 948 utterances
+MPI Rank 0: label set 0: 129 classes
+MPI Rank 0: minibatchutterancesource: 948 utterances grouped into 3 chunks, av. chunk size: 316.0 utterances, 84244.7 frames
+MPI Rank 0: 01/09/2018 01:23:26: 
+MPI Rank 0: Model has 37 nodes. Using CPU.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:26: Training criterion:   ce = CrossEntropyWithSoftmax
+MPI Rank 0: 01/09/2018 01:23:26: Evaluation criterion: err = ClassificationError
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:26: Training 779396 parameters in 8 out of 8 parameter tensors and 25 nodes with gradient:
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:26: 	Node 'layers[1].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 0: 01/09/2018 01:23:26: 	Node 'layers[1].Eh._._.W' (LearnableParameter operation) : [512 x 363]
+MPI Rank 0: 01/09/2018 01:23:26: 	Node 'layers[2].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 0: 01/09/2018 01:23:26: 	Node 'layers[2].Eh._._.W' (LearnableParameter operation) : [512 x 512]
+MPI Rank 0: 01/09/2018 01:23:26: 	Node 'layers[3].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 0: 01/09/2018 01:23:26: 	Node 'layers[3].Eh._._.W' (LearnableParameter operation) : [512 x 512]
+MPI Rank 0: 01/09/2018 01:23:26: 	Node 'outLayer.B' (LearnableParameter operation) : [132 x 1]
+MPI Rank 0: 01/09/2018 01:23:26: 	Node 'outLayer.W' (LearnableParameter operation) : [132 x 512]
+MPI Rank 0: 
+MPI Rank 0: Initializing dataParallelSGD with FP32 aggregation.
+MPI Rank 0: NcclComm: disabled, at least one rank using CPU device
+MPI Rank 0: 01/09/2018 01:23:26: No PreCompute nodes found, or all already computed. Skipping pre-computation step.
+MPI Rank 0: Setting dropout rate to 0.15.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:26: Starting Epoch 4: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 0: minibatchiterator: epoch 3: frames [61440..81920] (first utterance at frame 61440), data subset 0 of 2, with 1 datapasses
+MPI Rank 0: requiredata: determined feature kind as 33-dimensional 'USER' with frame shift 10.0 ms
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:27: Starting minibatch loop, DataParallelSGD training (myRank = 0, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 0: 01/09/2018 01:23:28:  Epoch[ 4 of 5]-Minibatch[   1-  10, 12.50%]: ce = 2.92042874 * 2560; err = 0.72656250 * 2560; time = 1.7927s; samplesPerSecond = 1428.0
+MPI Rank 0: 01/09/2018 01:23:30:  Epoch[ 4 of 5]-Minibatch[  11-  20, 25.00%]: ce = 2.84300730 * 2560; err = 0.69726562 * 2560; time = 1.6441s; samplesPerSecond = 1557.1
+MPI Rank 0: 01/09/2018 01:23:32:  Epoch[ 4 of 5]-Minibatch[  21-  30, 37.50%]: ce = 2.82612489 * 2560; err = 0.70000000 * 2560; time = 1.9561s; samplesPerSecond = 1308.7
+MPI Rank 0: 01/09/2018 01:23:33:  Epoch[ 4 of 5]-Minibatch[  31-  40, 50.00%]: ce = 2.84309925 * 2560; err = 0.70664063 * 2560; time = 0.9860s; samplesPerSecond = 2596.3
+MPI Rank 0: 01/09/2018 01:23:34:  Epoch[ 4 of 5]-Minibatch[  41-  50, 62.50%]: ce = 2.68966990 * 2560; err = 0.68789062 * 2560; time = 1.5430s; samplesPerSecond = 1659.1
+MPI Rank 0: 01/09/2018 01:23:36:  Epoch[ 4 of 5]-Minibatch[  51-  60, 75.00%]: ce = 2.70690113 * 2560; err = 0.67968750 * 2560; time = 1.6220s; samplesPerSecond = 1578.3
+MPI Rank 0: 01/09/2018 01:23:38:  Epoch[ 4 of 5]-Minibatch[  61-  70, 87.50%]: ce = 2.70273262 * 2560; err = 0.69531250 * 2560; time = 1.6281s; samplesPerSecond = 1572.4
+MPI Rank 0: 01/09/2018 01:23:40:  Epoch[ 4 of 5]-Minibatch[  71-  80, 100.00%]: ce = 2.67516232 * 2560; err = 0.68281250 * 2560; time = 2.0620s; samplesPerSecond = 1241.5
+MPI Rank 0: 01/09/2018 01:23:40: Finished Epoch[ 4 of 5]: [Training] ce = 2.77589077 * 20480; err = 0.69702148 * 20480; totalSamplesSeen = 81920; learningRatePerSample = 0.001953125; epochTime=13.3896s
+MPI Rank 0: 01/09/2018 01:23:40: SGD: Saving checkpoint model '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn.4'
+MPI Rank 0: Setting dropout rate to 0.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:40: Starting Epoch 5: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 0: minibatchiterator: epoch 4: frames [81920..102400] (first utterance at frame 81920), data subset 0 of 2, with 1 datapasses
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:40: Starting minibatch loop, DataParallelSGD training (myRank = 0, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 0: 01/09/2018 01:23:42:  Epoch[ 5 of 5]-Minibatch[   1-  10, 12.50%]: ce = 2.53175135 * 2560; err = 0.63320312 * 2560; time = 1.6535s; samplesPerSecond = 1548.2
+MPI Rank 0: 01/09/2018 01:23:43:  Epoch[ 5 of 5]-Minibatch[  11-  20, 25.00%]: ce = 2.52829936 * 2560; err = 0.65351563 * 2560; time = 1.4780s; samplesPerSecond = 1732.1
+MPI Rank 0: 01/09/2018 01:23:45:  Epoch[ 5 of 5]-Minibatch[  21-  30, 37.50%]: ce = 2.41131774 * 2560; err = 0.63281250 * 2560; time = 1.4819s; samplesPerSecond = 1727.5
+MPI Rank 0: 01/09/2018 01:23:46:  Epoch[ 5 of 5]-Minibatch[  31-  40, 50.00%]: ce = 2.44102817 * 2560; err = 0.63085938 * 2560; time = 1.4529s; samplesPerSecond = 1762.0
+MPI Rank 0: 01/09/2018 01:23:48:  Epoch[ 5 of 5]-Minibatch[  41-  50, 62.50%]: ce = 2.37801606 * 2560; err = 0.61015625 * 2560; time = 1.5405s; samplesPerSecond = 1661.8
+MPI Rank 0: 01/09/2018 01:23:49:  Epoch[ 5 of 5]-Minibatch[  51-  60, 75.00%]: ce = 2.27915046 * 2560; err = 0.59218750 * 2560; time = 1.3730s; samplesPerSecond = 1864.5
+MPI Rank 0: 01/09/2018 01:23:51:  Epoch[ 5 of 5]-Minibatch[  61-  70, 87.50%]: ce = 2.33015380 * 2560; err = 0.60000000 * 2560; time = 1.6254s; samplesPerSecond = 1575.0
+MPI Rank 0: 01/09/2018 01:23:52:  Epoch[ 5 of 5]-Minibatch[  71-  80, 100.00%]: ce = 2.26812986 * 2560; err = 0.59765625 * 2560; time = 1.4035s; samplesPerSecond = 1823.9
+MPI Rank 0: 01/09/2018 01:23:52: Finished Epoch[ 5 of 5]: [Training] ce = 2.39598085 * 20480; err = 0.61879883 * 20480; totalSamplesSeen = 102400; learningRatePerSample = 0.001953125; epochTime=12.0942s
+MPI Rank 0: 01/09/2018 01:23:52: SGD: Saving checkpoint model '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn'
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:52: Action "train" complete.
+MPI Rank 0: 
+MPI Rank 0: 01/09/2018 01:23:52: __COMPLETED__
+MPI Rank 1: CNTK 2.3.1+ (HEAD 294890, Jan  8 2018 16:47:50) at 2018/01/09 01:23:26
+MPI Rank 1: 
+MPI Rank 1: /home/ubuntu/workspace/build/gpu/release/bin/cntk  configFile=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout/cntk.cntk  currentDirectory=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  RunDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DataDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data  ConfigDir=/home/ubuntu/workspace/Tests/EndToEndTests/Speech/DNN/Dropout  OutputDir=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu  DeviceId=-1  timestamping=true  numCPUThreads=6  stderr=/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/stderr
+MPI Rank 1: 01/09/2018 01:23:26: -------------------------------------------------------------------
+MPI Rank 1: 01/09/2018 01:23:26: Build info: 
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:26: 		Built time: Jan  8 2018 16:42:01
+MPI Rank 1: 01/09/2018 01:23:26: 		Last modified date: Mon Jan  8 16:40:18 2018
+MPI Rank 1: 01/09/2018 01:23:26: 		Build type: release
+MPI Rank 1: 01/09/2018 01:23:26: 		Build target: GPU
+MPI Rank 1: 01/09/2018 01:23:26: 		With ASGD: yes
+MPI Rank 1: 01/09/2018 01:23:26: 		Math lib: mkl
+MPI Rank 1: 01/09/2018 01:23:26: 		CUDA version: 9.0.0
+MPI Rank 1: 01/09/2018 01:23:26: 		CUDNN version: 7.0.4
+MPI Rank 1: 01/09/2018 01:23:26: 		Build Branch: HEAD
+MPI Rank 1: 01/09/2018 01:23:26: 		Build SHA1: 294890cb1f83fc31a56bd2cc1fc1fec34894b71c
+MPI Rank 1: 01/09/2018 01:23:26: 		MPI distribution: Open MPI
+MPI Rank 1: 01/09/2018 01:23:26: 		MPI version: 1.10.7
+MPI Rank 1: 01/09/2018 01:23:26: -------------------------------------------------------------------
+MPI Rank 1: 01/09/2018 01:23:26: -------------------------------------------------------------------
+MPI Rank 1: 01/09/2018 01:23:26: GPU info:
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:26: 		Device[0]: cores = 3072; computeCapability = 5.2; type = "Tesla M60"; total memory = 8123 MB; free memory = 8029 MB
+MPI Rank 1: 01/09/2018 01:23:26: -------------------------------------------------------------------
+MPI Rank 1: 01/09/2018 01:23:26: Using 6 CPU threads.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:26: ##############################################################################
+MPI Rank 1: 01/09/2018 01:23:26: #                                                                            #
+MPI Rank 1: 01/09/2018 01:23:26: # speechTrain command (train action)                                         #
+MPI Rank 1: 01/09/2018 01:23:26: #                                                                            #
+MPI Rank 1: 01/09/2018 01:23:26: ##############################################################################
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:26: 
+MPI Rank 1: Starting from checkpoint. Loading network from '/tmp/cntk-test-20180109012214.493694/Speech/DNN_Dropout@release_cpu/models/cntkSpeech.dnn.3'.
+MPI Rank 1: reading script file glob_0000.scp ... 948 entries
+MPI Rank 1: total 132 state names in state list /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data/state.list
+MPI Rank 1: htkmlfreader: reading MLF file /home/ubuntu/workspace/Tests/EndToEndTests/Speech/Data/glob_0000.mlf ... total 948 entries
+MPI Rank 1: ...............................................................................................feature set 0: 252734 frames in 948 out of 948 utterances
+MPI Rank 1: label set 0: 129 classes
+MPI Rank 1: minibatchutterancesource: 948 utterances grouped into 3 chunks, av. chunk size: 316.0 utterances, 84244.7 frames
+MPI Rank 1: 01/09/2018 01:23:26: 
+MPI Rank 1: Model has 37 nodes. Using CPU.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:26: Training criterion:   ce = CrossEntropyWithSoftmax
+MPI Rank 1: 01/09/2018 01:23:26: Evaluation criterion: err = ClassificationError
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:26: Training 779396 parameters in 8 out of 8 parameter tensors and 25 nodes with gradient:
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:26: 	Node 'layers[1].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 1: 01/09/2018 01:23:26: 	Node 'layers[1].Eh._._.W' (LearnableParameter operation) : [512 x 363]
+MPI Rank 1: 01/09/2018 01:23:26: 	Node 'layers[2].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 1: 01/09/2018 01:23:26: 	Node 'layers[2].Eh._._.W' (LearnableParameter operation) : [512 x 512]
+MPI Rank 1: 01/09/2018 01:23:26: 	Node 'layers[3].Eh._._.B' (LearnableParameter operation) : [512 x 1]
+MPI Rank 1: 01/09/2018 01:23:26: 	Node 'layers[3].Eh._._.W' (LearnableParameter operation) : [512 x 512]
+MPI Rank 1: 01/09/2018 01:23:26: 	Node 'outLayer.B' (LearnableParameter operation) : [132 x 1]
+MPI Rank 1: 01/09/2018 01:23:26: 	Node 'outLayer.W' (LearnableParameter operation) : [132 x 512]
+MPI Rank 1: 
+MPI Rank 1: Initializing dataParallelSGD with FP32 aggregation.
+MPI Rank 1: NcclComm: disabled, at least one rank using CPU device
+MPI Rank 1: 01/09/2018 01:23:26: No PreCompute nodes found, or all already computed. Skipping pre-computation step.
+MPI Rank 1: Setting dropout rate to 0.15.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:26: Starting Epoch 4: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 1: minibatchiterator: epoch 3: frames [61440..81920] (first utterance at frame 61440), data subset 1 of 2, with 1 datapasses
+MPI Rank 1: requiredata: determined feature kind as 33-dimensional 'USER' with frame shift 10.0 ms
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:27: Starting minibatch loop, DataParallelSGD training (myRank = 1, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 1: 01/09/2018 01:23:28:  Epoch[ 4 of 5]-Minibatch[   1-  10, 12.50%]: ce = 2.92042874 * 2560; err = 0.72656250 * 2560; time = 1.8281s; samplesPerSecond = 1400.3
+MPI Rank 1: 01/09/2018 01:23:30:  Epoch[ 4 of 5]-Minibatch[  11-  20, 25.00%]: ce = 2.84300730 * 2560; err = 0.69726562 * 2560; time = 1.6083s; samplesPerSecond = 1591.7
+MPI Rank 1: 01/09/2018 01:23:32:  Epoch[ 4 of 5]-Minibatch[  21-  30, 37.50%]: ce = 2.82612489 * 2560; err = 0.70000000 * 2560; time = 1.9615s; samplesPerSecond = 1305.1
+MPI Rank 1: 01/09/2018 01:23:33:  Epoch[ 4 of 5]-Minibatch[  31-  40, 50.00%]: ce = 2.84309925 * 2560; err = 0.70664063 * 2560; time = 0.9802s; samplesPerSecond = 2611.8
+MPI Rank 1: 01/09/2018 01:23:34:  Epoch[ 4 of 5]-Minibatch[  41-  50, 62.50%]: ce = 2.68966990 * 2560; err = 0.68789062 * 2560; time = 1.5540s; samplesPerSecond = 1647.3
+MPI Rank 1: 01/09/2018 01:23:36:  Epoch[ 4 of 5]-Minibatch[  51-  60, 75.00%]: ce = 2.70690113 * 2560; err = 0.67968750 * 2560; time = 1.6310s; samplesPerSecond = 1569.6
+MPI Rank 1: 01/09/2018 01:23:38:  Epoch[ 4 of 5]-Minibatch[  61-  70, 87.50%]: ce = 2.70273262 * 2560; err = 0.69531250 * 2560; time = 1.6053s; samplesPerSecond = 1594.7
+MPI Rank 1: 01/09/2018 01:23:40:  Epoch[ 4 of 5]-Minibatch[  71-  80, 100.00%]: ce = 2.67516232 * 2560; err = 0.68281250 * 2560; time = 2.0755s; samplesPerSecond = 1233.4
+MPI Rank 1: 01/09/2018 01:23:40: Finished Epoch[ 4 of 5]: [Training] ce = 2.77589077 * 20480; err = 0.69702148 * 20480; totalSamplesSeen = 81920; learningRatePerSample = 0.001953125; epochTime=13.3896s
+MPI Rank 1: Setting dropout rate to 0.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:40: Starting Epoch 5: learning rate per sample = 0.001953  effective momentum = 0.900000  momentum as time constant = 2429.8 samples
+MPI Rank 1: minibatchiterator: epoch 4: frames [81920..102400] (first utterance at frame 81920), data subset 1 of 2, with 1 datapasses
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:40: Starting minibatch loop, DataParallelSGD training (myRank = 1, numNodes = 2, numGradientBits = 32), distributed reading is ENABLED.
+MPI Rank 1: 01/09/2018 01:23:42:  Epoch[ 5 of 5]-Minibatch[   1-  10, 12.50%]: ce = 2.53175135 * 2560; err = 0.63320312 * 2560; time = 1.6424s; samplesPerSecond = 1558.7
+MPI Rank 1: 01/09/2018 01:23:43:  Epoch[ 5 of 5]-Minibatch[  11-  20, 25.00%]: ce = 2.52829936 * 2560; err = 0.65351563 * 2560; time = 1.4763s; samplesPerSecond = 1734.1
+MPI Rank 1: 01/09/2018 01:23:45:  Epoch[ 5 of 5]-Minibatch[  21-  30, 37.50%]: ce = 2.41131774 * 2560; err = 0.63281250 * 2560; time = 1.4928s; samplesPerSecond = 1714.9
+MPI Rank 1: 01/09/2018 01:23:46:  Epoch[ 5 of 5]-Minibatch[  31-  40, 50.00%]: ce = 2.44102817 * 2560; err = 0.63085938 * 2560; time = 1.4341s; samplesPerSecond = 1785.1
+MPI Rank 1: 01/09/2018 01:23:48:  Epoch[ 5 of 5]-Minibatch[  41-  50, 62.50%]: ce = 2.37801606 * 2560; err = 0.61015625 * 2560; time = 1.5587s; samplesPerSecond = 1642.4
+MPI Rank 1: 01/09/2018 01:23:49:  Epoch[ 5 of 5]-Minibatch[  51-  60, 75.00%]: ce = 2.27915046 * 2560; err = 0.59218750 * 2560; time = 1.4013s; samplesPerSecond = 1826.9
+MPI Rank 1: 01/09/2018 01:23:51:  Epoch[ 5 of 5]-Minibatch[  61-  70, 87.50%]: ce = 2.33015380 * 2560; err = 0.60000000 * 2560; time = 1.6012s; samplesPerSecond = 1598.8
+MPI Rank 1: 01/09/2018 01:23:52:  Epoch[ 5 of 5]-Minibatch[  71-  80, 100.00%]: ce = 2.26812986 * 2560; err = 0.59765625 * 2560; time = 1.3890s; samplesPerSecond = 1843.0
+MPI Rank 1: 01/09/2018 01:23:52: Finished Epoch[ 5 of 5]: [Training] ce = 2.39598085 * 20480; err = 0.61879883 * 20480; totalSamplesSeen = 102400; learningRatePerSample = 0.001953125; epochTime=12.0803s
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:52: Action "train" complete.
+MPI Rank 1: 
+MPI Rank 1: 01/09/2018 01:23:52: __COMPLETED__

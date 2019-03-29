@@ -3,21 +3,14 @@
   <ItemGroup>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="..\..\Common\DataReader.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\fileutil.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\File.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="ImageTransformers.cpp" />
+    <ClCompile Include="ImageDataDeserializer.cpp" />
     <ClCompile Include="ImageReader.cpp" />
-    <ClCompile Include="..\..\Common\DebugUtil.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\Config.cpp" />
+    <ClCompile Include="ImageConfigHelper.cpp" />
+    <ClCompile Include="ZipByteReader.cpp" />
+    <ClCompile Include="Base64ImageDeserializer.cpp" />
+    <ClCompile Include="ImageDeserializerBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -31,7 +24,14 @@
     <ClInclude Include="..\..\Common\Include\fileutil.h">
       <Filter>Common\Include</Filter>
     </ClInclude>
+    <ClInclude Include="ImageTransformers.h" />
+    <ClInclude Include="ImageDataDeserializer.h" />
     <ClInclude Include="ImageReader.h" />
+    <ClInclude Include="ImageConfigHelper.h" />
+    <ClInclude Include="ByteReader.h" />
+    <ClInclude Include="ImageUtil.h" />
+    <ClInclude Include="Base64ImageDeserializer.h" />
+    <ClInclude Include="ImageDeserializerBase.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

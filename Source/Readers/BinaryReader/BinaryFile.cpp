@@ -11,6 +11,8 @@
 #include <limits.h>
 #include <stdint.h>
 
+#define CLOSEHANDLE_ERROR 0
+
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 // HIGH and LOW DWORD functions
@@ -91,7 +93,11 @@ BinaryFile::~BinaryFile()
         // the view
         iter = ReleaseView(iter, true);
     }
-    CloseHandle(m_hndMapped);
+    int rc = CloseHandle(m_hndMapped);
+    if ((rc == CLOSEHANDLE_ERROR) && !std::uncaught_exception())
+    {
+        RuntimeError("BinaryFile: Failed to close handle, %d", ::GetLastError());
+    }
 
     // if we are writing the file, truncate to actual size
     if (m_writeFile)
@@ -99,7 +105,11 @@ BinaryFile::~BinaryFile()
         SetFilePointerEx(m_hndFile, *(LARGE_INTEGER*) &m_filePositionMax, NULL, FILE_BEGIN);
         SetEndOfFile(m_hndFile);
     }
-    CloseHandle(m_hndFile);
+    rc = CloseHandle(m_hndFile);
+    if ((rc == CLOSEHANDLE_ERROR) && !std::uncaught_exception())
+    {
+        RuntimeError("BinaryFile: Failed to close handle, %d", ::GetLastError());
+    }
 }
 
 void BinaryFile::SetFilePositionMax(size_t filePositionMax)
@@ -108,7 +118,7 @@ void BinaryFile::SetFilePositionMax(size_t filePositionMax)
     if (m_filePositionMax > m_mappedSize)
     {
         char message[128];
-        sprintf_s(message, "Setting max position larger than mapped file size: %ld > %ld", m_filePositionMax, m_mappedSize);
+        sprintf_s(message, "Setting max position larger than mapped file size: %ld > %ld", (long)m_filePositionMax, (long)m_mappedSize);
         RuntimeError(message);
     }
 }
@@ -436,7 +446,7 @@ const std::wstring& Section::GetName()
         return m_name;
 
     // if name is not set yet, get it from the description header
-    std::wstring nameDescription(msra::strfun::utf16(m_sectionHeader->nameDescription));
+    std::wstring nameDescription(Microsoft::MSR::CNTK::ToFixedWStringFromMultiByte(m_sectionHeader->nameDescription));
     auto firstColon = nameDescription.find_first_of(L':');
     if (firstColon != npos && nameDescription.size() >= firstColon)
     {
@@ -498,7 +508,7 @@ Section* Section::ReadSection(size_t index, MappingType mapping, size_t sizeElem
     if (!section->ValidateHeader())
     {
         char message[256];
-        sprintf_s(message, "Invalid header in file %ls, in header %s\n", m_file->GetName(), section->GetName());
+        sprintf_s(message, "Invalid header in file %ls, in header %ls\n", m_file->GetName().c_str(), section->GetName().c_str());
         RuntimeError(message);
     }
 
@@ -749,7 +759,7 @@ SectionHeader* Section::GetSectionHeader(size_t filePosition, MappingType& mappi
     }
     case mappingFile:
         if (filePosition != 0)
-            RuntimeError("invalid fileposition, file mapping sections must start at filePostion zero");
+            RuntimeError("invalid fileposition, file mapping sections must start at filePosition zero");
     // intentional fall-through - same case, just at beginning of file
     case mappingSectionAll:
         sectionHeader = m_file->GetSection(filePosition, size);
@@ -1158,39 +1168,39 @@ void SectionStats::Store()
     for (int i = 0; i < GetElementCount(); i++)
     {
         auto stat = GetElement<NumericStatistics>(i);
-        if (!_stricmp(stat->statistic, "sum"))
+        if (EqualCI(stat->statistic, "sum"))
         {
             stat->value = m_sum;
         }
-        else if (!_stricmp(stat->statistic, "count"))
+        else if (EqualCI(stat->statistic, "count"))
         {
             stat->value = (double) m_count;
         }
-        else if (!_stricmp(stat->statistic, "mean"))
+        else if (EqualCI(stat->statistic, "mean"))
         {
             stat->value = m_mean;
         }
-        else if (!_stricmp(stat->statistic, "max"))
+        else if (EqualCI(stat->statistic, "max"))
         {
             stat->value = m_max;
         }
-        else if (!_stricmp(stat->statistic, "min"))
+        else if (EqualCI(stat->statistic, "min"))
         {
             stat->value = m_min;
         }
-        else if (!_stricmp(stat->statistic, "range"))
+        else if (EqualCI(stat->statistic, "range"))
         {
             stat->value = abs(m_max - m_min);
         }
-        else if (!_stricmp(stat->statistic, "rootmeansquare"))
+        else if (EqualCI(stat->statistic, "rootmeansquare"))
         {
             stat->value = m_rms;
         }
-        else if (!_stricmp(stat->statistic, "variance"))
+        else if (EqualCI(stat->statistic, "variance"))
         {
             stat->value = m_variance;
         }
-        else if (!_stricmp(stat->statistic, "stddev"))
+        else if (EqualCI(stat->statistic, "stddev"))
         {
             stat->value = m_stddev;
         }
@@ -1236,7 +1246,7 @@ void SectionStats::InitCompute(const ConfigArray& compute)
     m_rms = 0.0;  // root mean square
 
     // second pass measures
-    m_varSum = 0.0; // accumulated sum of difference between the mean and and the value squared
+    m_varSum = 0.0; // accumulated sum of difference between the mean and the value squared
 
     // compute after second pass
     m_variance = 0.0;
@@ -1255,7 +1265,7 @@ void SectionStats::SetCompute(const std::string& name, double value)
     for (int i = 0; i < GetElementCount(); i++)
     {
         auto stat = GetElement<NumericStatistics>(i);
-        if (!_stricmp(stat->statistic, name.c_str()))
+        if (EqualCI(stat->statistic, name.c_str()))
         {
             stat->value = value;
             break;
@@ -1271,7 +1281,7 @@ double SectionStats::GetCompute(const std::string& name)
     for (int i = 0; i < GetElementCount(); i++)
     {
         auto stat = GetElement<NumericStatistics>(i);
-        if (!_stricmp(stat->statistic, name.c_str()))
+        if (EqualCI(stat->statistic, name.c_str()))
         {
             return stat->value;
         }
